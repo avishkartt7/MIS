@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS System - Chart of Accounts</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>MIS System - Chart of Accounts</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="downloadSampleBtn">
+                        <i class="fas fa-download"></i> Download Sample
+                    </button>
+                    <button class="btn btn-secondary" id="importBtn">
+                        <i class="fas fa-upload"></i> Import Data
+                    </button>
+                    <button class="btn btn-primary" id="exportBtn">
+                        <i class="fas fa-file-export"></i> Export All
+                    </button>
+                    <button class="btn btn-success" id="addNewBtn">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Chart of Accounts Section -->
+            <section class="accounts-section">
+                <div class="section-header">
+                    <div class="section-info">
+                        <h2>Chart of Accounts Management</h2>
+                        <p class="section-description">Manage your complete chart of accounts with all details</p>
+                    </div>
+                    <div class="section-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search by Account No, Name, or Code...">
+                            <button class="search-clear" id="clearSearch" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="filter-controls">
+                            <select id="recordsPerPage" class="form-select">
+                                <option value="25">25 per page</option>
+                                <option value="50" selected>50 per page</option>
+                                <option value="100">100 per page</option>
+                                <option value="all">Show All</option>
+                            </select>
+                            <button class="btn btn-secondary" id="refreshBtn">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading chart of accounts...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Error loading data. Please check your connection and try again.</span>
+                    <button class="btn btn-secondary btn-small" id="retryBtn">Retry</button>
+                </div>
+
+                <!-- Accounts Table -->
+                <div class="table-container">
+                    <table class="accounts-table" id="accountsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="pts_account_no">
+                                    <div class="th-content">
+                                        Account No
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th class="sortable" data-sort="name">
+                                    <div class="th-content">
+                                        Account Name
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th class="sortable" data-sort="short_name">
+                                    <div class="th-content">
+                                        Short Name
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th>Account Type</th>
+                                <th>Debit Code</th>
+                                <th>Credit Code</th>
+                                <th class="sortable" data-sort="created_by">
+                                    <div class="th-content">
+                                        Created By
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th class="sortable" data-sort="created_on">
+                                    <div class="th-content">
+                                        Created Date
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th class="sortable" data-sort="updated_on">
+                                    <div class="th-content">
+                                        Updated Date
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    </div>
+                                </th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Info and Pagination -->
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="recordsInfo">Showing 0 of 0 records</span>
+                        <span id="filterInfo" style="display: none;"></span>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button class="pagination-btn" id="firstBtn" title="First Page">
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button class="pagination-btn" id="prevBtn" title="Previous Page">
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <div class="pagination-pages" id="paginationPages"></div>
+                        <button class="pagination-btn" id="nextBtn" title="Next Page">
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button class="pagination-btn" id="lastBtn" title="Last Page">
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Account</h3>
+                <span class="close-btn" id="closeModal">&times;</span>
+            </div>
+            <form id="accountForm" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ptsAccountNo">PTS Account No *</label>
+                        <input type="text" id="ptsAccountNo" required placeholder="e.g., 110101">
+                        <small class="form-help">Enter unique account number</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountName">Account Name *</label>
+                        <input type="text" id="accountName" required placeholder="e.g., Cash at Bank - Main Account">
+                        <small class="form-help">Full descriptive name</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shortName">Short Name</label>
+                        <input type="text" id="shortName" placeholder="e.g., Cash-Main">
+                        <small class="form-help">Abbreviated name for reports</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountType">Account Type</label>
+                        <select id="accountType" class="form-select">
+                            <option value="">Select Account Type</option>
+                            <option value="Asset">Asset</option>
+                            <option value="Liability">Liability</option>
+                            <option value="Equity">Equity</option>
+                            <option value="Revenue">Revenue</option>
+                            <option value="Cost of Sales">Cost of Sales</option>
+                            <option value="Expense">Expense</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="debitCode">Debit Code</label>
+                        <input type="text" id="debitCode" placeholder="e.g., DR, DEBIT">
+                        <small class="form-help">Debit posting code</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="creditCode">Credit Code</label>
+                        <input type="text" id="creditCode" placeholder="e.g., CR, CREDIT">
+                        <small class="form-help">Credit posting code</small>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save"></i> <span id="saveBtnText">Save Account</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Import Chart of Accounts</h3>
+                <span class="close-btn" id="closeImportModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="import-instructions">
+                    <h4><i class="fas fa-info-circle"></i> Import Instructions</h4>
+                    <ol>
+                        <li>Download the sample CSV file to see the correct format</li>
+                        <li>Prepare your data in the same format</li>
+                        <li>Select your CSV file below</li>
+                        <li>Click Import to upload your data</li>
+                    </ol>
+                </div>
+                
+                <div class="file-upload">
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                    <button class="btn btn-secondary btn-large" id="selectFileBtn">
+                        <i class="fas fa-folder-open"></i> Select CSV File
+                    </button>
+                    <div id="fileInfo" class="file-info" style="display: none;">
+                        <span id="fileName"></span>
+                        <button type="button" id="removeFile" class="btn-text">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelImportBtn">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="importDataBtn" disabled>
+                        <i class="fas fa-upload"></i> Import Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Toast -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+        <button class="toast-close">&times;</button>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmDialog" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
