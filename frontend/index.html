@@ -4,226 +4,617 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MIS System - Chart of Accounts</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 12px;
+        }
+
+        /* Top Menu Bar */
+        .menu-bar {
+            background: #f0f0f0;
+            border-bottom: 1px solid #d4d4d4;
+            padding: 8px 12px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 40px;
+        }
+
+        .menu-items {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-item {
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 3px;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: #e5e5e5;
+        }
+
+        .menu-item.active {
+            background: #0078d4;
+            color: white;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 40px;
+            left: 0;
+            width: 200px;
+            height: calc(100vh - 40px);
+            background: #f8f8f8;
+            border-right: 1px solid #d4d4d4;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-link:hover {
+            background: #e5e5e5;
+        }
+
+        .sidebar-link.active {
+            background: #0078d4;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 200px;
+            margin-top: 40px;
+            height: calc(100vh - 40px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: #f8f8f8;
+            border-bottom: 1px solid #d4d4d4;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-input {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            width: 300px;
+            font-size: 12px;
+        }
+
+        .search-input:focus {
+            outline: 1px solid #0078d4;
+            border-color: #0078d4;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #e5e5e5;
+        }
+
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+            border-color: #005a9e;
+        }
+
+        .btn-primary:hover {
+            background: #005a9e;
+        }
+
+        .btn-success {
+            background: #107c10;
+            color: white;
+            border-color: #0e5d0e;
+        }
+
+        .btn-success:hover {
+            background: #0e5d0e;
+        }
+
+        .select-input {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 12px;
+            background: white;
+        }
+
+        /* Table Container */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            background: white;
+            border: 1px solid #d4d4d4;
+            margin: 0;
+        }
+
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: white;
+            table-layout: fixed;
+        }
+
+        .excel-table th {
+            background: #f0f0f0;
+            border: 1px solid #d4d4d4;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+            height: 30px;
+            vertical-align: middle;
+        }
+
+        .excel-table th:hover {
+            background: #e5e5e5;
+        }
+
+        .excel-table td {
+            border: 1px solid #d4d4d4;
+            padding: 6px;
+            vertical-align: top;
+            background: white;
+            height: 25px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .excel-table tbody tr:hover {
+            background: #f0f8ff;
+        }
+
+        .excel-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .excel-table tbody tr:nth-child(even):hover {
+            background: #f0f8ff;
+        }
+
+        /* Column widths */
+        .col-account-no { width: 80px; }
+        .col-name { width: 200px; }
+        .col-debit-code { width: 150px; }
+        .col-credit-code { width: 150px; }
+        .col-short-name { width: 120px; }
+        .col-created-by { width: 100px; }
+        .col-created-on { width: 90px; }
+        .col-updated-by { width: 100px; }
+        .col-updated-on { width: 90px; }
+        .col-actions { width: 80px; }
+
+        .account-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .empty-cell {
+            color: #999;
+            font-style: italic;
+        }
+
+        .btn-edit {
+            background: #ff8c00;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-right: 2px;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: #f0f0f0;
+            border-top: 1px solid #d4d4d4;
+            padding: 4px 12px;
+            font-size: 11px;
+            color: #666;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            width: 500px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: #f0f0f0;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d4d4d4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        .form-control:focus {
+            outline: 1px solid #0078d4;
+            border-color: #0078d4;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            border-top: 1px solid #d4d4d4;
+            text-align: right;
+            background: #f8f8f8;
+        }
+
+        .modal-footer .btn {
+            margin-left: 8px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+        }
+
+        /* Hide sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            padding: 20px;
+            background: white;
+            height: 100%;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: #f8f8f8;
+            border: 1px solid #d4d4d4;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0078d4;
+        }
+
+        .card-description {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <h1>MIS System - Chart of Accounts</h1>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" id="downloadSampleBtn">
-                        <i class="fas fa-download"></i> Download Sample
-                    </button>
-                    <button class="btn btn-secondary" id="importBtn">
-                        <i class="fas fa-upload"></i> Import Data
-                    </button>
-                    <button class="btn btn-primary" id="exportBtn">
-                        <i class="fas fa-file-export"></i> Export All
-                    </button>
-                    <button class="btn btn-success" id="addNewBtn">
-                        <i class="fas fa-plus"></i> Add New
-                    </button>
-                </div>
-            </div>
+    <!-- Top Menu Bar -->
+    <div class="menu-bar">
+        <div class="menu-items">
+            <div class="menu-item active" onclick="showSection('dashboard')">File</div>
+            <div class="menu-item" onclick="showSection('accounts')">Data</div>
+            <div class="menu-item">View</div>
+            <div class="menu-item">Tools</div>
+            <div class="menu-item">Help</div>
         </div>
-    </header>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link active" onclick="showSection('dashboard')">Dashboard</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" onclick="showSection('accounts')">Chart of Accounts</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Transactions</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">General Ledger</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Trial Balance</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Reports</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Settings</a>
+            </li>
+        </ul>
+    </nav>
 
     <!-- Main Content -->
-    <main class="main">
-        <div class="container">
-            <!-- Chart of Accounts Section -->
-            <section class="accounts-section">
-                <div class="section-header">
-                    <div class="section-info">
-                        <h2>Chart of Accounts Management</h2>
-                        <p class="section-description">Manage your complete chart of accounts with all details</p>
-                    </div>
-                    <div class="section-controls">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search by Account No, Name, or Code...">
-                            <button class="search-clear" id="clearSearch" style="display: none;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="filter-controls">
-                            <select id="recordsPerPage" class="form-select">
-                                <option value="25">25 per page</option>
-                                <option value="50" selected>50 per page</option>
-                                <option value="100">100 per page</option>
-                                <option value="all">Show All</option>
-                            </select>
-                            <button class="btn btn-secondary" id="refreshBtn">
-                                <i class="fas fa-sync"></i> Refresh
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Loading Spinner -->
-                <div id="loading" class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading chart of accounts...</p>
-                </div>
-
-                <!-- Error Message -->
-                <div id="errorMessage" class="error-message" style="display: none;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Error loading data. Please check your connection and try again.</span>
-                    <button class="btn btn-secondary btn-small" id="retryBtn">Retry</button>
-                </div>
-
-                <!-- Accounts Table -->
-                <div class="table-container">
-                    <table class="accounts-table" id="accountsTable" style="display: none;">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="pts_account_no">
-                                    <div class="th-content">
-                                        Account No
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th class="sortable" data-sort="name">
-                                    <div class="th-content">
-                                        Account Name
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th class="sortable" data-sort="short_name">
-                                    <div class="th-content">
-                                        Short Name
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th>Account Type</th>
-                                <th>Debit Code</th>
-                                <th>Credit Code</th>
-                                <th class="sortable" data-sort="created_by">
-                                    <div class="th-content">
-                                        Created By
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th class="sortable" data-sort="created_on">
-                                    <div class="th-content">
-                                        Created Date
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th class="sortable" data-sort="updated_on">
-                                    <div class="th-content">
-                                        Updated Date
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    </div>
-                                </th>
-                                <th class="actions-col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="accountsTableBody">
-                            <!-- Data will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Table Info and Pagination -->
-                <div class="table-footer">
-                    <div class="table-info">
-                        <span id="recordsInfo">Showing 0 of 0 records</span>
-                        <span id="filterInfo" style="display: none;"></span>
+    <div class="main-content">
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section active">
+            <div class="dashboard">
+                <h2 style="margin-bottom: 20px;">MIS System Dashboard</h2>
+                
+                <div class="dashboard-cards">
+                    <div class="dashboard-card">
+                        <div class="card-title">Total Accounts</div>
+                        <div class="card-value" id="totalAccounts">0</div>
+                        <div class="card-description">Chart of Accounts</div>
                     </div>
                     
-                    <!-- Pagination -->
-                    <div class="pagination" id="pagination" style="display: none;">
-                        <button class="pagination-btn" id="firstBtn" title="First Page">
-                            <i class="fas fa-angle-double-left"></i>
-                        </button>
-                        <button class="pagination-btn" id="prevBtn" title="Previous Page">
-                            <i class="fas fa-angle-left"></i>
-                        </button>
-                        <div class="pagination-pages" id="paginationPages"></div>
-                        <button class="pagination-btn" id="nextBtn" title="Next Page">
-                            <i class="fas fa-angle-right"></i>
-                        </button>
-                        <button class="pagination-btn" id="lastBtn" title="Last Page">
-                            <i class="fas fa-angle-double-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Add/Edit Modal -->
-    <div id="accountModal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h3 id="modalTitle">Add New Account</h3>
-                <span class="close-btn" id="closeModal">&times;</span>
-            </div>
-            <form id="accountForm" class="modal-body">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="ptsAccountNo">PTS Account No *</label>
-                        <input type="text" id="ptsAccountNo" required placeholder="e.g., 110101">
-                        <small class="form-help">Enter unique account number</small>
+                    <div class="dashboard-card">
+                        <div class="card-title">Complete Accounts</div>
+                        <div class="card-value" id="completeAccounts">0</div>
+                        <div class="card-description">With full details</div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="accountName">Account Name *</label>
-                        <input type="text" id="accountName" required placeholder="e.g., Cash at Bank - Main Account">
-                        <small class="form-help">Full descriptive name</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="shortName">Short Name</label>
-                        <input type="text" id="shortName" placeholder="e.g., Cash-Main">
-                        <small class="form-help">Abbreviated name for reports</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="accountType">Account Type</label>
-                        <select id="accountType" class="form-select">
-                            <option value="">Select Account Type</option>
-                            <option value="Asset">Asset</option>
-                            <option value="Liability">Liability</option>
-                            <option value="Equity">Equity</option>
-                            <option value="Revenue">Revenue</option>
-                            <option value="Cost of Sales">Cost of Sales</option>
-                            <option value="Expense">Expense</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="debitCode">Debit Code</label>
-                        <input type="text" id="debitCode" placeholder="e.g., DR, DEBIT">
-                        <small class="form-help">Debit posting code</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="creditCode">Credit Code</label>
-                        <input type="text" id="creditCode" placeholder="e.g., CR, CREDIT">
-                        <small class="form-help">Credit posting code</small>
+                    <div class="dashboard-card">
+                        <div class="card-title">Recent Updates</div>
+                        <div class="card-value" id="recentUpdates">0</div>
+                        <div class="card-description">Last 7 days</div>
                     </div>
                 </div>
                 
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="cancelBtn">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">
-                        <i class="fas fa-save"></i> <span id="saveBtnText">Save Account</span>
-                    </button>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="showSection('accounts')">Open Chart of Accounts</button>
+                    <button class="btn btn-success" onclick="addNewAccount()">Add New Account</button>
+                    <button class="btn" onclick="exportData()">Export Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart of Accounts Section -->
+        <div id="accounts-section" class="section">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search accounts...">
+                    <button class="btn" id="clearSearch" style="display: none;" onclick="clearSearch()">Clear</button>
+                </div>
+                <div class="toolbar-right">
+                    <select id="recordsPerPage" class="select-input">
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                        <option value="all">All rows</option>
+                    </select>
+                    <button class="btn" onclick="refreshData()">Refresh</button>
+                    <button class="btn" onclick="importData()">Import</button>
+                    <button class="btn" onclick="exportData()">Export</button>
+                    <button class="btn btn-success" onclick="addNewAccount()">Add New</button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <div id="loading" class="loading" style="display: none;">
+                    <div>Loading data...</div>
+                </div>
+                
+                <div id="error" class="error" style="display: none;">
+                    <div>Error loading data. Please try again.</div>
+                    <button class="btn" onclick="loadAccounts()">Retry</button>
+                </div>
+
+                <table class="excel-table" id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-account-no" onclick="sortTable('pts_account_no')">Account No</th>
+                            <th class="col-name" onclick="sortTable('name')">Name</th>
+                            <th class="col-debit-code" onclick="sortTable('acc_type_code_debit')">Acc Type Code Debit</th>
+                            <th class="col-credit-code" onclick="sortTable('acc_type_code_credit')">Acc Type Code Credit</th>
+                            <th class="col-short-name" onclick="sortTable('short_name')">Short Name</th>
+                            <th class="col-created-by" onclick="sortTable('created_by')">Created By</th>
+                            <th class="col-created-on" onclick="sortTable('created_on')">Created On</th>
+                            <th class="col-updated-by" onclick="sortTable('updated_by')">Updated By</th>
+                            <th class="col-updated-on" onclick="sortTable('updated_on')">Updated On</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span id="recordsInfo">Showing 0 records</span>
+                <span id="filterInfo" style="display: none;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Add New Account</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="accountForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Account No *</label>
+                        <input type="text" id="ptsAccountNo" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" id="accountName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Short Name</label>
+                        <input type="text" id="shortName" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Acc Type Code Debit</label>
+                        <input type="text" id="debitCode" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Acc Type Code Credit</label>
+                        <input type="text" id="creditCode" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
                 </div>
             </form>
         </div>
@@ -233,68 +624,906 @@
     <div id="importModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Import Chart of Accounts</h3>
-                <span class="close-btn" id="closeImportModal">&times;</span>
+                <div class="modal-title">Import Data from Excel/CSV</div>
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="import-instructions">
-                    <h4><i class="fas fa-info-circle"></i> Import Instructions</h4>
-                    <ol>
-                        <li>Download the sample CSV file to see the correct format</li>
-                        <li>Prepare your data in the same format</li>
-                        <li>Select your CSV file below</li>
-                        <li>Click Import to upload your data</li>
-                    </ol>
+                <div class="form-group">
+                    <label class="form-label">Select File (Excel or CSV)</label>
+                    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" class="form-control">
                 </div>
+                <div style="margin-top: 12px; font-size: 11px; color: #666; line-height: 1.4;">
+                    <strong>Supported formats:</strong> Excel (.xlsx, .xls) and CSV (.csv)<br>
+                    <strong>Required columns:</strong> Account No, Name, Acc Type Code Debit, Acc Type Code Credit, Short Name, Created By, Updated By<br>
+                    <strong>Note:</strong> First row should contain headers
+                </div>
+                <div id="filePreview" style="display: none; margin-top: 12px; padding: 10px; background: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">File Preview:</div>
+                    <div id="previewContent" style="font-size: 11px; font-family: monospace;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeImportModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="importBtn" onclick="processImport()" disabled>Import Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Global variables
+        let allAccounts = [];
+        let filteredAccounts = [];
+        let currentSort = { column: null, direction: 'asc' };
+        let searchTimeout = null;
+        let importedData = null;
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('dashboard');
+            loadDashboardStats();
+            bindEvents();
+        });
+
+        // Bind events
+        function bindEvents() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => handleSearch(e.target.value), 300);
+            });
+
+            // Records per page
+            document.getElementById('recordsPerPage').addEventListener('change', function() {
+                renderTable();
+            });
+
+            // Form submission
+            document.getElementById('accountForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleFormSubmit();
+            });
+
+            // File input for import
+            document.getElementById('importFile').addEventListener('change', handleFileSelect);
+
+            // Sidebar navigation
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Extract section name from onclick attribute
+                    const onclick = this.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/showSection\('(\w+)'\)/);
+                        if (match) {
+                            const sectionName = match[1];
+                            // Update active state for sidebar
+                            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                            this.classList.add('active');
+                            showSectionInternal(sectionName);
+                        }
+                    }
+                });
+            });
+
+            // Menu bar navigation
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const onclick = this.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/showSection\('(\w+)'\)/);
+                        if (match) {
+                            const sectionName = match[1];
+                            // Update active state for menu
+                            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+                            this.classList.add('active');
+                            showSectionInternal(sectionName);
+                        }
+                    }
+                });
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    closeModal();
+                    closeImportModal();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeImportModal();
+                }
+            });
+        }
+
+        // Internal function to handle section switching
+        function showSectionInternal(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected section
+            if (sectionName === 'dashboard') {
+                document.getElementById('dashboard-section').classList.add('active');
+                loadDashboardStats();
+            } else if (sectionName === 'accounts') {
+                document.getElementById('accounts-section').classList.add('active');
+                loadAccounts();
+            }
+        }
+
+        // Show/hide sections - Updated to handle calls without event
+        function showSection(sectionName) {
+            // Update sidebar active states
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+                const onclick = link.getAttribute('onclick');
+                if (onclick && onclick.includes(`'${sectionName}'`)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update menu active states
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                const onclick = item.getAttribute('onclick');
+                if (onclick && onclick.includes(`'${sectionName}'`)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Call internal function to switch sections
+            showSectionInternal(sectionName);
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const result = await response.json();
                 
-                <div class="file-upload">
-                    <input type="file" id="csvFile" accept=".csv" style="display: none;">
-                    <button class="btn btn-secondary btn-large" id="selectFileBtn">
-                        <i class="fas fa-folder-open"></i> Select CSV File
-                    </button>
-                    <div id="fileInfo" class="file-info" style="display: none;">
-                        <span id="fileName"></span>
-                        <button type="button" id="removeFile" class="btn-text">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
+                if (result.success) {
+                    document.getElementById('totalAccounts').textContent = result.data.totalAccounts;
+                    document.getElementById('completeAccounts').textContent = result.data.namedAccounts;
+                    document.getElementById('recentUpdates').textContent = result.data.recentAccounts;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load accounts data
+        async function loadAccounts() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/accounts');
+                const result = await response.json();
                 
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="cancelImportBtn">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="importDataBtn" disabled>
-                        <i class="fas fa-upload"></i> Import Data
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                if (result.success) {
+                    allAccounts = result.data;
+                    filteredAccounts = [...allAccounts];
+                    renderTable();
+                    showLoading(false);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                showError(true);
+                showLoading(false);
+            }
+        }
 
-    <!-- Success/Error Toast -->
-    <div id="toast" class="toast">
-        <div class="toast-content">
-            <i class="toast-icon"></i>
-            <span class="toast-message"></span>
-        </div>
-        <button class="toast-close">&times;</button>
-    </div>
+        // Handle search
+        function handleSearch(searchTerm) {
+            const clearBtn = document.getElementById('clearSearch');
+            
+            if (!searchTerm.trim()) {
+                filteredAccounts = [...allAccounts];
+                clearBtn.style.display = 'none';
+                hideFilterInfo();
+            } else {
+                const term = searchTerm.toLowerCase();
+                filteredAccounts = allAccounts.filter(account => 
+                    account.pts_account_no.toLowerCase().includes(term) ||
+                    (account.name && account.name.toLowerCase().includes(term)) ||
+                    (account.short_name && account.short_name.toLowerCase().includes(term)) ||
+                    (account.acc_type_code_debit && account.acc_type_code_debit.toLowerCase().includes(term)) ||
+                    (account.acc_type_code_credit && account.acc_type_code_credit.toLowerCase().includes(term))
+                );
+                clearBtn.style.display = 'inline-block';
+                showFilterInfo(searchTerm);
+            }
+            
+            renderTable();
+        }
 
-    <!-- Confirmation Dialog -->
-    <div id="confirmDialog" class="modal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h3 id="confirmTitle">Confirm Action</h3>
-            </div>
-            <div class="modal-body">
-                <p id="confirmMessage">Are you sure you want to perform this action?</p>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmOkBtn">Confirm</button>
-            </div>
-        </div>
-    </div>
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            handleSearch('');
+        }
 
-    <script src="js/main.js"></script>
+        // Sort table
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            filteredAccounts.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+
+                if (column === 'pts_account_no') {
+                    aVal = parseInt(aVal) || 0;
+                    bVal = parseInt(bVal) || 0;
+                } else {
+                    aVal = aVal.toString().toLowerCase();
+                    bVal = bVal.toString().toLowerCase();
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+
+            renderTable();
+        }
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('accountsTableBody');
+            const recordsPerPage = document.getElementById('recordsPerPage').value;
+            
+            let displayAccounts = filteredAccounts;
+            if (recordsPerPage !== 'all') {
+                displayAccounts = filteredAccounts.slice(0, parseInt(recordsPerPage));
+            }
+
+            if (displayAccounts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 20px; color: #666;">
+                            No accounts found
+                        </td>
+                    </tr>
+                `;
+                updateRecordsInfo();
+                return;
+            }
+
+            tbody.innerHTML = displayAccounts.map(account => `
+                <tr>
+                    <td class="account-number">${account.pts_account_no}</td>
+                    <td title="${account.name || ''}">${account.name || '<span class="empty-cell">-</span>'}</td>
+                    <td title="${account.acc_type_code_debit || ''}">${account.acc_type_code_debit || '<span class="empty-cell">-</span>'}</td>
+                    <td title="${account.acc_type_code_credit || ''}">${account.acc_type_code_credit || '<span class="empty-cell">-</span>'}</td>
+                    <td title="${account.short_name || ''}">${account.short_name || '<span class="empty-cell">-</span>'}</td>
+                    <td>${account.created_by || '-'}</td>
+                    <td>${formatDate(account.created_on)}</td>
+                    <td>${account.updated_by || '-'}</td>
+                    <td>${formatDate(account.updated_on)}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editAccount('${account.pts_account_no}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteAccount('${account.pts_account_no}')">Del</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            updateRecordsInfo();
+        }
+
+        // Update records info
+        function updateRecordsInfo() {
+            const info = document.getElementById('recordsInfo');
+            const total = allAccounts.length;
+            const filtered = filteredAccounts.length;
+            
+            if (filtered === total) {
+                info.textContent = `Showing ${filtered} records`;
+            } else {
+                info.textContent = `Showing ${filtered} of ${total} records`;
+            }
+        }
+
+        // Show filter info
+        function showFilterInfo(searchTerm) {
+            const filterInfo = document.getElementById('filterInfo');
+            filterInfo.textContent = `Filtered by: "${searchTerm}"`;
+            filterInfo.style.display = 'inline';
+        }
+
+        // Hide filter info
+        function hideFilterInfo() {
+            document.getElementById('filterInfo').style.display = 'none';
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('accountsTable').style.display = show ? 'none' : 'table';
+        }
+
+        // Show/hide error
+        function showError(show) {
+            document.getElementById('error').style.display = show ? 'block' : 'none';
+            document.getElementById('accountsTable').style.display = show ? 'none' : 'table';
+        }
+
+        // Modal functions
+        function addNewAccount() {
+            showSection('accounts');
+            setTimeout(() => {
+                document.getElementById('modalTitle').textContent = 'Add New Account';
+                document.getElementById('accountForm').reset();
+                document.getElementById('ptsAccountNo').readOnly = false;
+                document.getElementById('saveBtn').textContent = 'Save';
+                document.getElementById('accountModal').style.display = 'block';
+                document.getElementById('ptsAccountNo').focus();
+            }, 100);
+        }
+
+        function editAccount(ptsAccountNo) {
+            const account = allAccounts.find(acc => acc.pts_account_no === ptsAccountNo);
+            if (account) {
+                document.getElementById('modalTitle').textContent = 'Edit Account';
+                document.getElementById('ptsAccountNo').value = account.pts_account_no;
+                document.getElementById('ptsAccountNo').readOnly = true;
+                document.getElementById('accountName').value = account.name || '';
+                document.getElementById('shortName').value = account.short_name || '';
+                document.getElementById('debitCode').value = account.acc_type_code_debit || '';
+                document.getElementById('creditCode').value = account.acc_type_code_credit || '';
+                document.getElementById('saveBtn').textContent = 'Update';
+                document.getElementById('accountModal').style.display = 'block';
+            }
+        }
+
+        function deleteAccount(ptsAccountNo) {
+            if (confirm(`Are you sure you want to delete account ${ptsAccountNo}?`)) {
+                // Implement delete functionality
+                alert('Delete functionality will be implemented');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('accountModal').style.display = 'none';
+            document.getElementById('accountForm').reset();
+        }
+
+        // Form submission
+        async function handleFormSubmit() {
+            const formData = {
+                pts_account_no: document.getElementById('ptsAccountNo').value.trim(),
+                name: document.getElementById('accountName').value.trim(),
+                short_name: document.getElementById('shortName').value.trim(),
+                acc_type_code_debit: document.getElementById('debitCode').value.trim(),
+                acc_type_code_credit: document.getElementById('creditCode').value.trim()
+            };
+
+            if (!formData.pts_account_no || !formData.name) {
+                alert('Account No and Name are required');
+                return;
+            }
+
+            const isEdit = document.getElementById('ptsAccountNo').readOnly;
+            const url = isEdit ? `/api/accounts/${formData.pts_account_no}` : '/api/accounts';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: formData.name,
+                        short_name: formData.short_name,
+                        acc_type_code_debit: formData.acc_type_code_debit,
+                        acc_type_code_credit: formData.acc_type_code_credit,
+                        updated_by: 'USER'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(isEdit ? 'Account updated successfully!' : 'Account created successfully!');
+                    closeModal();
+                    loadAccounts();
+                    loadDashboardStats();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error saving account:', error);
+                alert('Error saving account. Please try again.');
+            }
+        }
+
+        // Import functions
+        function importData() {
+            document.getElementById('importModal').style.display = 'block';
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            document.getElementById('importFile').value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('importBtn').disabled = true;
+            importedData = null;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const importBtn = document.getElementById('importBtn');
+            const filePreview = document.getElementById('filePreview');
+            
+            if (!file) {
+                importBtn.disabled = true;
+                filePreview.style.display = 'none';
+                return;
+            }
+
+            const fileName = file.name.toLowerCase();
+            const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+            const isCSV = fileName.endsWith('.csv');
+
+            if (!isExcel && !isCSV) {
+                alert('Please select an Excel (.xlsx, .xls) or CSV (.csv) file');
+                event.target.value = '';
+                importBtn.disabled = true;
+                filePreview.style.display = 'none';
+                return;
+            }
+
+            // Show loading in preview
+            filePreview.style.display = 'block';
+            document.getElementById('previewContent').innerHTML = 'Loading file preview...';
+            
+            // Process file based on type
+            if (isExcel) {
+                processExcelFile(file);
+            } else {
+                processCSVFile(file);
+            }
+        }
+
+        function processExcelFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Get first sheet
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON with proper options
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,
+                        defval: '',
+                        raw: false  // This ensures text values are preserved
+                    });
+                    
+                    console.log('Raw Excel data:', jsonData);
+                    
+                    if (jsonData.length < 2) {
+                        throw new Error('File must contain at least a header row and one data row');
+                    }
+                    
+                    // Process the data
+                    const headers = jsonData[0].map(h => String(h).trim());
+                    const rows = jsonData.slice(1).map(row => 
+                        row.map(cell => String(cell || '').trim())
+                    );
+                    
+                    console.log('Processed headers:', headers);
+                    console.log('First few rows:', rows.slice(0, 3));
+                    
+                    importedData = parseImportData(headers, rows);
+                    console.log('Parsed import data:', importedData);
+                    
+                    showFilePreview(headers, rows.slice(0, 5)); // Show first 5 rows
+                    
+                    document.getElementById('importBtn').disabled = false;
+                    
+                } catch (error) {
+                    console.error('Excel processing error:', error);
+                    alert('Error reading Excel file: ' + error.message);
+                    document.getElementById('filePreview').style.display = 'none';
+                    document.getElementById('importBtn').disabled = true;
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file');
+                document.getElementById('filePreview').style.display = 'none';
+                document.getElementById('importBtn').disabled = true;
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processCSVFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    const lines = csvText.trim().split('\n');
+                    
+                    if (lines.length < 2) {
+                        throw new Error('CSV file must contain at least a header row and one data row');
+                    }
+                    
+                    const headers = parseCSVLine(lines[0]);
+                    const rows = lines.slice(1).map(line => parseCSVLine(line));
+                    
+                    importedData = parseImportData(headers, rows);
+                    showFilePreview(headers, rows.slice(0, 5)); // Show first 5 rows
+                    
+                    document.getElementById('importBtn').disabled = false;
+                    
+                } catch (error) {
+                    console.error('CSV processing error:', error);
+                    alert('Error reading CSV file: ' + error.message);
+                    document.getElementById('filePreview').style.display = 'none';
+                    document.getElementById('importBtn').disabled = true;
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file');
+                document.getElementById('filePreview').style.display = 'none';
+                document.getElementById('importBtn').disabled = true;
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function parseImportData(headers, rows) {
+            const data = [];
+            
+            console.log('Parsing data with headers:', headers);
+            
+            // Find column indices by exact header names from the preview
+            const findColumnIndex = (searchTerms) => {
+                for (let i = 0; i < headers.length; i++) {
+                    const headerStr = String(headers[i]).trim();
+                    console.log(`Checking header ${i}: "${headerStr}"`);
+                    
+                    for (const term of searchTerms) {
+                        if (headerStr.toLowerCase() === term.toLowerCase()) {
+                            console.log(`✅ Found exact match: "${headerStr}" at index ${i}`);
+                            return i;
+                        }
+                    }
+                }
+                
+                // If no exact match, try partial match
+                for (let i = 0; i < headers.length; i++) {
+                    const headerStr = String(headers[i]).toLowerCase().trim();
+                    for (const term of searchTerms) {
+                        if (headerStr.includes(term.toLowerCase())) {
+                            console.log(`⚠️ Found partial match: "${headers[i]}" at index ${i} for "${term}"`);
+                            return i;
+                        }
+                    }
+                }
+                
+                console.log(`❌ No match found for terms:`, searchTerms);
+                return -1;
+            };
+            
+            // Updated search terms based on your exact headers
+            const columnIndices = {
+                account_no: findColumnIndex(['Account_No', 'Account No']),
+                name: findColumnIndex(['Name']),
+                debit_code: findColumnIndex(['Acc_Type_Code_Debit', 'Acc Type Code Debit']),
+                credit_code: findColumnIndex(['Acc_Type_Code_Credit', 'Acc Type Code Credit']),
+                short_name: findColumnIndex(['Short_Name', 'Short Name']),
+                created_by: findColumnIndex(['Created_By', 'Created By']),
+                updated_by: findColumnIndex(['Updated_By', 'Updated By'])
+            };
+            
+            console.log('Final column mapping:', columnIndices);
+            
+            // Verify the mapping is correct by checking first row
+            if (rows.length > 0) {
+                const firstRow = rows[0];
+                console.log('First row verification:');
+                console.log(`Account No (index ${columnIndices.account_no}):`, firstRow[columnIndices.account_no]);
+                console.log(`Name (index ${columnIndices.name}):`, firstRow[columnIndices.name]);
+                console.log(`Debit Code (index ${columnIndices.debit_code}):`, firstRow[columnIndices.debit_code]);
+            }
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+                
+                const accountNo = columnIndices.account_no >= 0 ? 
+                    String(row[columnIndices.account_no] || '').trim() : '';
+                const name = columnIndices.name >= 0 ? 
+                    String(row[columnIndices.name] || '').trim() : '';
+                
+                console.log(`Processing row ${i + 1}:`);
+                console.log(`- Raw account no: "${row[columnIndices.account_no]}"`);
+                console.log(`- Raw name: "${row[columnIndices.name]}"`);
+                console.log(`- Processed account no: "${accountNo}"`);
+                console.log(`- Processed name: "${name}"`);
+                
+                // Skip if no account number or name
+                if (!accountNo || !name || name === accountNo) {
+                    console.log(`❌ Skipping row ${i + 1}: invalid data`);
+                    continue;
+                }
+                
+                const account = {
+                    pts_account_no: accountNo,
+                    name: name,
+                    acc_type_code_debit: columnIndices.debit_code >= 0 ? 
+                        String(row[columnIndices.debit_code] || '').trim() : '',
+                    acc_type_code_credit: columnIndices.credit_code >= 0 ? 
+                        String(row[columnIndices.credit_code] || '').trim() : '',
+                    short_name: columnIndices.short_name >= 0 ? 
+                        String(row[columnIndices.short_name] || '').trim() : '',
+                    created_by: columnIndices.created_by >= 0 ? 
+                        String(row[columnIndices.created_by] || '').trim() : 'IMPORT',
+                    updated_by: columnIndices.updated_by >= 0 ? 
+                        String(row[columnIndices.updated_by] || '').trim() : 'IMPORT'
+                };
+                
+                console.log(`✅ Adding account:`, account);
+                data.push(account);
+            }
+            
+            console.log('Final parsed data count:', data.length);
+            return data;
+        }
+
+        function showFilePreview(headers, rows) {
+            const previewContent = document.getElementById('previewContent');
+            
+            let preview = `<strong>Headers found:</strong> ${headers.join(', ')}<br><br>`;
+            preview += `<strong>Sample data (first ${rows.length} rows):</strong><br>`;
+            
+            rows.forEach((row, index) => {
+                preview += `Row ${index + 1}: ${row.join(' | ')}<br>`;
+            });
+            
+            preview += `<br><strong>Total valid records to import:</strong> ${importedData ? importedData.length : 0}<br><br>`;
+            
+            // Show what will actually be imported
+            if (importedData && importedData.length > 0) {
+                preview += `<strong>Parsed data preview:</strong><br>`;
+                importedData.slice(0, 3).forEach((account, index) => {
+                    preview += `Record ${index + 1}:<br>`;
+                    preview += `- Account No: "${account.pts_account_no}"<br>`;
+                    preview += `- Name: "${account.name}"<br>`;
+                    preview += `- Debit Code: "${account.acc_type_code_debit}"<br>`;
+                    preview += `- Credit Code: "${account.acc_type_code_credit}"<br>`;
+                    preview += `- Short Name: "${account.short_name}"<br><br>`;
+                });
+            }
+            
+            previewContent.innerHTML = preview;
+        }
+
+        async function processImport() {
+            if (!importedData || importedData.length === 0) {
+                alert('No valid data to import');
+                return;
+            }
+
+            const confirmMessage = `Import ${importedData.length} accounts?\n\nThis will:\n- Add new accounts\n- Update existing accounts with same Account No\n- Skip invalid records`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                // Show loading
+                const importBtn = document.getElementById('importBtn');
+                importBtn.textContent = 'Importing...';
+                importBtn.disabled = true;
+                
+                console.log('Sending import data:', importedData);
+                
+                const response = await fetch('/api/accounts/bulk-import', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ accounts: importedData })
+                });
+
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Import endpoint not found. Please check if the backend server is running the latest version.');
+                    }
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid response from server. Check server logs for details.');
+                }
+
+                if (result.success) {
+                    let message = `Import completed successfully!\n\n`;
+                    message += `✓ ${result.data.successCount} accounts imported/updated\n`;
+                    message += `📊 Total processed: ${result.data.totalProcessed}\n`;
+                    
+                    if (result.data.errorCount > 0) {
+                        message += `⚠ ${result.data.errorCount} errors occurred\n\n`;
+                        if (result.data.errors && result.data.errors.length > 0) {
+                            message += `Sample errors:\n${result.data.errors.slice(0, 3).join('\n')}`;
+                            if (result.data.errors.length > 3) {
+                                message += `\n... and ${result.data.errors.length - 3} more errors`;
+                            }
+                        }
+                    }
+                    
+                    alert(message);
+                    closeImportModal();
+                    loadAccounts();
+                    loadDashboardStats();
+                } else {
+                    throw new Error(result.message || 'Import failed');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                let errorMessage = 'Error during import:\n\n';
+                
+                if (error.message.includes('404')) {
+                    errorMessage += 'The import functionality is not available. Please:\n';
+                    errorMessage += '1. Make sure your backend server is running\n';
+                    errorMessage += '2. Update your backend with the latest code\n';
+                    errorMessage += '3. Restart the server';
+                } else if (error.message.includes('JSON')) {
+                    errorMessage += 'Server returned invalid response. Check:\n';
+                    errorMessage += '1. Server console for error logs\n';
+                    errorMessage += '2. Database connection\n';
+                    errorMessage += '3. File format is correct';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
+            } finally {
+                const importBtn = document.getElementById('importBtn');
+                importBtn.textContent = 'Import Data';
+                importBtn.disabled = false;
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsText(file);
+            });
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        // Export function
+        function exportData() {
+            if (filteredAccounts.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = [
+                'Account No', 'Name', 'Acc Type Code Debit', 'Acc Type Code Credit',
+                'Short Name', 'Created By', 'Created On', 'Updated By', 'Updated On'
+            ];
+
+            const csvContent = [
+                headers.join(','),
+                ...filteredAccounts.map(account => [
+                    account.pts_account_no,
+                    `"${account.name || ''}"`,
+                    `"${account.acc_type_code_debit || ''}"`,
+                    `"${account.acc_type_code_credit || ''}"`,
+                    `"${account.short_name || ''}"`,
+                    account.created_by || '',
+                    formatDateForExport(account.created_on),
+                    account.updated_by || '',
+                    formatDateForExport(account.updated_on)
+                ].join(','))
+            ].join('\n');
+
+            downloadFile(csvContent, `chart_of_accounts_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+            alert(`Exported ${filteredAccounts.length} accounts successfully!`);
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Utility functions
+        function refreshData() {
+            loadAccounts();
+            loadDashboardStats();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function formatDateForExport(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB');
+        }
+
+        // Global functions for onclick events
+        window.showSection = showSection;
+        window.addNewAccount = addNewAccount;
+        window.editAccount = editAccount;
+        window.deleteAccount = deleteAccount;
+        window.closeModal = closeModal;
+        window.importData = importData;
+        window.closeImportModal = closeImportModal;
+        window.processImport = processImport;
+        window.exportData = exportData;
+        window.refreshData = refreshData;
+        window.clearSearch = clearSearch;
+        window.sortTable = sortTable;
+    </script>
 </body>
 </html>
