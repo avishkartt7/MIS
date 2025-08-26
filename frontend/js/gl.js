@@ -1,5 +1,5 @@
 // =====================================================
-// GENERAL LEDGER JAVASCRIPT MODULE
+// GENERAL LEDGER JAVASCRIPT MODULE - COMPLETE VERSION
 // Complete client-side functionality for GL management
 // File: frontend/js/gl.js
 // =====================================================
@@ -13,7 +13,16 @@ class GeneralLedgerManager {
         this.accounts = [];
         this.currentSort = { column: null, direction: 'asc' };
         this.searchTimeout = null;
-        this.currentFilters = {};
+        this.currentFilters = {
+            search: '',
+            account: '',
+            dateFrom: '',
+            dateTo: '',
+            jvNumber: '',
+            currency: '',
+            debitCredit: '',
+            pendingOnly: false
+        };
         this.isLoading = false;
         
         // Exchange rates (make this configurable)
@@ -21,21 +30,24 @@ class GeneralLedgerManager {
             'USD': 3.675,
             'EUR': 4.1,
             'GBP': 4.65,
-            'SAR': 0.98
+            'SAR': 0.98,
+            'AED': 1.0
         };
         
         this.init();
     }
     
     init() {
+        console.log('🚀 Initializing General Ledger Manager...');
         this.bindEvents();
         this.loadAccounts();
         this.loadGeneralLedger();
-        this.loadStatistics();
         this.setDefaultValues();
     }
     
     bindEvents() {
+        console.log('📋 Binding events...');
+        
         // Search functionality
         const searchInput = document.getElementById('glSearchInput');
         if (searchInput) {
@@ -48,11 +60,10 @@ class GeneralLedgerManager {
         }
         
         // Clear search
-        const clearSearchBtn = document.getElementById('clearGLSearch');
+        const clearSearchBtn = document.getElementById('glClearSearch');
         if (clearSearchBtn) {
             clearSearchBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                this.handleSearch('');
+                this.clearSearch();
             });
         }
         
@@ -134,20 +145,7 @@ class GeneralLedgerManager {
             });
         }
         
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-            }
-            if (e.ctrlKey && e.key === 'n') {
-                e.preventDefault();
-                this.showAddModal();
-            }
-            if (e.ctrlKey && e.key === 'f') {
-                e.preventDefault();
-                if (searchInput) searchInput.focus();
-            }
-        });
+        console.log('✅ Events bound successfully');
     }
     
     setDefaultValues() {
@@ -178,6 +176,7 @@ class GeneralLedgerManager {
     }
     
     async loadAccounts() {
+        console.log('📊 Loading accounts...');
         try {
             const response = await fetch('/api/accounts');
             const result = await response.json();
@@ -185,9 +184,12 @@ class GeneralLedgerManager {
             if (result.success) {
                 this.accounts = result.data;
                 this.populateAccountDropdowns();
+                console.log(`✅ Loaded ${this.accounts.length} accounts`);
+            } else {
+                throw new Error(result.message);
             }
         } catch (error) {
-            console.error('Error loading accounts:', error);
+            console.error('❌ Error loading accounts:', error);
             this.showToast('Error loading accounts', 'error');
         }
     }
@@ -205,8 +207,14 @@ class GeneralLedgerManager {
                     select.appendChild(firstOption);
                 }
                 
-                // Add account options
-                this.accounts.forEach(account => {
+                // Add account options sorted by account number
+                const sortedAccounts = [...this.accounts].sort((a, b) => {
+                    const aNum = parseInt(a.pts_account_no) || 0;
+                    const bNum = parseInt(b.pts_account_no) || 0;
+                    return aNum - bNum;
+                });
+                
+                sortedAccounts.forEach(account => {
                     const option = document.createElement('option');
                     option.value = account.pts_account_no;
                     option.textContent = `${account.pts_account_no} - ${account.name || 'Unnamed'}`;
@@ -219,40 +227,52 @@ class GeneralLedgerManager {
     async loadGeneralLedger() {
         if (this.isLoading) return;
         
+        console.log('📋 Loading general ledger entries...');
         this.isLoading = true;
         this.showLoading(true);
         this.hideError();
         
         try {
+            // Build search parameters
+            const searchInput = document.getElementById('glSearchInput');
+            const searchValue = searchInput ? searchInput.value : '';
+            
             const params = new URLSearchParams({
                 page: this.currentPage,
                 limit: this.recordsPerPage,
-                search: document.getElementById('glSearchInput')?.value || '',
+                search: searchValue,
                 account: this.currentFilters.account || '',
                 date_from: this.currentFilters.dateFrom || '',
                 date_to: this.currentFilters.dateTo || '',
                 jv_number: this.currentFilters.jvNumber || '',
                 currency: this.currentFilters.currency || '',
                 debit_credit: this.currentFilters.debitCredit || '',
-                pending_only: this.currentFilters.pendingOnly || ''
+                pending_only: this.currentFilters.pendingOnly ? 'true' : ''
             });
+            
+            console.log('🔍 Search params:', params.toString());
             
             const response = await fetch(`/api/general-ledger?${params}`);
             const result = await response.json();
             
             if (result.success) {
                 this.allEntries = result.data;
-                this.totalPages = result.pagination.totalPages;
-                this.currentPage = result.pagination.currentPage;
+                
+                // Handle pagination info
+                if (result.pagination) {
+                    this.totalPages = result.pagination.totalPages;
+                    this.currentPage = result.pagination.currentPage;
+                    this.updatePagination();
+                    this.updateRecordsInfo(result.pagination);
+                }
                 
                 this.renderTable();
-                this.updatePagination();
-                this.updateRecordsInfo(result.pagination);
+                console.log(`✅ Loaded ${this.allEntries.length} entries`);
             } else {
                 throw new Error(result.message);
             }
         } catch (error) {
-            console.error('Error loading general ledger:', error);
+            console.error('❌ Error loading general ledger:', error);
             this.showError();
             this.showToast('Error loading general ledger entries', 'error');
         } finally {
@@ -261,38 +281,12 @@ class GeneralLedgerManager {
         }
     }
     
-    async loadStatistics() {
-        try {
-            const response = await fetch('/api/general-ledger/stats');
-            const result = await response.json();
-            
-            if (result.success) {
-                this.updateStatistics(result.data);
-            }
-        } catch (error) {
-            console.error('Error loading statistics:', error);
-        }
-    }
-    
-    updateStatistics(stats) {
-        const elements = {
-            'glTotalEntries': stats.totalEntries,
-            'glPendingEntries': stats.pendingEntries,
-            'glLockedEntries': stats.lockedEntries,
-            'glRecentEntries': stats.recentEntries
-        };
-        
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value.toLocaleString();
-            }
-        });
-    }
-    
     renderTable() {
         const tbody = document.getElementById('glTableBody');
-        if (!tbody) return;
+        if (!tbody) {
+            console.error('❌ Table body not found');
+            return;
+        }
         
         const table = document.getElementById('glTable');
         
@@ -300,11 +294,12 @@ class GeneralLedgerManager {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="29" style="text-align: center; padding: 40px; color: #666;">
-                        <div style="font-size: 14px; margin-bottom: 12px;">
+                        <div style="font-size: 16px; margin-bottom: 12px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; display: block; margin-bottom: 16px; color: #dee2e6;"></i>
                             No general ledger entries found
                         </div>
-                        <button class="btn btn-primary" onclick="glManager.showAddModal()">
-                            Add First Entry
+                        <button class="gl-btn gl-btn-primary" onclick="glManager.showAddModal()">
+                            <i class="fas fa-plus"></i> Add First Entry
                         </button>
                     </td>
                 </tr>
@@ -317,62 +312,58 @@ class GeneralLedgerManager {
         if (table) {
             table.style.display = 'table';
         }
+        
+        console.log(`✅ Rendered ${this.allEntries.length} table rows`);
     }
     
     renderTableRow(entry) {
+        const debitCreditClass = entry.debit_credit === 'D' ? 'debit' : 'credit';
+        const debitCreditColor = entry.debit_credit === 'D' ? '#28a745' : '#dc3545';
+        
         return `
             <tr>
-                <td title="ID: ${entry.id}">${entry.id}</td>
-                <td title="Transaction Date">${this.formatDate(entry.transaction_date)}</td>
-                <td class="jv-number" title="Journal Voucher: ${entry.jv_number}">${entry.jv_number}</td>
-                <td title="Year Period">${entry.year_period}</td>
-                <td title="Batch Number">${entry.batch_number || '<span class="empty-cell">-</span>'}</td>
-                <td title="Batch Sequence">${entry.batch_sequence || '<span class="empty-cell">-</span>'}</td>
-                <td title="Transaction Type">${entry.transaction_type || '<span class="empty-cell">-</span>'}</td>
-                <td title="Type Sequence">${entry.type_sequence || '<span class="empty-cell">-</span>'}</td>
-                <td class="account-number" title="Account: ${entry.account_number}">${entry.account_number}</td>
-                <td title="Auxiliary Account">${entry.auxiliary_account || '<span class="empty-cell">-</span>'}</td>
-                <td title="Account Name" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">
-                    ${entry.account_name || '<span class="empty-cell">-</span>'}
-                </td>
-                <td title="Cost Center 2">${entry.cc2 || '<span class="empty-cell">-</span>'}</td>
-                <td title="Shipment">${entry.shipment || '<span class="empty-cell">-</span>'}</td>
-                <td title="Document Reference">${entry.doc_ref || '<span class="empty-cell">-</span>'}</td>
-                <td title="Document Date">${this.formatDate(entry.doc_date) || '<span class="empty-cell">-</span>'}</td>
-                <td title="M Classification">${entry.m_classification || '<span class="empty-cell">-</span>'}</td>
-                <td title="Description: ${entry.description || 'No description'}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
-                    ${this.truncateText(entry.description, 50) || '<span class="empty-cell">-</span>'}
-                </td>
-                <td title="${this.getDebitCreditText(entry.debit_credit)}" 
-                    style="text-align: center; font-weight: bold; color: ${entry.debit_credit === 'D' ? '#008000' : '#cc0000'};">
+                <td class="col-id" title="Entry ID: ${entry.id}">${entry.id}</td>
+                <td class="col-date" title="Transaction Date">${this.formatDate(entry.transaction_date)}</td>
+                <td class="col-jv" title="Journal Voucher Number">${entry.jv_number || '-'}</td>
+                <td class="col-year" title="Year Period">${entry.year_period || '-'}</td>
+                <td class="col-batch" title="Batch Number">${entry.batch_number || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-seq" title="Batch Sequence">${entry.batch_sequence || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-type" title="Transaction Type">${entry.transaction_type || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-seq" title="Type Sequence">${entry.type_sequence || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-account" title="Account Number">${entry.account_number || '-'}</td>
+                <td class="col-aux" title="Auxiliary Account">${entry.auxiliary_account || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-name" title="${entry.account_name || 'No account name'}">${this.truncateText(entry.account_name, 20) || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-cc2" title="Cost Center 2">${entry.cc2 || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-ship" title="Shipment">${entry.shipment || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-doc" title="Document Reference">${entry.doc_ref || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-date" title="Document Date">${this.formatDate(entry.doc_date) || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-cc2" title="M Classification">${entry.m_classification || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-desc" title="${entry.description || 'No description'}">${this.truncateText(entry.description, 30) || '<span class="empty-cell">-</span>'}</td>
+                <td class="col-dc" title="${this.getDebitCreditText(entry.debit_credit)}" style="color: ${debitCreditColor};">
                     ${entry.debit_credit || '-'}
                 </td>
-                <td title="Currency">${entry.currency_code}</td>
-                <td class="amount" title="Foreign Amount">${this.formatAmount(entry.foreign_amount)}</td>
-                <td class="amount ${entry.debit_credit === 'D' ? 'debit' : 'credit'}" title="AED Amount">
-                    ${this.formatAmount(entry.aed_amount)}
-                </td>
-                <td class="amount ${entry.debit_credit === 'D' ? 'debit' : 'credit'}" title="USD Amount">
-                    ${this.formatAmount(entry.usd_amount)}
-                </td>
-                <td title="Pending Status" style="text-align: center;">
+                <td class="col-currency" title="Currency Code">${entry.currency_code || 'AED'}</td>
+                <td class="col-amount amount ${debitCreditClass}" title="Foreign Amount">${this.formatAmount(entry.foreign_amount)}</td>
+                <td class="col-amount amount ${debitCreditClass}" title="AED Amount">${this.formatAmount(entry.aed_amount)}</td>
+                <td class="col-amount amount ${debitCreditClass}" title="USD Amount">${this.formatAmount(entry.usd_amount)}</td>
+                <td class="col-status" title="Pending Status">
                     ${entry.is_pending ? '<span class="status-pending">PENDING</span>' : '-'}
                 </td>
-                <td title="Locked Status" style="text-align: center;">
+                <td class="col-status" title="Locked Status">
                     ${entry.is_locked ? '<span class="status-locked">LOCKED</span>' : '-'}
                 </td>
-                <td title="Created By">${entry.created_by || 'N/A'}</td>
-                <td title="Created On: ${this.formatDateTime(entry.created_on)}">${this.formatDate(entry.created_on)}</td>
-                <td title="Updated By">${entry.updated_by || 'N/A'}</td>
-                <td title="Updated On: ${this.formatDateTime(entry.updated_on)}">${this.formatDate(entry.updated_on)}</td>
-                <td style="text-align: center;">
-                    <button class="btn-edit" onclick="glManager.editEntry(${entry.id})" 
-                            title="Edit Entry" ${entry.is_locked ? 'disabled' : ''}>
-                        Edit
+                <td class="col-user" title="Created By">${entry.created_by || 'N/A'}</td>
+                <td class="col-date" title="Created On: ${this.formatDateTime(entry.created_on)}">${this.formatDate(entry.created_on)}</td>
+                <td class="col-user" title="Updated By">${entry.updated_by || 'N/A'}</td>
+                <td class="col-date" title="Updated On: ${this.formatDateTime(entry.updated_on)}">${this.formatDate(entry.updated_on)}</td>
+                <td class="col-actions">
+                    <button class="gl-btn gl-btn-warning" onclick="glManager.editEntry(${entry.id})" 
+                            title="Edit Entry" ${entry.is_locked ? 'disabled' : ''} style="margin-right: 4px; padding: 4px 8px;">
+                        <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-delete" onclick="glManager.deleteEntry(${entry.id})" 
-                            title="Delete Entry" ${entry.is_locked ? 'disabled' : ''}>
-                        Del
+                    <button class="gl-btn gl-btn-danger" onclick="glManager.deleteEntry(${entry.id})" 
+                            title="Delete Entry" ${entry.is_locked ? 'disabled' : ''} style="padding: 4px 8px;">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </td>
             </tr>
@@ -380,7 +371,9 @@ class GeneralLedgerManager {
     }
     
     handleSearch(searchTerm) {
-        const clearBtn = document.getElementById('clearGLSearch');
+        const clearBtn = document.getElementById('glClearSearch');
+        
+        this.currentFilters.search = searchTerm;
         
         if (searchTerm.trim()) {
             if (clearBtn) clearBtn.style.display = 'inline-block';
@@ -394,8 +387,17 @@ class GeneralLedgerManager {
         this.loadGeneralLedger();
     }
     
+    clearSearch() {
+        const searchInput = document.getElementById('glSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            this.handleSearch('');
+        }
+    }
+    
     applyFilters() {
         this.currentFilters = {
+            search: document.getElementById('glSearchInput')?.value || '',
             account: document.getElementById('glFilterAccount')?.value || '',
             dateFrom: document.getElementById('glFilterDateFrom')?.value || '',
             dateTo: document.getElementById('glFilterDateTo')?.value || '',
@@ -439,20 +441,24 @@ class GeneralLedgerManager {
         const pendingCheckbox = document.getElementById('glFilterPending');
         if (pendingCheckbox) pendingCheckbox.checked = false;
         
+        // Also clear search
+        const searchInput = document.getElementById('glSearchInput');
+        if (searchInput) searchInput.value = '';
+        
         this.applyFilters();
     }
     
     toggleFilters() {
-        const filterPanel = document.getElementById('glFilterPanel');
+        const filterPanel = document.getElementById('glFiltersPanel');
         const toggleBtn = document.getElementById('glFilterToggle');
         
         if (filterPanel && toggleBtn) {
             if (filterPanel.classList.contains('active')) {
                 filterPanel.classList.remove('active');
-                toggleBtn.textContent = 'Filters';
+                toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Filters';
             } else {
                 filterPanel.classList.add('active');
-                toggleBtn.textContent = 'Hide Filters';
+                toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Hide Filters';
             }
         }
     }
@@ -465,13 +471,14 @@ class GeneralLedgerManager {
             this.currentSort.direction = 'asc';
         }
         
-        // Visual indicators would be handled by CSS
+        console.log(`🔄 Sorting by ${column} ${this.currentSort.direction}`);
         this.loadGeneralLedger();
     }
     
     goToPage(page) {
         if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
             this.currentPage = page;
+            console.log(`📄 Going to page ${page}`);
             this.loadGeneralLedger();
         }
     }
@@ -511,16 +518,21 @@ class GeneralLedgerManager {
         const recordsInfo = document.getElementById('glRecordsInfo');
         if (!recordsInfo) return;
         
-        if (pagination.totalPages > 1) {
-            recordsInfo.textContent = 
-                `Page ${pagination.currentPage} of ${pagination.totalPages} (${pagination.totalRecords.toLocaleString()} records)`;
+        if (pagination.totalRecords > 0) {
+            if (pagination.totalPages > 1) {
+                recordsInfo.textContent = 
+                    `Page ${pagination.currentPage} of ${pagination.totalPages} (${pagination.totalRecords.toLocaleString()} records)`;
+            } else {
+                recordsInfo.textContent = `${pagination.totalRecords.toLocaleString()} records`;
+            }
         } else {
-            recordsInfo.textContent = `${pagination.totalRecords.toLocaleString()} records`;
+            recordsInfo.textContent = 'No records found';
         }
     }
     
     // Modal Management
     showAddModal() {
+        console.log('➕ Opening add modal');
         this.clearForm();
         this.setDefaultValues();
         
@@ -536,11 +548,22 @@ class GeneralLedgerManager {
         }
         
         document.body.style.overflow = 'hidden';
+        
+        // Focus first input
+        setTimeout(() => {
+            const firstInput = document.getElementById('glTransactionDate');
+            if (firstInput) firstInput.focus();
+        }, 100);
     }
     
     editEntry(id) {
+        console.log(`✏️ Opening edit modal for entry ${id}`);
+        
         const entry = this.allEntries.find(e => e.id === id);
-        if (!entry) return;
+        if (!entry) {
+            this.showToast('Entry not found', 'error');
+            return;
+        }
         
         if (entry.is_locked) {
             this.showToast('Cannot edit locked entry', 'warning');
@@ -648,6 +671,12 @@ class GeneralLedgerManager {
         const currency = currencySelect.value;
         const foreignAmount = parseFloat(foreignAmountInput.value) || 0;
         
+        if (foreignAmount === 0) {
+            aedAmountInput.value = '';
+            usdAmountInput.value = '';
+            return;
+        }
+        
         if (currency === 'AED') {
             aedAmountInput.value = foreignAmount.toFixed(2);
             usdAmountInput.value = (foreignAmount / this.exchangeRates.USD).toFixed(2);
@@ -679,6 +708,8 @@ class GeneralLedgerManager {
     }
     
     async handleFormSubmit() {
+        console.log('💾 Handling form submission...');
+        
         const formData = this.getFormData();
         
         if (!this.validateForm(formData)) {
@@ -692,6 +723,8 @@ class GeneralLedgerManager {
         try {
             const url = isEdit ? `/api/general-ledger/${entryId}` : '/api/general-ledger';
             const method = isEdit ? 'PUT' : 'POST';
+            
+            console.log(`📤 ${method} to ${url}`, formData);
             
             const response = await fetch(url, {
                 method,
@@ -708,12 +741,11 @@ class GeneralLedgerManager {
                 );
                 this.closeModal();
                 this.loadGeneralLedger();
-                this.loadStatistics();
             } else {
                 throw new Error(result.message);
             }
         } catch (error) {
-            console.error('Error saving entry:', error);
+            console.error('❌ Error saving entry:', error);
             this.showToast(`Error saving entry: ${error.message}`, 'error');
         }
     }
@@ -782,22 +814,33 @@ class GeneralLedgerManager {
             return false;
         }
         
+        // Validate debit/credit
+        if (formData.debit_credit && !['D', 'C'].includes(formData.debit_credit)) {
+            this.showToast('Debit/Credit must be D or C', 'error');
+            return false;
+        }
+        
         return true;
     }
     
     async deleteEntry(id) {
         const entry = this.allEntries.find(e => e.id === id);
-        if (!entry) return;
+        if (!entry) {
+            this.showToast('Entry not found', 'error');
+            return;
+        }
         
         if (entry.is_locked) {
             this.showToast('Cannot delete locked entry', 'warning');
             return;
         }
         
-        const confirmMessage = `Are you sure you want to delete entry ${entry.jv_number}?\n\nThis action cannot be undone.`;
+        const confirmMessage = `Are you sure you want to delete this entry?\n\nJV: ${entry.jv_number}\nAccount: ${entry.account_number}\nAmount: ${entry.currency_code} ${this.formatAmount(entry.foreign_amount)}\n\nThis action cannot be undone.`;
         
         if (confirm(confirmMessage)) {
             try {
+                console.log(`🗑️ Deleting entry ${id}`);
+                
                 const response = await fetch(`/api/general-ledger/${id}`, {
                     method: 'DELETE'
                 });
@@ -807,12 +850,11 @@ class GeneralLedgerManager {
                 if (result.success) {
                     this.showToast('Entry deleted successfully!', 'success');
                     this.loadGeneralLedger();
-                    this.loadStatistics();
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
-                console.error('Error deleting entry:', error);
+                console.error('❌ Error deleting entry:', error);
                 this.showToast(`Error deleting entry: ${error.message}`, 'error');
             }
         }
@@ -823,6 +865,8 @@ class GeneralLedgerManager {
             this.showToast('No data to export', 'warning');
             return;
         }
+        
+        console.log('📥 Exporting to CSV...');
         
         const headers = [
             'ID', 'Date', 'JV#', 'Year', 'Batch', 'Batch Seq', 'Type', 'Type Seq',
@@ -836,7 +880,7 @@ class GeneralLedgerManager {
             ...this.allEntries.map(entry => [
                 entry.id,
                 entry.transaction_date,
-                `"${entry.jv_number}"`,
+                `"${entry.jv_number || ''}"`,
                 entry.year_period,
                 `"${entry.batch_number || ''}"`,
                 entry.batch_sequence || '',
@@ -883,8 +927,9 @@ class GeneralLedgerManager {
     }
     
     refreshData() {
+        console.log('🔄 Refreshing data...');
         this.loadGeneralLedger();
-        this.loadStatistics();
+        this.loadAccounts();
         this.showToast('Data refreshed', 'success');
     }
     
@@ -924,6 +969,8 @@ class GeneralLedgerManager {
     }
     
     showToast(message, type = 'info') {
+        console.log(`📢 Toast: ${message} (${type})`);
+        
         // Create toast element if it doesn't exist
         let toast = document.getElementById('glToast');
         if (!toast) {
@@ -954,32 +1001,44 @@ class GeneralLedgerManager {
     // Utility Methods
     formatDate(dateString) {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit'
-        });
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+            });
+        } catch (e) {
+            return dateString;
+        }
     }
     
     formatDateTime(dateString) {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return dateString;
+        }
     }
     
     formatAmount(amount) {
         if (amount === null || amount === undefined || amount === '') return '';
-        return parseFloat(amount).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        try {
+            return parseFloat(amount).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } catch (e) {
+            return amount.toString();
+        }
     }
     
     truncateText(text, maxLength) {
@@ -997,18 +1056,21 @@ class GeneralLedgerManager {
 
 // Initialize General Ledger Manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM loaded, checking for GL elements...');
+    
     // Only initialize if we're on the General Ledger page
     if (document.getElementById('glTable') || document.getElementById('glEntryModal')) {
+        console.log('✅ GL elements found, initializing GL Manager...');
         window.glManager = new GeneralLedgerManager();
         
-        // Global functions for onclick handlers
+        // Set up global functions for onclick handlers
         window.glShowAddModal = () => window.glManager.showAddModal();
         window.glEditEntry = (id) => window.glManager.editEntry(id);
         window.glDeleteEntry = (id) => window.glManager.deleteEntry(id);
         window.glCloseModal = () => window.glManager.closeModal();
         window.glRefreshData = () => window.glManager.refreshData();
         window.glExportData = () => window.glManager.exportToCSV();
-        window.glClearSearch = () => window.glManager.handleSearch('');
+        window.glClearSearch = () => window.glManager.clearSearch();
         window.glToggleFilters = () => window.glManager.toggleFilters();
         window.glApplyFilters = () => window.glManager.applyFilters();
         window.glClearFilters = () => window.glManager.clearFilters();
@@ -1017,13 +1079,22 @@ document.addEventListener('DOMContentLoaded', () => {
         window.glUpdateAccountName = () => window.glManager.updateAccountName();
         window.glCalculateAmounts = () => window.glManager.calculateAmounts();
         window.glUpdateAmountStyles = () => window.glManager.updateAmountStyles();
+        
+        console.log('✅ GL Manager initialized and global functions set up');
+    } else {
+        console.log('ℹ️ Not on GL page, skipping GL Manager initialization');
     }
 });
 
-// Keyboard shortcuts
+// Keyboard shortcuts for General Ledger
 document.addEventListener('keydown', (e) => {
-    // Only if General Ledger page is active
+    // Only if General Ledger page is active and glManager exists
     if (window.glManager) {
+        // Escape to close modal
+        if (e.key === 'Escape') {
+            window.glManager.closeModal();
+        }
+        
         // Ctrl+N for new entry
         if (e.ctrlKey && e.key === 'n') {
             e.preventDefault();
@@ -1048,6 +1119,12 @@ document.addEventListener('keydown', (e) => {
             const searchInput = document.getElementById('glSearchInput');
             if (searchInput) searchInput.focus();
         }
+        
+        // Ctrl+Shift+F for filter toggle
+        if (e.ctrlKey && e.shiftKey && e.key === 'F') {
+            e.preventDefault();
+            window.glManager.toggleFilters();
+        }
     }
 });
 
@@ -1055,3 +1132,47 @@ document.addEventListener('keydown', (e) => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = GeneralLedgerManager;
 }
+
+// Additional utility functions that can be called globally
+window.GLUtils = {
+    formatCurrency: function(amount, currency = 'AED') {
+        if (!amount) return '';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 2
+        }).format(amount);
+    },
+    
+    validateJournalEntry: function(entries) {
+        let totalDebits = 0;
+        let totalCredits = 0;
+        
+        entries.forEach(entry => {
+            const amount = parseFloat(entry.aed_amount || entry.foreign_amount || 0);
+            if (entry.debit_credit === 'D') {
+                totalDebits += amount;
+            } else if (entry.debit_credit === 'C') {
+                totalCredits += amount;
+            }
+        });
+        
+        return {
+            balanced: Math.abs(totalDebits - totalCredits) < 0.01,
+            totalDebits,
+            totalCredits,
+            difference: totalDebits - totalCredits
+        };
+    },
+    
+    generateJVNumber: function(prefix = 'JV', date = new Date()) {
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        
+        return `${prefix}${year}${month}${day}-${random}`;
+    }
+};
+
+console.log('✅ General Ledger JavaScript module loaded successfully');

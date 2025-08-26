@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Ledger - MIS System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* General Ledger Specific Styles */
+        .gl-toolbar {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .gl-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .gl-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .gl-search-box {
+            position: relative;
+            min-width: 300px;
+        }
+
+        .gl-search-box input {
+            padding: 8px 40px 8px 35px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .gl-search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+
+        .gl-clear-search {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #95a5a6;
+            cursor: pointer;
+            display: none;
+        }
+
+        .gl-filters-panel {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .gl-filters-panel.active {
+            max-height: 200px;
+            padding: 16px 20px;
+        }
+
+        .gl-filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .gl-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gl-filter-group label {
+            font-weight: 500;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .gl-filter-group input,
+        .gl-filter-group select {
+            padding: 6px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .gl-table-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gl-table-wrapper {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid #dee2e6;
+        }
+
+        .gl-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: white;
+            min-width: 2000px; /* Ensure horizontal scroll for many columns */
+        }
+
+        .gl-table thead th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 10px 6px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .gl-table thead th:hover {
+            background: linear-gradient(135deg, #2c3e50, #1a252f);
+        }
+
+        .gl-table tbody td {
+            padding: 8px 6px;
+            border: 1px solid #dee2e6;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+
+        .gl-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .gl-table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+
+        .gl-table tbody tr:nth-child(even):hover {
+            background-color: #f1f2f6;
+        }
+
+        /* Column-specific styles */
+        .col-id { width: 60px; text-align: center; }
+        .col-date { width: 90px; }
+        .col-jv { width: 100px; font-family: monospace; font-weight: 600; }
+        .col-year { width: 60px; text-align: center; }
+        .col-batch { width: 80px; }
+        .col-seq { width: 60px; text-align: center; }
+        .col-type { width: 100px; }
+        .col-account { width: 100px; font-family: monospace; font-weight: 600; color: #0066cc; }
+        .col-name { width: 150px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+        .col-aux { width: 100px; }
+        .col-cc2 { width: 80px; }
+        .col-ship { width: 80px; }
+        .col-doc { width: 100px; }
+        .col-desc { width: 200px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        .col-dc { width: 40px; text-align: center; font-weight: bold; }
+        .col-currency { width: 60px; text-align: center; }
+        .col-amount { width: 100px; text-align: right; font-family: monospace; }
+        .col-status { width: 80px; text-align: center; }
+        .col-user { width: 80px; }
+        .col-actions { width: 100px; text-align: center; }
+
+        .amount {
+            font-family: 'Courier New', monospace;
+            text-align: right;
+        }
+
+        .debit { color: #28a745; }
+        .credit { color: #dc3545; }
+
+        .empty-cell {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .status-locked {
+            background: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .gl-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-top: 2px solid #dee2e6;
+            background: #f8f9fa;
+        }
+
+        .gl-pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gl-pagination-info {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .gl-btn {
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+            background: white;
+            color: #495057;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .gl-btn:hover:not(:disabled) {
+            background: #e9ecef;
+        }
+
+        .gl-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .gl-btn-primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .gl-btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .gl-btn-success {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .gl-btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .gl-btn-danger {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .gl-btn-danger:hover {
+            background: #c82333;
+        }
+
+        .gl-loading, .gl-error {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: #6c757d;
+        }
+
+        .gl-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gl-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .gl-filter-info {
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .gl-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .gl-modal-content {
+            background: white;
+            margin: 2% auto;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .gl-modal-header {
+            padding: 20px 24px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        }
+
+        .gl-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .gl-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .gl-modal-close:hover {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .gl-modal-body {
+            padding: 24px;
+        }
+
+        .gl-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .gl-form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gl-form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .gl-form-control {
+            padding: 10px 12px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .gl-form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .gl-form-control[readonly] {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+
+        .gl-form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .gl-form-wide {
+            grid-column: 1 / -1;
+        }
+
+        .gl-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .gl-checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .gl-table {
+                min-width: 1500px;
+            }
+            
+            .gl-search-box {
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .gl-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .gl-toolbar-left,
+            .gl-toolbar-right {
+                justify-content: space-between;
+            }
+
+            .gl-search-box {
+                min-width: auto;
+            }
+
+            .gl-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gl-modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>MIS System - General Ledger</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="index.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <button class="btn btn-primary" onclick="glManager.showAddModal()">
+                        <i class="fas fa-plus"></i> Add Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" style="max-width: 100%; padding: 0;">
+        <div style="background: white; height: calc(100vh - 80px); display: flex; flex-direction: column;">
+            
+            <!-- Toolbar -->
+            <div class="gl-toolbar">
+                <div class="gl-toolbar-left">
+                    <div class="gl-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="glSearchInput" placeholder="Search entries..." autocomplete="off">
+                        <button class="gl-clear-search" id="glClearSearch" onclick="glManager.clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="gl-btn" id="glFilterToggle" onclick="glManager.toggleFilters()">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                </div>
+                <div class="gl-toolbar-right">
+                    <select id="glRecordsPerPage" class="gl-form-control" style="width: auto;">
+                        <option value="25">25 rows</option>
+                        <option value="50" selected>50 rows</option>
+                        <option value="100">100 rows</option>
+                        <option value="200">200 rows</option>
+                    </select>
+                    <button class="gl-btn" onclick="glManager.refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="gl-btn" onclick="glManager.exportData()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="gl-btn gl-btn-success" onclick="glManager.showAddModal()">
+                        <i class="fas fa-plus"></i> Add Entry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Panel -->
+            <div class="gl-filters-panel" id="glFiltersPanel">
+                <div class="gl-filters-grid">
+                    <div class="gl-filter-group">
+                        <label>Account</label>
+                        <select id="glFilterAccount" class="gl-form-control">
+                            <option value="">All Accounts</option>
+                        </select>
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>Date From</label>
+                        <input type="date" id="glFilterDateFrom" class="gl-form-control">
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>Date To</label>
+                        <input type="date" id="glFilterDateTo" class="gl-form-control">
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>JV Number</label>
+                        <input type="text" id="glFilterJV" class="gl-form-control" placeholder="Journal Voucher">
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>Currency</label>
+                        <select id="glFilterCurrency" class="gl-form-control">
+                            <option value="">All Currencies</option>
+                            <option value="AED">AED</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="SAR">SAR</option>
+                        </select>
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>Debit/Credit</label>
+                        <select id="glFilterDC" class="gl-form-control">
+                            <option value="">Both</option>
+                            <option value="D">Debit Only</option>
+                            <option value="C">Credit Only</option>
+                        </select>
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>&nbsp;</label>
+                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                            <input type="checkbox" id="glFilterPending"> Pending Only
+                        </label>
+                    </div>
+                    <div class="gl-filter-group">
+                        <label>&nbsp;</label>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="gl-btn" onclick="glManager.applyFilters()">Apply</button>
+                            <button class="gl-btn" onclick="glManager.clearFilters()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="gl-loading" id="glLoading">
+                <div class="gl-loading-spinner"></div>
+                <div>Loading general ledger entries...</div>
+            </div>
+
+            <!-- Error State -->
+            <div class="gl-error" id="glError">
+                <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 12px; color: #dc3545;"></i>
+                <div>Error loading general ledger entries</div>
+                <button class="gl-btn gl-btn-primary" style="margin-top: 12px;" onclick="glManager.refreshData()">
+                    Try Again
+                </button>
+            </div>
+
+            <!-- Table Container -->
+            <div class="gl-table-container">
+                <div class="gl-table-wrapper">
+                    <table class="gl-table" id="glTable">
+                        <thead>
+                            <tr>
+                                <th class="col-id" onclick="glManager.sortTable('id')">ID</th>
+                                <th class="col-date" onclick="glManager.sortTable('transaction_date')">Date</th>
+                                <th class="col-jv" onclick="glManager.sortTable('jv_number')">JV Number</th>
+                                <th class="col-year" onclick="glManager.sortTable('year_period')">Year</th>
+                                <th class="col-batch" onclick="glManager.sortTable('batch_number')">Batch#</th>
+                                <th class="col-seq" onclick="glManager.sortTable('batch_sequence')">Batch Seq</th>
+                                <th class="col-type" onclick="glManager.sortTable('transaction_type')">Type</th>
+                                <th class="col-seq" onclick="glManager.sortTable('type_sequence')">Type Seq</th>
+                                <th class="col-account" onclick="glManager.sortTable('account_number')">Account</th>
+                                <th class="col-aux" onclick="glManager.sortTable('auxiliary_account')">Auxiliary</th>
+                                <th class="col-name" onclick="glManager.sortTable('account_name')">Account Name</th>
+                                <th class="col-cc2" onclick="glManager.sortTable('cc2')">CC2</th>
+                                <th class="col-ship" onclick="glManager.sortTable('shipment')">Shipment</th>
+                                <th class="col-doc" onclick="glManager.sortTable('doc_ref')">Doc Ref</th>
+                                <th class="col-date" onclick="glManager.sortTable('doc_date')">Doc Date</th>
+                                <th class="col-cc2" onclick="glManager.sortTable('m_classification')">M Class</th>
+                                <th class="col-desc" onclick="glManager.sortTable('description')">Description</th>
+                                <th class="col-dc" onclick="glManager.sortTable('debit_credit')">D/C</th>
+                                <th class="col-currency" onclick="glManager.sortTable('currency_code')">Currency</th>
+                                <th class="col-amount" onclick="glManager.sortTable('foreign_amount')">Foreign Amt</th>
+                                <th class="col-amount" onclick="glManager.sortTable('aed_amount')">AED Amount</th>
+                                <th class="col-amount" onclick="glManager.sortTable('usd_amount')">USD Amount</th>
+                                <th class="col-status">Pending</th>
+                                <th class="col-status">Locked</th>
+                                <th class="col-user" onclick="glManager.sortTable('created_by')">Created By</th>
+                                <th class="col-date" onclick="glManager.sortTable('created_on')">Created</th>
+                                <th class="col-user" onclick="glManager.sortTable('updated_by')">Updated By</th>
+                                <th class="col-date" onclick="glManager.sortTable('updated_on')">Updated</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="glTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="gl-pagination" id="glPagination">
+                <div class="gl-pagination-info" id="glRecordsInfo">
+                    Ready
+                </div>
+                <div class="gl-pagination-controls">
+                    <button class="gl-btn" id="glFirstBtn" onclick="glManager.goToPage(1)">
+                        <i class="fas fa-angle-double-left"></i>
+                    </button>
+                    <button class="gl-btn" id="glPrevBtn" onclick="glManager.goToPage(glManager.currentPage - 1)">
+                        <i class="fas fa-angle-left"></i>
+                    </button>
+                    <span id="glPageInfo" style="margin: 0 12px; font-size: 13px;">Page 1 of 1</span>
+                    <button class="gl-btn" id="glNextBtn" onclick="glManager.goToPage(glManager.currentPage + 1)">
+                        <i class="fas fa-angle-right"></i>
+                    </button>
+                    <button class="gl-btn" id="glLastBtn" onclick="glManager.goToPage(glManager.totalPages)">
+                        <i class="fas fa-angle-double-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="gl-status-bar">
+                <span id="glStatusInfo">Ready</span>
+                <span id="glFilterInfo" class="gl-filter-info" style="display: none;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="gl-modal" id="glEntryModal">
+        <div class="gl-modal-content">
+            <div class="gl-modal-header">
+                <h3 class="gl-modal-title" id="glModalTitle">Add General Ledger Entry</h3>
+                <button class="gl-modal-close" onclick="glManager.closeModal()">×</button>
+            </div>
+            
+            <form id="glEntryForm">
+                <div class="gl-modal-body">
+                    <div class="gl-form-grid">
+                        <!-- Row 1 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Transaction Date *</label>
+                            <input type="date" id="glTransactionDate" class="gl-form-control" required>
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">JV Number *</label>
+                            <input type="text" id="glJvNumber" class="gl-form-control" maxlength="50" required>
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Year Period *</label>
+                            <input type="number" id="glYearPeriod" class="gl-form-control" min="2000" max="2099" required>
+                        </div>
+                        
+                        <!-- Row 2 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Batch Number</label>
+                            <input type="text" id="glBatchNumber" class="gl-form-control" maxlength="50">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Batch Sequence</label>
+                            <input type="number" id="glBatchSequence" class="gl-form-control" min="1">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Transaction Type</label>
+                            <input type="text" id="glTransactionType" class="gl-form-control" maxlength="50">
+                        </div>
+                        
+                        <!-- Row 3 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Type Sequence</label>
+                            <input type="number" id="glTypeSequence" class="gl-form-control" min="1">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Account Number *</label>
+                            <select id="glAccountNumber" class="gl-form-control" required onchange="glManager.updateAccountName()">
+                                <option value="">Select Account</option>
+                            </select>
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Account Name</label>
+                            <input type="text" id="glAccountName" class="gl-form-control" maxlength="500" readonly>
+                        </div>
+                        
+                        <!-- Row 4 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Auxiliary Account</label>
+                            <input type="text" id="glAuxiliaryAccount" class="gl-form-control" maxlength="100">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">CC2</label>
+                            <input type="text" id="glCc2" class="gl-form-control" maxlength="50">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Shipment</label>
+                            <input type="text" id="glShipment" class="gl-form-control" maxlength="50">
+                        </div>
+                        
+                        <!-- Row 5 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Document Reference</label>
+                            <input type="text" id="glDocRef" class="gl-form-control" maxlength="100">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Document Date</label>
+                            <input type="date" id="glDocDate" class="gl-form-control">
+                        </div>
+                        
+                        <!-- Row 6 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">M Classification</label>
+                            <input type="text" id="glMClassification" class="gl-form-control" maxlength="10">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Debit/Credit *</label>
+                            <select id="glDebitCredit" class="gl-form-control" required onchange="glManager.updateAmountStyles()">
+                                <option value="">Select</option>
+                                <option value="D">Debit</option>
+                                <option value="C">Credit</option>
+                            </select>
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Currency Code</label>
+                            <select id="glCurrencyCode" class="gl-form-control" onchange="glManager.calculateAmounts()">
+                                <option value="AED">AED</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="SAR">SAR</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Row 7 - Amounts -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Foreign Amount</label>
+                            <input type="number" id="glForeignAmount" class="gl-form-control gl-amount-input" step="0.01" min="0" oninput="glManager.calculateAmounts()">
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">AED Amount</label>
+                            <input type="number" id="glAedAmount" class="gl-form-control gl-amount-input" step="0.01" min="0" readonly>
+                        </div>
+                        
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">USD Amount</label>
+                            <input type="number" id="glUsdAmount" class="gl-form-control gl-amount-input" step="0.01" min="0" readonly>
+                        </div>
+                        
+                        <!-- Row 8 -->
+                        <div class="gl-form-group">
+                            <label class="gl-form-label">Created/Updated By</label>
+                            <input type="text" id="glCreatedBy" class="gl-form-control" maxlength="100">
+                        </div>
+                        
+                        <!-- Full Width Description -->
+                        <div class="gl-form-group gl-form-wide">
+                            <label class="gl-form-label">Description</label>
+                            <textarea id="glDescription" class="gl-form-control" rows="3" maxlength="1000" style="resize: vertical;"></textarea>
+                        </div>
+                        
+                        <!-- Checkboxes -->
+                        <div class="gl-form-group gl-form-wide">
+                            <div style="display: flex; gap: 24px;">
+                                <div class="gl-checkbox-group">
+                                    <input type="checkbox" id="glIsPending">
+                                    <label for="glIsPending">Mark as Pending</label>
+                                </div>
+                                <div class="gl-checkbox-group">
+                                    <input type="checkbox" id="glIsLocked">
+                                    <label for="glIsLocked">Lock Entry</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="gl-form-actions">
+                    <button type="button" class="gl-btn" onclick="glManager.closeModal()">Cancel</button>
+                    <button type="submit" class="gl-btn gl-btn-primary" id="glSaveBtn">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/gl.js"></script>
+    
+    <script>
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create global glManager instance
+            window.glManager = new GeneralLedgerManager();
+            
+            // Set up global functions for onclick handlers
+            window.glShowAddModal = () => window.glManager.showAddModal();
+            window.glEditEntry = (id) => window.glManager.editEntry(id);
+            window.glDeleteEntry = (id) => window.glManager.deleteEntry(id);
+            window.glCloseModal = () => window.glManager.closeModal();
+            window.glRefreshData = () => window.glManager.refreshData();
+            window.glExportData = () => window.glManager.exportToCSV();
+            window.glClearSearch = () => {
+                document.getElementById('glSearchInput').value = '';
+                window.glManager.handleSearch('');
+            };
+            window.glToggleFilters = () => window.glManager.toggleFilters();
+            window.glApplyFilters = () => window.glManager.applyFilters();
+            window.glClearFilters = () => window.glManager.clearFilters();
+            window.glSortTable = (column) => window.glManager.sortTable(column);
+            window.glGoToPage = (page) => window.glManager.goToPage(page);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modal
+            if (e.key === 'Escape') {
+                if (window.glManager) window.glManager.closeModal();
+            }
+            
+            // Ctrl+N for new entry
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                if (window.glManager) window.glManager.showAddModal();
+            }
+            
+            // Ctrl+F for search focus
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                const searchInput = document.getElementById('glSearchInput');
+                if (searchInput) searchInput.focus();
+            }
+            
+            // Ctrl+R for refresh
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                if (window.glManager) window.glManager.refreshData();
+            }
+            
+            // Ctrl+E for export
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                if (window.glManager) window.glManager.exportToCSV();
+            }
+        });
+    </script>
+</body>
+</html>
