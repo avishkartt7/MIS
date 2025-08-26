@@ -16,6 +16,7 @@
             background-color: #ffffff;
             color: #000000;
             font-size: 12px;
+            overflow: hidden;
         }
 
         /* Top Menu Bar */
@@ -29,6 +30,8 @@
             right: 0;
             z-index: 1000;
             height: 40px;
+            display: flex;
+            align-items: center;
         }
 
         .menu-items {
@@ -98,7 +101,6 @@
             margin-left: 200px;
             margin-top: 40px;
             height: calc(100vh - 40px);
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -112,6 +114,7 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            min-height: 48px;
         }
 
         .toolbar-left {
@@ -147,6 +150,7 @@
             cursor: pointer;
             font-size: 12px;
             transition: background 0.2s;
+            white-space: nowrap;
         }
 
         .btn:hover {
@@ -181,49 +185,88 @@
             background: white;
         }
 
-        /* Table Container */
+        /* Table Container - Excel-like scrolling */
         .table-container {
             flex: 1;
-            overflow: auto;
+            position: relative;
+            overflow: hidden;
             background: white;
             border: 1px solid #d4d4d4;
-            margin: 0;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            position: relative;
         }
 
         .excel-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 11px;
             background: white;
             table-layout: fixed;
         }
 
+        /* Fixed Header Styling */
+        .excel-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
         .excel-table th {
-            background: #f0f0f0;
+            background: linear-gradient(180deg, #fff2cc 0%, #ffe699 100%);
             border: 1px solid #d4d4d4;
+            border-right: 1px solid #bbb;
+            border-bottom: 2px solid #999;
             padding: 8px 6px;
             text-align: left;
             font-weight: 600;
             color: #333;
-            position: sticky;
-            top: 0;
-            z-index: 10;
             cursor: pointer;
             user-select: none;
-            height: 30px;
+            height: 32px;
             vertical-align: middle;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .excel-table th:hover {
-            background: #e5e5e5;
+            background: linear-gradient(180deg, #ffeb9c 0%, #ffd966 100%);
+        }
+
+        .excel-table th:active {
+            background: linear-gradient(180deg, #ffd966 0%, #ffcc02 100%);
+        }
+
+        /* Column Resize Handle */
+        .excel-table th::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            cursor: col-resize;
+            background: transparent;
+        }
+
+        .excel-table th::after:hover {
+            background: #0078d4;
         }
 
         .excel-table td {
             border: 1px solid #d4d4d4;
+            border-right: 1px solid #e1e1e1;
+            border-bottom: 1px solid #e1e1e1;
             padding: 6px;
             vertical-align: top;
             background: white;
-            height: 25px;
+            height: 26px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -242,20 +285,21 @@
         }
 
         /* Column widths */
-        .col-account-no { width: 80px; }
-        .col-name { width: 200px; }
-        .col-debit-code { width: 150px; }
-        .col-credit-code { width: 150px; }
-        .col-short-name { width: 120px; }
-        .col-created-by { width: 100px; }
-        .col-created-on { width: 90px; }
-        .col-updated-by { width: 100px; }
-        .col-updated-on { width: 90px; }
-        .col-actions { width: 80px; }
+        .col-account-no { width: 100px; min-width: 100px; }
+        .col-name { width: 250px; min-width: 200px; }
+        .col-debit-code { width: 150px; min-width: 120px; }
+        .col-credit-code { width: 150px; min-width: 120px; }
+        .col-short-name { width: 140px; min-width: 120px; }
+        .col-created-by { width: 100px; min-width: 80px; }
+        .col-created-on { width: 100px; min-width: 90px; }
+        .col-updated-by { width: 100px; min-width: 80px; }
+        .col-updated-on { width: 100px; min-width: 90px; }
+        .col-actions { width: 90px; min-width: 80px; }
 
         .account-number {
             font-family: 'Courier New', monospace;
             font-weight: 600;
+            color: #0066cc;
         }
 
         .empty-cell {
@@ -295,6 +339,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-height: 28px;
         }
 
         /* Modal */
@@ -311,15 +356,17 @@
 
         .modal-content {
             background: white;
-            margin: 10% auto;
+            margin: 5% auto;
             width: 500px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
-            background: #f0f0f0;
+            background: linear-gradient(180deg, #fff2cc 0%, #ffe699 100%);
             padding: 12px 16px;
             border-bottom: 1px solid #d4d4d4;
             display: flex;
@@ -338,6 +385,12 @@
             font-size: 16px;
             cursor: pointer;
             color: #666;
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: rgba(0,0,0,0.1);
         }
 
         .modal-body {
@@ -368,6 +421,11 @@
             border-color: #0078d4;
         }
 
+        .form-control[readonly] {
+            background-color: #f8f8f8;
+            color: #666;
+        }
+
         .modal-footer {
             padding: 12px 16px;
             border-top: 1px solid #d4d4d4;
@@ -381,24 +439,47 @@
 
         /* Loading */
         .loading {
-            text-align: center;
-            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             color: #666;
         }
 
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0078d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .error {
-            text-align: center;
-            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             color: #dc3545;
         }
 
         /* Hide sections */
         .section {
             display: none;
+            height: 100%;
         }
 
         .section.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Dashboard */
@@ -406,20 +487,22 @@
             padding: 20px;
             background: white;
             height: 100%;
+            overflow-y: auto;
         }
 
         .dashboard-cards {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .dashboard-card {
-            background: #f8f8f8;
+            background: linear-gradient(180deg, #fff2cc 0%, #ffe699 100%);
             border: 1px solid #d4d4d4;
             padding: 20px;
             border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .card-title {
@@ -429,15 +512,108 @@
         }
 
         .card-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
             color: #0078d4;
+            margin-bottom: 4px;
         }
 
         .card-description {
             font-size: 11px;
             color: #666;
-            margin-top: 4px;
+        }
+
+        /* Sort indicators */
+        .sort-asc::after {
+            content: ' ▲';
+            color: #0078d4;
+        }
+
+        .sort-desc::after {
+            content: ' ▼';
+            color: #0078d4;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .search-input {
+                width: 200px;
+            }
+            
+            .col-name { width: 200px; }
+            .col-debit-code { width: 130px; }
+            .col-credit-code { width: 130px; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .toolbar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .search-input {
+                width: 150px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .table-wrapper::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .table-wrapper::-webkit-scrollbar-corner {
+            background: #f1f1f1;
+        }
+
+        /* File upload styles */
+        .file-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0078d4;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #0078d4;
+            background: #f0f8ff;
+        }
+
+        .file-info {
+            background: #e8f5e8;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #28a745;
+            margin-top: 8px;
+            display: none;
         }
     </style>
 </head>
@@ -528,6 +704,7 @@
                     <select id="recordsPerPage" class="select-input">
                         <option value="50">50 rows</option>
                         <option value="100">100 rows</option>
+                        <option value="200">200 rows</option>
                         <option value="all">All rows</option>
                     </select>
                     <button class="btn" onclick="refreshData()">Refresh</button>
@@ -540,6 +717,7 @@
             <!-- Table Container -->
             <div class="table-container">
                 <div id="loading" class="loading" style="display: none;">
+                    <div class="loading-spinner"></div>
                     <div>Loading data...</div>
                 </div>
                 
@@ -548,30 +726,32 @@
                     <button class="btn" onclick="loadAccounts()">Retry</button>
                 </div>
 
-                <table class="excel-table" id="accountsTable">
-                    <thead>
-                        <tr>
-                            <th class="col-account-no" onclick="sortTable('pts_account_no')">Account No</th>
-                            <th class="col-name" onclick="sortTable('name')">Name</th>
-                            <th class="col-debit-code" onclick="sortTable('acc_type_code_debit')">Acc Type Code Debit</th>
-                            <th class="col-credit-code" onclick="sortTable('acc_type_code_credit')">Acc Type Code Credit</th>
-                            <th class="col-short-name" onclick="sortTable('short_name')">Short Name</th>
-                            <th class="col-created-by" onclick="sortTable('created_by')">Created By</th>
-                            <th class="col-created-on" onclick="sortTable('created_on')">Created On</th>
-                            <th class="col-updated-by" onclick="sortTable('updated_by')">Updated By</th>
-                            <th class="col-updated-on" onclick="sortTable('updated_on')">Updated On</th>
-                            <th class="col-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="accountsTableBody">
-                        <!-- Data will be loaded here -->
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table class="excel-table" id="accountsTable">
+                        <thead>
+                            <tr>
+                                <th class="col-account-no" onclick="sortTable('pts_account_no')" title="Click to sort">Account No</th>
+                                <th class="col-name" onclick="sortTable('name')" title="Click to sort">Name</th>
+                                <th class="col-debit-code" onclick="sortTable('acc_type_code_debit')" title="Click to sort">Acc Type Code Debit</th>
+                                <th class="col-credit-code" onclick="sortTable('acc_type_code_credit')" title="Click to sort">Acc Type Code Credit</th>
+                                <th class="col-short-name" onclick="sortTable('short_name')" title="Click to sort">Short Name</th>
+                                <th class="col-created-by" onclick="sortTable('created_by')" title="Click to sort">Created By</th>
+                                <th class="col-created-on" onclick="sortTable('created_on')" title="Click to sort">Created On</th>
+                                <th class="col-updated-by" onclick="sortTable('updated_by')" title="Click to sort">Updated By</th>
+                                <th class="col-updated-on" onclick="sortTable('updated_on')" title="Click to sort">Updated On</th>
+                                <th class="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Status Bar -->
             <div class="status-bar">
-                <span id="recordsInfo">Showing 0 records</span>
+                <span id="recordsInfo">Ready</span>
                 <span id="filterInfo" style="display: none;"></span>
             </div>
         </div>
@@ -588,27 +768,27 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label">Account No *</label>
-                        <input type="text" id="ptsAccountNo" class="form-control" required>
+                        <input type="text" id="ptsAccountNo" class="form-control" required maxlength="20">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Name *</label>
-                        <input type="text" id="accountName" class="form-control" required>
+                        <input type="text" id="accountName" class="form-control" required maxlength="500">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Short Name</label>
-                        <input type="text" id="shortName" class="form-control">
+                        <input type="text" id="shortName" class="form-control" maxlength="150">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Acc Type Code Debit</label>
-                        <input type="text" id="debitCode" class="form-control">
+                        <input type="text" id="debitCode" class="form-control" maxlength="50">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Acc Type Code Credit</label>
-                        <input type="text" id="creditCode" class="form-control">
+                        <input type="text" id="creditCode" class="form-control" maxlength="50">
                     </div>
                 </div>
                 
@@ -630,16 +810,28 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Select File (Excel or CSV)</label>
-                    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" class="form-control">
+                    <div class="file-upload-area" onclick="document.getElementById('importFile').click()">
+                        <div>Click here to select file or drag and drop</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            Supported: .xlsx, .xls, .csv (Max 10MB)
+                        </div>
+                    </div>
+                    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <div id="fileInfo" class="file-info">
+                        <span id="fileName"></span>
+                        <button type="button" onclick="clearFileSelection()" style="background: none; border: none; color: #dc3545; cursor: pointer;">Remove</button>
+                    </div>
                 </div>
+                
                 <div style="margin-top: 12px; font-size: 11px; color: #666; line-height: 1.4;">
-                    <strong>Supported formats:</strong> Excel (.xlsx, .xls) and CSV (.csv)<br>
-                    <strong>Required columns:</strong> Account No, Name, Acc Type Code Debit, Acc Type Code Credit, Short Name, Created By, Updated By<br>
-                    <strong>Note:</strong> First row should contain headers
+                    <strong>Required columns:</strong> Account No, Name<br>
+                    <strong>Optional columns:</strong> Acc Type Code Debit, Acc Type Code Credit, Short Name<br>
+                    <strong>Note:</strong> First row should contain headers. Existing accounts will be updated.
                 </div>
+                
                 <div id="filePreview" style="display: none; margin-top: 12px; padding: 10px; background: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
                     <div style="font-weight: 600; margin-bottom: 8px;">File Preview:</div>
-                    <div id="previewContent" style="font-size: 11px; font-family: monospace;"></div>
+                    <div id="previewContent" style="font-size: 11px; font-family: monospace; max-height: 150px; overflow-y: auto;"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -663,6 +855,7 @@
             showSection('dashboard');
             loadDashboardStats();
             bindEvents();
+            setupDragDrop();
         });
 
         // Bind events
@@ -687,43 +880,6 @@
             // File input for import
             document.getElementById('importFile').addEventListener('change', handleFileSelect);
 
-            // Sidebar navigation
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    // Extract section name from onclick attribute
-                    const onclick = this.getAttribute('onclick');
-                    if (onclick) {
-                        const match = onclick.match(/showSection\('(\w+)'\)/);
-                        if (match) {
-                            const sectionName = match[1];
-                            // Update active state for sidebar
-                            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                            this.classList.add('active');
-                            showSectionInternal(sectionName);
-                        }
-                    }
-                });
-            });
-
-            // Menu bar navigation
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const onclick = this.getAttribute('onclick');
-                    if (onclick) {
-                        const match = onclick.match(/showSection\('(\w+)'\)/);
-                        if (match) {
-                            const sectionName = match[1];
-                            // Update active state for menu
-                            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-                            this.classList.add('active');
-                            showSectionInternal(sectionName);
-                        }
-                    }
-                });
-            });
-
             // Close modal when clicking outside
             window.addEventListener('click', function(e) {
                 if (e.target.classList.contains('modal')) {
@@ -738,48 +894,73 @@
                     closeModal();
                     closeImportModal();
                 }
+                if (e.ctrlKey && e.key === 'f') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    addNewAccount();
+                }
             });
         }
 
-        // Internal function to handle section switching
-        function showSectionInternal(sectionName) {
+        // Setup drag and drop
+        function setupDragDrop() {
+            const uploadArea = document.querySelector('.file-upload-area');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    document.getElementById('importFile').files = files;
+                    handleFileSelect({ target: { files: files } });
+                }
+            });
+        }
+
+        // Show/hide sections
+        function showSection(sectionName) {
             // Hide all sections
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
 
-            // Show selected section
-            if (sectionName === 'dashboard') {
-                document.getElementById('dashboard-section').classList.add('active');
-                loadDashboardStats();
-            } else if (sectionName === 'accounts') {
-                document.getElementById('accounts-section').classList.add('active');
-                loadAccounts();
-            }
-        }
-
-        // Show/hide sections - Updated to handle calls without event
-        function showSection(sectionName) {
-            // Update sidebar active states
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.classList.remove('active');
-                const onclick = link.getAttribute('onclick');
-                if (onclick && onclick.includes(`'${sectionName}'`)) {
-                    link.classList.add('active');
-                }
-            });
-
             // Update menu active states
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
-                const onclick = item.getAttribute('onclick');
-                if (onclick && onclick.includes(`'${sectionName}'`)) {
-                    item.classList.add('active');
-                }
             });
 
-            // Call internal function to switch sections
-            showSectionInternal(sectionName);
+            // Update sidebar active states
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show selected section
+            if (sectionName === 'dashboard') {
+                document.getElementById('dashboard-section').classList.add('active');
+                document.querySelector('.menu-item[onclick*="dashboard"]').classList.add('active');
+                document.querySelector('.sidebar-link[onclick*="dashboard"]').classList.add('active');
+                loadDashboardStats();
+            } else if (sectionName === 'accounts') {
+                document.getElementById('accounts-section').classList.add('active');
+                document.querySelector('.menu-item[onclick*="accounts"]').classList.add('active');
+                document.querySelector('.sidebar-link[onclick*="accounts"]').classList.add('active');
+                loadAccounts();
+            }
         }
 
         // Load dashboard statistics
@@ -789,12 +970,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    document.getElementById('totalAccounts').textContent = result.data.totalAccounts;
-                    document.getElementById('completeAccounts').textContent = result.data.namedAccounts;
-                    document.getElementById('recentUpdates').textContent = result.data.recentAccounts;
+                    document.getElementById('totalAccounts').textContent = result.data.totalAccounts.toLocaleString();
+                    document.getElementById('completeAccounts').textContent = result.data.namedAccounts.toLocaleString();
+                    document.getElementById('recentUpdates').textContent = result.data.recentAccounts.toLocaleString();
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                document.getElementById('totalAccounts').textContent = 'Error';
+                document.getElementById('completeAccounts').textContent = 'Error';
+                document.getElementById('recentUpdates').textContent = 'Error';
             }
         }
 
@@ -852,12 +1036,21 @@
 
         // Sort table
         function sortTable(column) {
+            // Remove existing sort classes
+            document.querySelectorAll('.excel-table th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
             if (currentSort.column === column) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSort.column = column;
                 currentSort.direction = 'asc';
             }
+
+            // Add sort class to current column
+            const currentTh = document.querySelector(`th[onclick*="${column}"]`);
+            currentTh.classList.add(`sort-${currentSort.direction}`);
 
             filteredAccounts.sort((a, b) => {
                 let aVal = a[column] || '';
@@ -866,6 +1059,9 @@
                 if (column === 'pts_account_no') {
                     aVal = parseInt(aVal) || 0;
                     bVal = parseInt(bVal) || 0;
+                } else if (column === 'created_on' || column === 'updated_on') {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
                 } else {
                     aVal = aVal.toString().toLowerCase();
                     bVal = bVal.toString().toLowerCase();
@@ -894,7 +1090,7 @@
             if (displayAccounts.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 20px; color: #666;">
+                        <td colspan="10" style="text-align: center; padding: 40px; color: #666;">
                             No accounts found
                         </td>
                     </tr>
@@ -905,18 +1101,18 @@
 
             tbody.innerHTML = displayAccounts.map(account => `
                 <tr>
-                    <td class="account-number">${account.pts_account_no}</td>
-                    <td title="${account.name || ''}">${account.name || '<span class="empty-cell">-</span>'}</td>
-                    <td title="${account.acc_type_code_debit || ''}">${account.acc_type_code_debit || '<span class="empty-cell">-</span>'}</td>
-                    <td title="${account.acc_type_code_credit || ''}">${account.acc_type_code_credit || '<span class="empty-cell">-</span>'}</td>
-                    <td title="${account.short_name || ''}">${account.short_name || '<span class="empty-cell">-</span>'}</td>
-                    <td>${account.created_by || '-'}</td>
-                    <td>${formatDate(account.created_on)}</td>
-                    <td>${account.updated_by || '-'}</td>
-                    <td>${formatDate(account.updated_on)}</td>
+                    <td class="account-number" title="${account.pts_account_no}">${account.pts_account_no}</td>
+                    <td title="${account.name || 'Not set'}">${account.name || '<span class="empty-cell">Not set</span>'}</td>
+                    <td title="${account.acc_type_code_debit || 'Not set'}">${account.acc_type_code_debit || '<span class="empty-cell">Not set</span>'}</td>
+                    <td title="${account.acc_type_code_credit || 'Not set'}">${account.acc_type_code_credit || '<span class="empty-cell">Not set</span>'}</td>
+                    <td title="${account.short_name || 'Not set'}">${account.short_name || '<span class="empty-cell">Not set</span>'}</td>
+                    <td title="${account.created_by || 'N/A'}">${account.created_by || 'N/A'}</td>
+                    <td title="${formatDateLong(account.created_on)}">${formatDate(account.created_on)}</td>
+                    <td title="${account.updated_by || 'N/A'}">${account.updated_by || 'N/A'}</td>
+                    <td title="${formatDateLong(account.updated_on)}">${formatDate(account.updated_on)}</td>
                     <td>
-                        <button class="btn-edit" onclick="editAccount('${account.pts_account_no}')">Edit</button>
-                        <button class="btn-delete" onclick="deleteAccount('${account.pts_account_no}')">Del</button>
+                        <button class="btn-edit" onclick="editAccount('${account.pts_account_no}')" title="Edit Account">Edit</button>
+                        <button class="btn-delete" onclick="deleteAccount('${account.pts_account_no}')" title="Delete Account">Del</button>
                     </td>
                 </tr>
             `).join('');
@@ -931,16 +1127,16 @@
             const filtered = filteredAccounts.length;
             
             if (filtered === total) {
-                info.textContent = `Showing ${filtered} records`;
+                info.textContent = `Showing ${filtered.toLocaleString()} records`;
             } else {
-                info.textContent = `Showing ${filtered} of ${total} records`;
+                info.textContent = `Showing ${filtered.toLocaleString()} of ${total.toLocaleString()} records`;
             }
         }
 
         // Show filter info
         function showFilterInfo(searchTerm) {
             const filterInfo = document.getElementById('filterInfo');
-            filterInfo.textContent = `Filtered by: "${searchTerm}"`;
+            filterInfo.textContent = `Filtered: "${searchTerm}"`;
             filterInfo.style.display = 'inline';
         }
 
@@ -951,14 +1147,14 @@
 
         // Show/hide loading
         function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('accountsTable').style.display = show ? 'none' : 'table';
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+            document.querySelector('.table-wrapper').style.display = show ? 'none' : 'block';
         }
 
         // Show/hide error
         function showError(show) {
-            document.getElementById('error').style.display = show ? 'block' : 'none';
-            document.getElementById('accountsTable').style.display = show ? 'none' : 'table';
+            document.getElementById('error').style.display = show ? 'flex' : 'none';
+            document.querySelector('.table-wrapper').style.display = show ? 'none' : 'block';
         }
 
         // Modal functions
@@ -986,13 +1182,34 @@
                 document.getElementById('creditCode').value = account.acc_type_code_credit || '';
                 document.getElementById('saveBtn').textContent = 'Update';
                 document.getElementById('accountModal').style.display = 'block';
+                document.getElementById('accountName').focus();
             }
         }
 
         function deleteAccount(ptsAccountNo) {
-            if (confirm(`Are you sure you want to delete account ${ptsAccountNo}?`)) {
-                // Implement delete functionality
-                alert('Delete functionality will be implemented');
+            if (confirm(`Are you sure you want to delete account ${ptsAccountNo}?\n\nThis action cannot be undone.`)) {
+                deleteAccountAPI(ptsAccountNo);
+            }
+        }
+
+        async function deleteAccountAPI(ptsAccountNo) {
+            try {
+                const response = await fetch(`/api/accounts/${ptsAccountNo}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Account deleted successfully!');
+                    loadAccounts();
+                    loadDashboardStats();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Error deleting account. Please try again.');
             }
         }
 
@@ -1025,6 +1242,7 @@
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        pts_account_no: formData.pts_account_no,
                         name: formData.name,
                         short_name: formData.short_name,
                         acc_type_code_debit: formData.acc_type_code_debit,
@@ -1045,7 +1263,7 @@
                 }
             } catch (error) {
                 console.error('Error saving account:', error);
-                alert('Error saving account. Please try again.');
+                alert('Error saving account: ' + error.message);
             }
         }
 
@@ -1053,10 +1271,20 @@
         function importData() {
             document.getElementById('importModal').style.display = 'block';
         }
+        
 
         function closeImportModal() {
             document.getElementById('importModal').style.display = 'none';
             document.getElementById('importFile').value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('importBtn').disabled = true;
+            importedData = null;
+        }
+
+        function clearFileSelection() {
+            document.getElementById('importFile').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
             document.getElementById('filePreview').style.display = 'none';
             document.getElementById('importBtn').disabled = true;
             importedData = null;
@@ -1065,11 +1293,16 @@
         function handleFileSelect(event) {
             const file = event.target.files[0];
             const importBtn = document.getElementById('importBtn');
-            const filePreview = document.getElementById('filePreview');
             
             if (!file) {
-                importBtn.disabled = true;
-                filePreview.style.display = 'none';
+                clearFileSelection();
+                return;
+            }
+
+            // Check file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                clearFileSelection();
                 return;
             }
 
@@ -1079,14 +1312,16 @@
 
             if (!isExcel && !isCSV) {
                 alert('Please select an Excel (.xlsx, .xls) or CSV (.csv) file');
-                event.target.value = '';
-                importBtn.disabled = true;
-                filePreview.style.display = 'none';
+                clearFileSelection();
                 return;
             }
 
+            // Show file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').style.display = 'flex';
+
             // Show loading in preview
-            filePreview.style.display = 'block';
+            document.getElementById('filePreview').style.display = 'block';
             document.getElementById('previewContent').innerHTML = 'Loading file preview...';
             
             // Process file based on type
@@ -1109,14 +1344,12 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Convert to JSON with proper options
+                    // Convert to JSON
                     const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
                         header: 1,
                         defval: '',
-                        raw: false  // This ensures text values are preserved
+                        raw: false
                     });
-                    
-                    console.log('Raw Excel data:', jsonData);
                     
                     if (jsonData.length < 2) {
                         throw new Error('File must contain at least a header row and one data row');
@@ -1128,28 +1361,21 @@
                         row.map(cell => String(cell || '').trim())
                     );
                     
-                    console.log('Processed headers:', headers);
-                    console.log('First few rows:', rows.slice(0, 3));
-                    
                     importedData = parseImportData(headers, rows);
-                    console.log('Parsed import data:', importedData);
-                    
-                    showFilePreview(headers, rows.slice(0, 5)); // Show first 5 rows
+                    showFilePreview(headers, rows.slice(0, 5), importedData.length);
                     
                     document.getElementById('importBtn').disabled = false;
                     
                 } catch (error) {
                     console.error('Excel processing error:', error);
                     alert('Error reading Excel file: ' + error.message);
-                    document.getElementById('filePreview').style.display = 'none';
-                    document.getElementById('importBtn').disabled = true;
+                    clearFileSelection();
                 }
             };
             
             reader.onerror = function() {
                 alert('Error reading file');
-                document.getElementById('filePreview').style.display = 'none';
-                document.getElementById('importBtn').disabled = true;
+                clearFileSelection();
             };
             
             reader.readAsArrayBuffer(file);
@@ -1171,22 +1397,20 @@
                     const rows = lines.slice(1).map(line => parseCSVLine(line));
                     
                     importedData = parseImportData(headers, rows);
-                    showFilePreview(headers, rows.slice(0, 5)); // Show first 5 rows
+                    showFilePreview(headers, rows.slice(0, 5), importedData.length);
                     
                     document.getElementById('importBtn').disabled = false;
                     
                 } catch (error) {
                     console.error('CSV processing error:', error);
                     alert('Error reading CSV file: ' + error.message);
-                    document.getElementById('filePreview').style.display = 'none';
-                    document.getElementById('importBtn').disabled = true;
+                    clearFileSelection();
                 }
             };
             
             reader.onerror = function() {
                 alert('Error reading file');
-                document.getElementById('filePreview').style.display = 'none';
-                document.getElementById('importBtn').disabled = true;
+                clearFileSelection();
             };
             
             reader.readAsText(file);
@@ -1195,58 +1419,30 @@
         function parseImportData(headers, rows) {
             const data = [];
             
-            console.log('Parsing data with headers:', headers);
-            
-            // Find column indices by exact header names from the preview
+            // Find column indices
             const findColumnIndex = (searchTerms) => {
                 for (let i = 0; i < headers.length; i++) {
-                    const headerStr = String(headers[i]).trim();
-                    console.log(`Checking header ${i}: "${headerStr}"`);
-                    
+                    const headerStr = String(headers[i]).trim().toLowerCase();
                     for (const term of searchTerms) {
-                        if (headerStr.toLowerCase() === term.toLowerCase()) {
-                            console.log(`✅ Found exact match: "${headerStr}" at index ${i}`);
+                        if (headerStr === term.toLowerCase() || 
+                            headerStr.includes(term.toLowerCase()) ||
+                            headerStr.replace(/[^a-z0-9]/g, '').includes(term.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
                             return i;
                         }
                     }
                 }
-                
-                // If no exact match, try partial match
-                for (let i = 0; i < headers.length; i++) {
-                    const headerStr = String(headers[i]).toLowerCase().trim();
-                    for (const term of searchTerms) {
-                        if (headerStr.includes(term.toLowerCase())) {
-                            console.log(`⚠️ Found partial match: "${headers[i]}" at index ${i} for "${term}"`);
-                            return i;
-                        }
-                    }
-                }
-                
-                console.log(`❌ No match found for terms:`, searchTerms);
                 return -1;
             };
             
-            // Updated search terms based on your exact headers
             const columnIndices = {
-                account_no: findColumnIndex(['Account_No', 'Account No']),
-                name: findColumnIndex(['Name']),
-                debit_code: findColumnIndex(['Acc_Type_Code_Debit', 'Acc Type Code Debit']),
-                credit_code: findColumnIndex(['Acc_Type_Code_Credit', 'Acc Type Code Credit']),
-                short_name: findColumnIndex(['Short_Name', 'Short Name']),
-                created_by: findColumnIndex(['Created_By', 'Created By']),
-                updated_by: findColumnIndex(['Updated_By', 'Updated By'])
+                account_no: findColumnIndex(['account no', 'account_no', 'pts_account_no', 'accountno']),
+                name: findColumnIndex(['name', 'account name', 'accountname']),
+                debit_code: findColumnIndex(['debit', 'acc_type_code_debit', 'debitcode', 'acc type code debit']),
+                credit_code: findColumnIndex(['credit', 'acc_type_code_credit', 'creditcode', 'acc type code credit']),
+                short_name: findColumnIndex(['short name', 'short_name', 'shortname']),
+                created_by: findColumnIndex(['created by', 'created_by', 'createdby']),
+                updated_by: findColumnIndex(['updated by', 'updated_by', 'updatedby'])
             };
-            
-            console.log('Final column mapping:', columnIndices);
-            
-            // Verify the mapping is correct by checking first row
-            if (rows.length > 0) {
-                const firstRow = rows[0];
-                console.log('First row verification:');
-                console.log(`Account No (index ${columnIndices.account_no}):`, firstRow[columnIndices.account_no]);
-                console.log(`Name (index ${columnIndices.name}):`, firstRow[columnIndices.name]);
-                console.log(`Debit Code (index ${columnIndices.debit_code}):`, firstRow[columnIndices.debit_code]);
-            }
             
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
@@ -1257,17 +1453,8 @@
                 const name = columnIndices.name >= 0 ? 
                     String(row[columnIndices.name] || '').trim() : '';
                 
-                console.log(`Processing row ${i + 1}:`);
-                console.log(`- Raw account no: "${row[columnIndices.account_no]}"`);
-                console.log(`- Raw name: "${row[columnIndices.name]}"`);
-                console.log(`- Processed account no: "${accountNo}"`);
-                console.log(`- Processed name: "${name}"`);
-                
                 // Skip if no account number or name
-                if (!accountNo || !name || name === accountNo) {
-                    console.log(`❌ Skipping row ${i + 1}: invalid data`);
-                    continue;
-                }
+                if (!accountNo || !name) continue;
                 
                 const account = {
                     pts_account_no: accountNo,
@@ -1284,38 +1471,25 @@
                         String(row[columnIndices.updated_by] || '').trim() : 'IMPORT'
                 };
                 
-                console.log(`✅ Adding account:`, account);
                 data.push(account);
             }
             
-            console.log('Final parsed data count:', data.length);
             return data;
         }
 
-        function showFilePreview(headers, rows) {
+        function showFilePreview(headers, rows, validCount) {
             const previewContent = document.getElementById('previewContent');
             
-            let preview = `<strong>Headers found:</strong> ${headers.join(', ')}<br><br>`;
-            preview += `<strong>Sample data (first ${rows.length} rows):</strong><br>`;
+            let preview = `<strong>Headers:</strong> ${headers.join(', ')}<br><br>`;
+            preview += `<strong>Sample data:</strong><br>`;
             
             rows.forEach((row, index) => {
-                preview += `Row ${index + 1}: ${row.join(' | ')}<br>`;
+                if (row.some(cell => cell)) { // Only show rows with data
+                    preview += `Row ${index + 1}: ${row.join(' | ')}<br>`;
+                }
             });
             
-            preview += `<br><strong>Total valid records to import:</strong> ${importedData ? importedData.length : 0}<br><br>`;
-            
-            // Show what will actually be imported
-            if (importedData && importedData.length > 0) {
-                preview += `<strong>Parsed data preview:</strong><br>`;
-                importedData.slice(0, 3).forEach((account, index) => {
-                    preview += `Record ${index + 1}:<br>`;
-                    preview += `- Account No: "${account.pts_account_no}"<br>`;
-                    preview += `- Name: "${account.name}"<br>`;
-                    preview += `- Debit Code: "${account.acc_type_code_debit}"<br>`;
-                    preview += `- Credit Code: "${account.acc_type_code_credit}"<br>`;
-                    preview += `- Short Name: "${account.short_name}"<br><br>`;
-                });
-            }
+            preview += `<br><strong>Valid records found: ${validCount}</strong>`;
             
             previewContent.innerHTML = preview;
         }
@@ -1326,7 +1500,7 @@
                 return;
             }
 
-            const confirmMessage = `Import ${importedData.length} accounts?\n\nThis will:\n- Add new accounts\n- Update existing accounts with same Account No\n- Skip invalid records`;
+            const confirmMessage = `Import ${importedData.length} accounts?\n\nThis will:\n- Add new accounts\n- Update existing accounts\n- Skip invalid records`;
             
             if (!confirm(confirmMessage)) {
                 return;
@@ -1338,49 +1512,29 @@
                 importBtn.textContent = 'Importing...';
                 importBtn.disabled = true;
                 
-                console.log('Sending import data:', importedData);
-                
                 const response = await fetch('/api/accounts/bulk-import', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ accounts: importedData })
                 });
 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Import endpoint not found. Please check if the backend server is running the latest version.');
-                    }
-                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
-                const responseText = await response.text();
-                console.log('Raw response:', responseText);
-
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    throw new Error('Invalid response from server. Check server logs for details.');
-                }
+                const result = await response.json();
 
                 if (result.success) {
-                    let message = `Import completed successfully!\n\n`;
-                    message += `✓ ${result.data.successCount} accounts imported/updated\n`;
+                    let message = `Import completed!\n\n`;
+                    message += `✓ ${result.data.successCount} accounts processed\n`;
                     message += `📊 Total processed: ${result.data.totalProcessed}\n`;
                     
                     if (result.data.errorCount > 0) {
-                        message += `⚠ ${result.data.errorCount} errors occurred\n\n`;
+                        message += `⚠ ${result.data.errorCount} errors occurred\n`;
                         if (result.data.errors && result.data.errors.length > 0) {
-                            message += `Sample errors:\n${result.data.errors.slice(0, 3).join('\n')}`;
-                            if (result.data.errors.length > 3) {
-                                message += `\n... and ${result.data.errors.length - 3} more errors`;
-                            }
+                            message += `\nFirst few errors:\n${result.data.errors.slice(0, 3).join('\n')}`;
                         }
                     }
                     
@@ -1393,37 +1547,12 @@
                 }
             } catch (error) {
                 console.error('Import error:', error);
-                let errorMessage = 'Error during import:\n\n';
-                
-                if (error.message.includes('404')) {
-                    errorMessage += 'The import functionality is not available. Please:\n';
-                    errorMessage += '1. Make sure your backend server is running\n';
-                    errorMessage += '2. Update your backend with the latest code\n';
-                    errorMessage += '3. Restart the server';
-                } else if (error.message.includes('JSON')) {
-                    errorMessage += 'Server returned invalid response. Check:\n';
-                    errorMessage += '1. Server console for error logs\n';
-                    errorMessage += '2. Database connection\n';
-                    errorMessage += '3. File format is correct';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                alert(errorMessage);
+                alert('Import failed: ' + error.message);
             } finally {
                 const importBtn = document.getElementById('importBtn');
                 importBtn.textContent = 'Import Data';
                 importBtn.disabled = false;
             }
-        }
-
-        function readFileAsText(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result);
-                reader.onerror = e => reject(e);
-                reader.readAsText(file);
-            });
         }
 
         function parseCSVLine(line) {
@@ -1462,10 +1591,10 @@
                 headers.join(','),
                 ...filteredAccounts.map(account => [
                     account.pts_account_no,
-                    `"${account.name || ''}"`,
-                    `"${account.acc_type_code_debit || ''}"`,
-                    `"${account.acc_type_code_credit || ''}"`,
-                    `"${account.short_name || ''}"`,
+                    `"${(account.name || '').replace(/"/g, '""')}"`,
+                    `"${(account.acc_type_code_debit || '').replace(/"/g, '""')}"`,
+                    `"${(account.acc_type_code_credit || '').replace(/"/g, '""')}"`,
+                    `"${(account.short_name || '').replace(/"/g, '""')}"`,
                     account.created_by || '',
                     formatDateForExport(account.created_on),
                     account.updated_by || '',
@@ -1501,17 +1630,29 @@
             return date.toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: '2-digit',
-                year: 'numeric'
+                year: '2-digit'
+            });
+        }
+
+        function formatDateLong(dateString) {
+            if (!dateString) return 'Not set';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
 
         function formatDateForExport(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-GB');
+            return date.toISOString().split('T')[0];
         }
 
-        // Global functions for onclick events
+        // Make functions globally available
         window.showSection = showSection;
         window.addNewAccount = addNewAccount;
         window.editAccount = editAccount;
@@ -1519,11 +1660,13 @@
         window.closeModal = closeModal;
         window.importData = importData;
         window.closeImportModal = closeImportModal;
+        window.clearFileSelection = clearFileSelection;
         window.processImport = processImport;
         window.exportData = exportData;
         window.refreshData = refreshData;
         window.clearSearch = clearSearch;
         window.sortTable = sortTable;
+        window.loadAccounts = loadAccounts;
     </script>
 </body>
 </html>
