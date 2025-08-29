@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS System - Profit & Loss Report</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* P&L Report Specific Styles */
+        .pl-container {
+            background: white;
+            height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pl-header {
+            background: #f8f9fa;
+            border-bottom: 2px solid #0038A8;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .pl-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0038A8;
+            margin-bottom: 8px;
+        }
+
+        .pl-subtitle {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 16px;
+        }
+
+        .pl-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .pl-control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pl-control-group label {
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .pl-select, .pl-input {
+            padding: 8px 12px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pl-select:focus, .pl-input:focus {
+            outline: none;
+            border-color: #0038A8;
+            box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
+        }
+
+        .pl-btn {
+            padding: 10px 20px;
+            background: #0038A8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pl-btn:hover {
+            background: #002F88;
+            transform: translateY(-2px);
+        }
+
+        .pl-btn-export {
+            background: #28a745;
+        }
+
+        .pl-btn-export:hover {
+            background: #1e7e34;
+        }
+
+        .pl-content {
+            flex: 1;
+            overflow: auto;
+            padding: 0;
+        }
+
+        .pl-table-wrapper {
+            width: 100%;
+            overflow: auto;
+        }
+
+        .pl-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 13px;
+            min-width: 1000px;
+        }
+
+        .pl-table th {
+            background: linear-gradient(135deg, #0038A8, #002F88);
+            color: white;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #002F88;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .pl-table th.amount-header {
+            text-align: right;
+            width: 120px;
+        }
+
+        .pl-table td {
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .pl-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Category Headers */
+        .pl-category-header {
+            background: #f1f3f5 !important;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0038A8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pl-category-header td {
+            padding: 16px 12px;
+            border-top: 2px solid #0038A8;
+            border-bottom: 2px solid #0038A8;
+        }
+
+        /* Subcategory Headers */
+        .pl-subcategory-header {
+            background: #f8f9fa !important;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .pl-subcategory-header td {
+            padding: 14px 12px;
+            font-size: 13px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Account Rows */
+        .pl-account-row td {
+            padding: 8px 12px;
+        }
+
+        .account-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #0066cc;
+            font-size: 12px;
+        }
+
+        .account-name {
+            color: #495057;
+            font-size: 12px;
+        }
+
+        .amount-cell {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .amount-positive {
+            color: #28a745;
+        }
+
+        .amount-negative {
+            color: #dc3545;
+        }
+
+        .amount-zero {
+            color: #6c757d;
+        }
+
+        /* Total Rows */
+        .pl-total-row {
+            background: #fff3cd !important;
+            font-weight: 700;
+        }
+
+        .pl-total-row td {
+            padding: 14px 12px;
+            border-top: 2px solid #ffc107;
+            border-bottom: 2px solid #ffc107;
+            font-size: 14px;
+        }
+
+        .pl-grand-total-row {
+            background: #d4edda !important;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .pl-grand-total-row td {
+            padding: 16px 12px;
+            border-top: 3px solid #28a745;
+            border-bottom: 3px solid #28a745;
+        }
+
+        /* Loading and Error States */
+        .pl-loading, .pl-error {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: #6c757d;
+        }
+
+        .pl-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0038A8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pl-error-icon {
+            font-size: 48px;
+            color: #dc3545;
+            margin-bottom: 16px;
+        }
+
+        /* Status Bar */
+        .pl-status-bar {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pl-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pl-control-group {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .pl-table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>MIS System - Profit & Loss Report</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="index.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <button class="btn btn-success" onclick="exportPLReport()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" style="max-width: 100%; padding: 0;">
+        <div class="pl-container">
+            
+            <!-- Header Section -->
+            <div class="pl-header">
+                <div class="pl-title">PROFIT & LOSS STATEMENT</div>
+                <div class="pl-subtitle" id="plReportPeriod">For the Month Ended June 2025</div>
+                
+                <!-- Controls -->
+                <div class="pl-controls">
+                    <div class="pl-control-group">
+                        <label for="plYear">Year:</label>
+                        <select id="plYear" class="pl-select">
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                        </select>
+                    </div>
+                    
+                    <div class="pl-control-group">
+                        <label for="plMonth">Month:</label>
+                        <select id="plMonth" class="pl-select">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6" selected>June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    
+                    <div class="pl-control-group">
+                        <button class="pl-btn" onclick="loadPLReport()">
+                            <i class="fas fa-sync-alt"></i> Generate Report
+                        </button>
+                    </div>
+                    
+                    <div class="pl-control-group">
+                        <button class="pl-btn pl-btn-export" onclick="exportPLReport()">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="pl-loading" id="plLoading">
+                <div class="pl-loading-spinner"></div>
+                <div>Generating Profit & Loss Report...</div>
+            </div>
+
+            <!-- Error State -->
+            <div class="pl-error" id="plError">
+                <i class="fas fa-exclamation-triangle pl-error-icon"></i>
+                <div>Error generating report</div>
+                <button class="pl-btn" onclick="loadPLReport()" style="margin-top: 16px;">
+                    Try Again
+                </button>
+            </div>
+
+            <!-- Report Content -->
+            <div class="pl-content" id="plContent">
+                <div class="pl-table-wrapper">
+                    <table class="pl-table" id="plTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Account</th>
+                                <th style="width: 250px;">Particulars</th>
+                                <th class="amount-header">Actual</th>
+                                <th class="amount-header">Accum System<br><span id="plAccumHeader">Jun 2025</span></th>
+                                <th class="amount-header">Last Report<br>MIS</th>
+                                <th class="amount-header">Budget</th>
+                                <th class="amount-header">Variance</th>
+                                <th class="amount-header">Last Year</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="pl-status-bar">
+                <span id="plStatusInfo">Ready to generate report</span>
+                <span id="plTimestamp"></span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/pl-report.js"></script>
+    
+    <script>
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current month and year
+            const now = new Date();
+            document.getElementById('plYear').value = now.getFullYear();
+            document.getElementById('plMonth').value = now.getMonth() + 1;
+            
+            // Update header
+            updateReportHeader();
+            
+            // Load initial report
+            loadPLReport();
+        });
+
+        function updateReportHeader() {
+            const year = document.getElementById('plYear').value;
+            const month = document.getElementById('plMonth').value;
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            const monthName = monthNames[month - 1];
+            document.getElementById('plReportPeriod').textContent = 
+                `For the Month Ended ${monthName} ${year}`;
+            document.getElementById('plAccumHeader').textContent = 
+                `${monthName.substring(0, 3)} ${year}`;
+        }
+
+        // Update header when controls change
+        document.getElementById('plYear').addEventListener('change', updateReportHeader);
+        document.getElementById('plMonth').addEventListener('change', updateReportHeader);
+    </script>
+</body>
+</html>

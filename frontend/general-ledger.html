@@ -10,19 +10,19 @@
         /* General Ledger Specific Styles */
         .gl-toolbar {
             background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            padding: 12px 20px;
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
 
         .gl-toolbar-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
@@ -35,20 +35,20 @@
 
         .gl-search-box {
             position: relative;
-            min-width: 300px;
+            min-width: 280px;
         }
 
         .gl-search-box input {
-            padding: 8px 40px 8px 35px;
-            border: 2px solid #bdc3c7;
-            border-radius: 6px;
+            padding: 8px 35px 8px 32px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
             width: 100%;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .gl-search-box i {
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #7f8c8d;
@@ -56,7 +56,7 @@
 
         .gl-clear-search {
             position: absolute;
-            right: 12px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -76,35 +76,35 @@
         }
 
         .gl-filters-panel.active {
-            max-height: 200px;
-            padding: 16px 20px;
+            max-height: 180px;
+            padding: 12px 20px;
         }
 
         .gl-filters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
             align-items: end;
         }
 
         .gl-filter-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .gl-filter-group label {
             font-weight: 500;
-            font-size: 12px;
+            font-size: 11px;
             color: #495057;
         }
 
         .gl-filter-group input,
         .gl-filter-group select {
-            padding: 6px 8px;
+            padding: 5px 7px;
             border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 11px;
         }
 
         .gl-table-container {
@@ -125,97 +125,198 @@
             border-collapse: collapse;
             font-size: 11px;
             background: white;
-            min-width: 2000px; /* Ensure horizontal scroll for many columns */
+            min-width: 2200px;
         }
 
         .gl-table thead th {
-            background: linear-gradient(135deg, #34495e, #2c3e50);
+            background: #0038A8;
             color: white;
-            padding: 10px 6px;
+            padding: 6px 4px;
             text-align: left;
             font-weight: 600;
-            border: 1px solid #2c3e50;
+            border: 1px solid #002F88;
             position: sticky;
             top: 0;
             z-index: 10;
             white-space: nowrap;
             cursor: pointer;
             user-select: none;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            height: 28px;
+            vertical-align: middle;
         }
 
         .gl-table thead th:hover {
-            background: linear-gradient(135deg, #2c3e50, #1a252f);
+            background: #002F88;
         }
 
         .gl-table tbody td {
-            padding: 8px 6px;
-            border: 1px solid #dee2e6;
+            padding: 4px 4px;
+            border: 1px solid #e5e5e5;
             white-space: nowrap;
             font-size: 11px;
+            vertical-align: middle;
+            height: 24px;
+            line-height: 1.2;
+        }
+
+        .gl-table tbody tr {
+            height: 26px;
         }
 
         .gl-table tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: #f0f8ff;
         }
 
         .gl-table tbody tr:nth-child(even) {
-            background-color: #fafbfc;
+            background-color: #f9f9f9;
         }
 
         .gl-table tbody tr:nth-child(even):hover {
-            background-color: #f1f2f6;
+            background-color: #e6f3ff;
         }
 
         /* Column-specific styles */
-        .col-id { width: 60px; text-align: center; }
-        .col-date { width: 90px; }
-        .col-jv { width: 100px; font-family: monospace; font-weight: 600; }
-        .col-year { width: 60px; text-align: center; }
-        .col-batch { width: 80px; }
-        .col-seq { width: 60px; text-align: center; }
-        .col-type { width: 100px; }
-        .col-account { width: 100px; font-family: monospace; font-weight: 600; color: #0066cc; }
-        .col-name { width: 150px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
-        .col-aux { width: 100px; }
-        .col-cc2 { width: 80px; }
-        .col-ship { width: 80px; }
-        .col-doc { width: 100px; }
-        .col-desc { width: 200px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
-        .col-dc { width: 40px; text-align: center; font-weight: bold; }
-        .col-currency { width: 60px; text-align: center; }
-        .col-amount { width: 100px; text-align: right; font-family: monospace; }
-        .col-status { width: 80px; text-align: center; }
-        .col-user { width: 80px; }
-        .col-actions { width: 100px; text-align: center; }
+        .col-id { 
+            width: 50px; 
+            text-align: center; 
+            font-weight: 600;
+            color: #495057;
+        }
+        .col-date { 
+            width: 80px; 
+            font-family: 'Courier New', monospace;
+            color: #6c757d;
+            font-size: 11px;
+        }
+        .col-jv { 
+            width: 90px; 
+            font-family: 'Courier New', monospace; 
+            font-weight: 600;
+            color: #0038A8;
+        }
+        .col-year { 
+            width: 50px; 
+            text-align: center;
+            font-weight: 500;
+        }
+        .col-batch { 
+            width: 70px;
+            font-family: monospace;
+        }
+        .col-seq { 
+            width: 50px; 
+            text-align: center;
+            font-family: monospace;
+        }
+        .col-type { 
+            width: 80px;
+            font-size: 10px;
+        }
+        .col-account { 
+            width: 85px; 
+            font-family: 'Courier New', monospace; 
+            font-weight: 600; 
+            color: #0066cc;
+        }
+        .col-name { 
+            width: 130px; 
+            max-width: 130px; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            font-size: 10px;
+        }
+        .col-aux { 
+            width: 80px;
+            font-family: monospace;
+        }
+        .col-cc2 { 
+            width: 60px;
+            font-size: 10px;
+        }
+        .col-ship { 
+            width: 70px;
+            font-size: 10px;
+        }
+        .col-doc { 
+            width: 85px;
+            font-family: monospace;
+        }
+        .col-desc { 
+            width: 160px; 
+            max-width: 160px; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            font-size: 10px;
+        }
+        .col-dc { 
+            width: 30px; 
+            text-align: center; 
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .col-currency { 
+            width: 50px; 
+            text-align: center;
+            font-family: monospace;
+            font-weight: 500;
+        }
+        .col-amount { 
+            width: 85px; 
+            text-align: right; 
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        .col-status { 
+            width: 60px; 
+            text-align: center;
+        }
+        .col-user { 
+            width: 70px;
+            font-size: 10px;
+        }
+        .col-actions { 
+            width: 80px; 
+            text-align: center;
+        }
 
         .amount {
             font-family: 'Courier New', monospace;
             text-align: right;
         }
 
-        .debit { color: #28a745; }
-        .credit { color: #dc3545; }
+        .debit { 
+            color: #28a745; 
+            font-weight: 600;
+        }
+        .credit { 
+            color: #dc3545;
+            font-weight: 600;
+        }
 
         .empty-cell {
-            color: #6c757d;
+            color: #adb5bd;
             font-style: italic;
         }
 
         .status-pending {
             background: #ffc107;
             color: #000;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-size: 8px;
             font-weight: 600;
         }
 
         .status-locked {
             background: #dc3545;
             color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-size: 8px;
             font-weight: 600;
         }
 
@@ -223,30 +324,30 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 20px;
-            border-top: 2px solid #dee2e6;
+            padding: 10px 20px;
+            border-top: 1px solid #dee2e6;
             background: #f8f9fa;
         }
 
         .gl-pagination-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .gl-pagination-info {
-            font-size: 13px;
+            font-size: 12px;
             color: #6c757d;
         }
 
         .gl-btn {
-            padding: 6px 12px;
+            padding: 5px 10px;
             border: 1px solid #ced4da;
             background: white;
             color: #495057;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             transition: all 0.2s;
         }
 
@@ -260,13 +361,13 @@
         }
 
         .gl-btn-primary {
-            background: #007bff;
+            background: #0038A8;
             color: white;
-            border-color: #007bff;
+            border-color: #0038A8;
         }
 
         .gl-btn-primary:hover {
-            background: #0056b3;
+            background: #002F88;
         }
 
         .gl-btn-success {
@@ -299,13 +400,13 @@
         }
 
         .gl-loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
+            width: 35px;
+            height: 35px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0038A8;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         @keyframes spin {
@@ -317,15 +418,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 20px;
+            padding: 6px 20px;
             background: #f8f9fa;
             border-top: 1px solid #dee2e6;
-            font-size: 12px;
+            font-size: 11px;
             color: #6c757d;
         }
 
         .gl-filter-info {
-            color: #007bff;
+            color: #0038A8;
             font-weight: 500;
         }
 
@@ -343,54 +444,54 @@
 
         .gl-modal-content {
             background: white;
-            margin: 2% auto;
-            border-radius: 8px;
+            margin: 1% auto;
+            border-radius: 6px;
             width: 90%;
-            max-width: 900px;
+            max-width: 850px;
             max-height: 95vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
         }
 
         .gl-modal-header {
-            padding: 20px 24px;
-            border-bottom: 2px solid #dee2e6;
+            padding: 16px 20px;
+            border-bottom: 1px solid #dee2e6;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            background: linear-gradient(135deg, #0038A8, #002F88);
+            color: white;
+            border-radius: 6px 6px 0 0;
         }
 
         .gl-modal-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            color: #2c3e50;
         }
 
         .gl-modal-close {
             background: none;
             border: none;
-            font-size: 24px;
-            color: #6c757d;
+            font-size: 20px;
+            color: white;
             cursor: pointer;
-            padding: 4px;
+            padding: 2px;
             border-radius: 50%;
         }
 
         .gl-modal-close:hover {
-            background: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .gl-modal-body {
-            padding: 24px;
+            padding: 20px;
         }
 
         .gl-form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .gl-form-group {
@@ -401,22 +502,22 @@
         .gl-form-label {
             font-weight: 600;
             color: #495057;
-            margin-bottom: 6px;
-            font-size: 13px;
+            margin-bottom: 4px;
+            font-size: 12px;
         }
 
         .gl-form-control {
-            padding: 10px 12px;
-            border: 2px solid #ced4da;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 8px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
             transition: border-color 0.3s;
         }
 
         .gl-form-control:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            border-color: #0038A8;
+            box-shadow: 0 0 0 2px rgba(0, 56, 168, 0.1);
         }
 
         .gl-form-control[readonly] {
@@ -426,11 +527,11 @@
 
         .gl-form-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 2px solid #dee2e6;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #dee2e6;
         }
 
         .gl-form-wide {
@@ -440,8 +541,8 @@
         .gl-checkbox-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 8px;
         }
 
         .gl-checkbox-group input[type="checkbox"] {
@@ -449,14 +550,44 @@
             margin: 0;
         }
 
+        /* Action buttons in table */
+        .action-btn {
+            padding: 2px 6px;
+            margin: 0 1px;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .action-btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .action-btn-edit:hover {
+            background: #0056b3;
+        }
+
+        .action-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn-delete:hover {
+            background: #c82333;
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .gl-table {
-                min-width: 1500px;
+                min-width: 1800px;
             }
             
             .gl-search-box {
-                min-width: 250px;
+                min-width: 220px;
             }
         }
 
@@ -481,7 +612,7 @@
 
             .gl-modal-content {
                 width: 95%;
-                margin: 5% auto;
+                margin: 3% auto;
             }
         }
     </style>
@@ -527,8 +658,8 @@
                 </div>
                 <div class="gl-toolbar-right">
                     <select id="glRecordsPerPage" class="gl-form-control" style="width: auto;">
-                        <option value="25">25 rows</option>
-                        <option value="50" selected>50 rows</option>
+                        <option value="25" selected>25 rows</option>
+                        <option value="50">50 rows</option>
                         <option value="100">100 rows</option>
                         <option value="200">200 rows</option>
                     </select>
@@ -586,13 +717,13 @@
                     </div>
                     <div class="gl-filter-group">
                         <label>&nbsp;</label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
                             <input type="checkbox" id="glFilterPending"> Pending Only
                         </label>
                     </div>
                     <div class="gl-filter-group">
                         <label>&nbsp;</label>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <div style="display: flex; gap: 6px; margin-top: 6px;">
                             <button class="gl-btn" onclick="glManager.applyFilters()">Apply</button>
                             <button class="gl-btn" onclick="glManager.clearFilters()">Clear</button>
                         </div>
@@ -608,9 +739,9 @@
 
             <!-- Error State -->
             <div class="gl-error" id="glError">
-                <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 12px; color: #dc3545;"></i>
+                <i class="fas fa-exclamation-triangle" style="font-size: 20px; margin-bottom: 10px; color: #dc3545;"></i>
                 <div>Error loading general ledger entries</div>
-                <button class="gl-btn gl-btn-primary" style="margin-top: 12px;" onclick="glManager.refreshData()">
+                <button class="gl-btn gl-btn-primary" style="margin-top: 10px;" onclick="glManager.refreshData()">
                     Try Again
                 </button>
             </div>
@@ -626,9 +757,9 @@
                                 <th class="col-jv" onclick="glManager.sortTable('jv_number')">JV Number</th>
                                 <th class="col-year" onclick="glManager.sortTable('year_period')">Year</th>
                                 <th class="col-batch" onclick="glManager.sortTable('batch_number')">Batch#</th>
-                                <th class="col-seq" onclick="glManager.sortTable('batch_sequence')">Batch Seq</th>
+                                <th class="col-seq" onclick="glManager.sortTable('batch_sequence')">B.Seq</th>
                                 <th class="col-type" onclick="glManager.sortTable('transaction_type')">Type</th>
-                                <th class="col-seq" onclick="glManager.sortTable('type_sequence')">Type Seq</th>
+                                <th class="col-seq" onclick="glManager.sortTable('type_sequence')">T.Seq</th>
                                 <th class="col-account" onclick="glManager.sortTable('account_number')">Account</th>
                                 <th class="col-aux" onclick="glManager.sortTable('auxiliary_account')">Auxiliary</th>
                                 <th class="col-name" onclick="glManager.sortTable('account_name')">Account Name</th>
@@ -671,7 +802,7 @@
                     <button class="gl-btn" id="glPrevBtn" onclick="glManager.goToPage(glManager.currentPage - 1)">
                         <i class="fas fa-angle-left"></i>
                     </button>
-                    <span id="glPageInfo" style="margin: 0 12px; font-size: 13px;">Page 1 of 1</span>
+                    <span id="glPageInfo" style="margin: 0 10px; font-size: 12px;">Page 1 of 1</span>
                     <button class="gl-btn" id="glNextBtn" onclick="glManager.goToPage(glManager.currentPage + 1)">
                         <i class="fas fa-angle-right"></i>
                     </button>
@@ -833,7 +964,7 @@
                         
                         <!-- Checkboxes -->
                         <div class="gl-form-group gl-form-wide">
-                            <div style="display: flex; gap: 24px;">
+                            <div style="display: flex; gap: 20px;">
                                 <div class="gl-checkbox-group">
                                     <input type="checkbox" id="glIsPending">
                                     <label for="glIsPending">Mark as Pending</label>

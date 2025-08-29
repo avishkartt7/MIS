@@ -361,7 +361,7 @@ app.get('/api/accounts/search/:query', async (req, res) => {
 // Get all general ledger entries with filtering and pagination
 app.get('/api/general-ledger', async (req, res) => {
     try {
-        console.log('📊 Fetching general ledger entries...');
+        console.log('📊 Fetching general ledger entries for P&L...');
         
         const { 
             page = 1, 
@@ -376,14 +376,20 @@ app.get('/api/general-ledger', async (req, res) => {
             currency = '',
             debit_credit = '',
             pending_only = '',
-            locked_only = ''
+            locked_only = '',
+            // NEW PARAMETERS FOR P&L
+            year = '',
+            month = '',
+            month_from = '',
+            month_to = ''
         } = req.query;
 
         let whereConditions = [];
         let queryParams = [];
         let paramCounter = 1;
 
-        // Search functionality
+
+        // Existing filters (keep all your existing filter logic here)
         if (search) {
             whereConditions.push(`(
                 jv_number ILIKE $${paramCounter} OR 
@@ -395,14 +401,12 @@ app.get('/api/general-ledger', async (req, res) => {
             paramCounter++;
         }
 
-        // Account filter
         if (account) {
             whereConditions.push(`account_number = $${paramCounter}`);
             queryParams.push(account);
             paramCounter++;
         }
 
-        // Date range filter
         if (date_from) {
             whereConditions.push(`transaction_date >= $${paramCounter}`);
             queryParams.push(date_from);
@@ -415,47 +419,68 @@ app.get('/api/general-ledger', async (req, res) => {
             paramCounter++;
         }
 
-        // JV Number filter
+        // NEW: Year filter for P&L
+        if (year) {
+            whereConditions.push(`EXTRACT(YEAR FROM transaction_date) = $${paramCounter}`);
+            queryParams.push(year);
+            paramCounter++;
+        }
+
+        // NEW: Month filter for P&L
+        if (month) {
+            whereConditions.push(`EXTRACT(MONTH FROM transaction_date) = $${paramCounter}`);
+            queryParams.push(month);
+            paramCounter++;
+        }
+
+        // NEW: Month range filter for P&L (for cumulative)
+        if (month_from) {
+            whereConditions.push(`EXTRACT(MONTH FROM transaction_date) >= $${paramCounter}`);
+            queryParams.push(month_from);
+            paramCounter++;
+        }
+
+        if (month_to) {
+            whereConditions.push(`EXTRACT(MONTH FROM transaction_date) <= $${paramCounter}`);
+            queryParams.push(month_to);
+            paramCounter++;
+        }
+
+        // Continue with existing filters...
         if (jv_number) {
             whereConditions.push(`jv_number ILIKE $${paramCounter}`);
             queryParams.push(`%${jv_number}%`);
             paramCounter++;
         }
 
-        // Batch filter
         if (batch_number) {
             whereConditions.push(`batch_number ILIKE $${paramCounter}`);
             queryParams.push(`%${batch_number}%`);
             paramCounter++;
         }
 
-        // Transaction type filter
         if (transaction_type) {
             whereConditions.push(`transaction_type = $${paramCounter}`);
             queryParams.push(transaction_type);
             paramCounter++;
         }
 
-        // Currency filter
         if (currency) {
             whereConditions.push(`currency_code = $${paramCounter}`);
             queryParams.push(currency);
             paramCounter++;
         }
 
-        // Debit/Credit filter
         if (debit_credit) {
             whereConditions.push(`debit_credit = $${paramCounter}`);
             queryParams.push(debit_credit);
             paramCounter++;
         }
 
-        // Pending filter
         if (pending_only === 'true') {
             whereConditions.push('is_pending = true');
         }
 
-        // Locked filter
         if (locked_only === 'true') {
             whereConditions.push('is_locked = true');
         }
@@ -728,6 +753,572 @@ app.put('/api/general-ledger/:id', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error updating entry', error: error.message });
     }
 });
+
+//////////////MIS 
+
+// =====================================================
+// ADD THESE COMPLETE ROUTES TO YOUR backend/server.js
+// P&L REPORT API ROUTES - COMPLETE VERSION
+// =====================================================
+
+// P&L Report Summary API - Current Month Only (Actual)
+app.get('/api/reports/pl-summary/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        console.log(`📊 Generating P&L summary for ${year}-${month}...`);
+        
+        // Specific revenue accounts only
+        const revenueAccounts = [
+            '42', '4102', '4103', '4104', '4105', '4109', '4201', 
+            '410101', '410102', '410103', '410104', '410105', '410106', '410107',
+            '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
+            '410301', '410401', '410501', '410502', '410503', '410901',
+            '419', '419001', '419002'
+        ];
+        
+        // Get revenue accounts - ONLY specific accounts
+        const revenueQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number = ANY($3)
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) = $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get cost accounts (5xxxx) - unchanged
+        const costsQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '5%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) = $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get expense accounts (6xxxx) - unchanged
+        const expensesQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '6%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) = $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Execute all queries
+        const [revenueResult, costsResult, expensesResult] = await Promise.all([
+            queryDB(revenueQuery, [year, month, revenueAccounts]),
+            queryDB(costsQuery, [year, month]),
+            queryDB(expensesQuery, [year, month])
+        ]);
+
+        // Calculate totals
+        const revenueTotals = revenueResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const costsTotals = costsResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const expensesTotals = expensesResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+
+        const grossProfit = revenueTotals - costsTotals;
+        const netProfit = grossProfit - expensesTotals;
+
+        console.log(`✅ P&L Summary - Revenue: ${revenueTotals}, Costs: ${costsTotals}, Expenses: ${expensesTotals}`);
+        
+        res.json({
+            success: true,
+            data: {
+                period: `${year}-${String(month).padStart(2, '0')}`,
+                revenue: {
+                    accounts: revenueResult.rows,
+                    total: revenueTotals
+                },
+                directCosts: {
+                    accounts: costsResult.rows,
+                    total: costsTotals
+                },
+                expenses: {
+                    accounts: expensesResult.rows,
+                    total: expensesTotals
+                },
+                grossProfit: grossProfit,
+                netProfit: netProfit,
+                generatedAt: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating P&L summary:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating P&L summary',
+            error: error.message
+        });
+    }
+});
+
+// P&L Report Cumulative Data API (Jan to Current Month)
+app.get('/api/reports/pl-cumulative/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        console.log(`📊 Generating cumulative P&L data for ${year} Jan-${month}...`);
+        
+        // Specific revenue accounts only
+        const revenueAccounts = [
+            '42', '4102', '4103', '4104', '4105', '4109', '4201', 
+            '410101', '410102', '410103', '410104', '410105', '410106', '410107',
+            '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
+            '410301', '410401', '410501', '410502', '410503', '410901',
+            '419', '419001', '419002'
+        ];
+        
+        // Get revenue accounts cumulative - ONLY specific accounts
+        const revenueQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number = ANY($3)
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get cost accounts cumulative (5xxxx) - unchanged
+        const costsQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '5%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get expense accounts cumulative (6xxxx) - unchanged
+        const expensesQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '6%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Execute all queries
+        const [revenueResult, costsResult, expensesResult] = await Promise.all([
+            queryDB(revenueQuery, [year, month, revenueAccounts]),
+            queryDB(costsQuery, [year, month]),
+            queryDB(expensesQuery, [year, month])
+        ]);
+
+        // Calculate totals
+        const revenueTotals = revenueResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const costsTotals = costsResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const expensesTotals = expensesResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+
+        const grossProfit = revenueTotals - costsTotals;
+        const netProfit = grossProfit - expensesTotals;
+
+        console.log(`✅ Cumulative P&L - Revenue: ${revenueTotals}, Costs: ${costsTotals}, Expenses: ${expensesTotals}`);
+        
+        res.json({
+            success: true,
+            data: {
+                period: `${year}-01 to ${year}-${String(month).padStart(2, '0')}`,
+                revenue: {
+                    accounts: revenueResult.rows,
+                    total: revenueTotals
+                },
+                directCosts: {
+                    accounts: costsResult.rows,
+                    total: costsTotals
+                },
+                expenses: {
+                    accounts: expensesResult.rows,
+                    total: expensesTotals
+                },
+                grossProfit: grossProfit,
+                netProfit: netProfit,
+                generatedAt: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating cumulative P&L data:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating cumulative P&L data',
+            error: error.message
+        });
+    }
+});
+
+// P&L Report Previous Period Data API (Jan to Previous Month)
+app.get('/api/reports/pl-previous/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        const previousMonth = month > 1 ? month - 1 : 12;
+        const previousYear = month > 1 ? year : year - 1;
+        
+        console.log(`📊 Generating previous P&L data for ${previousYear} Jan-${previousMonth}...`);
+        
+        // Specific revenue accounts only
+        const revenueAccounts = [
+            '42', '4102', '4103', '4104', '4105', '4109', '4201', 
+            '410101', '410102', '410103', '410104', '410105', '410106', '410107',
+            '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
+            '410301', '410401', '410501', '410502', '410503', '410901',
+            '419', '419001', '419002'
+        ];
+        
+        // Get revenue accounts previous period - ONLY specific accounts
+        const revenueQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number = ANY($3)
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'D' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get cost accounts previous period (5xxxx) - unchanged
+        const costsQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '5%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Get expense accounts previous period (6xxxx) - unchanged
+        const expensesQuery = `
+            SELECT 
+                gl.account_number,
+                coa.name as account_name,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as debits,
+                SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as credits,
+                SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                         ELSE 0 END) as net_amount
+            FROM general_ledger gl
+            JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+            WHERE gl.account_number LIKE '6%'
+              AND EXTRACT(YEAR FROM gl.transaction_date) = $1
+              AND EXTRACT(MONTH FROM gl.transaction_date) <= $2
+              AND gl.is_locked = false
+            GROUP BY gl.account_number, coa.name
+            HAVING SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            WHEN gl.debit_credit = 'C' THEN -COALESCE(gl.aed_amount, gl.foreign_amount, 0) 
+                            ELSE 0 END) != 0
+            ORDER BY gl.account_number
+        `;
+
+        // Execute all queries
+        const [revenueResult, costsResult, expensesResult] = await Promise.all([
+            queryDB(revenueQuery, [previousYear, previousMonth, revenueAccounts]),
+            queryDB(costsQuery, [previousYear, previousMonth]),
+            queryDB(expensesQuery, [previousYear, previousMonth])
+        ]);
+
+        // Calculate totals
+        const revenueTotals = revenueResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const costsTotals = costsResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+        const expensesTotals = expensesResult.rows.reduce((sum, row) => sum + parseFloat(row.net_amount || 0), 0);
+
+        const grossProfit = revenueTotals - costsTotals;
+        const netProfit = grossProfit - expensesTotals;
+
+        console.log(`✅ Previous P&L - Revenue: ${revenueTotals}, Costs: ${costsTotals}, Expenses: ${expensesTotals}`);
+        
+        res.json({
+            success: true,
+            data: {
+                period: `${previousYear}-01 to ${previousYear}-${String(previousMonth).padStart(2, '0')}`,
+                revenue: {
+                    accounts: revenueResult.rows,
+                    total: revenueTotals
+                },
+                directCosts: {
+                    accounts: costsResult.rows,
+                    total: costsTotals
+                },
+                expenses: {
+                    accounts: expensesResult.rows,
+                    total: expensesTotals
+                },
+                grossProfit: grossProfit,
+                netProfit: netProfit,
+                generatedAt: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating previous P&L data:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating previous P&L data',
+            error: error.message
+        });
+    }
+});
+
+
+
+app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        console.log(`📊 Generating complete P&L report for ${year}-${month}...`);
+        
+        // Specific revenue accounts
+        const revenueAccounts = [
+            '42', '4102', '4103', '4104', '4105', '4109', '4201', 
+            '410101', '410102', '410103', '410104', '410105', '410106', '410107',
+            '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
+            '410301', '410401', '410501', '410502', '410503', '410901',
+            '419', '419001', '419002'
+        ];
+
+        const previousMonth = month > 1 ? month - 1 : 12;
+        const previousYear = month > 1 ? year : year - 1;
+
+        // Helper function to get category totals
+        async function getCategoryTotals(yearParam, monthCondition, accounts = null, accountType = null) {
+            let whereClause = '';
+            let params = [yearParam];
+            
+            if (accounts) {
+                whereClause = 'WHERE gl.account_number = ANY($2)';
+                params.push(accounts);
+            } else if (accountType) {
+                whereClause = `WHERE gl.account_number LIKE '${accountType}%'`;
+            }
+            
+            whereClause += ` AND EXTRACT(YEAR FROM gl.transaction_date) = $1 ${monthCondition} AND gl.is_locked = false`;
+            
+            const query = `
+                SELECT 
+                    SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_credits,
+                    SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_debits
+                FROM general_ledger gl
+                JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+                ${whereClause}
+            `;
+            
+            const result = await queryDB(query, params);
+            return result.rows[0] || { total_credits: 0, total_debits: 0 };
+        }
+
+        // Get all data in parallel
+        const [
+            // ACTUAL (Current month only)
+            revenueActual,
+            costsActual,
+            expensesActual,
+            
+            // CUMULATIVE (Jan to current month)
+            revenueCumulative,
+            costsCumulative,
+            expensesCumulative,
+            
+            // PREVIOUS (Jan to previous month)
+            revenuePrevious,
+            costsPrevious,
+            expensesPrevious
+        ] = await Promise.all([
+            // ACTUAL
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, revenueAccounts),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, null, '5'),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, null, '6'),
+            
+            // CUMULATIVE
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, revenueAccounts),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, null, '5'),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, null, '6'),
+            
+            // PREVIOUS
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, revenueAccounts),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, null, '5'),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, null, '6')
+        ]);
+
+        // Calculate net amounts (Revenue: Credit-Debit, Costs/Expenses: Debit-Credit)
+        const calculateRevenue = (data) => parseFloat(data.total_credits || 0) - parseFloat(data.total_debits || 0);
+        const calculateExpense = (data) => parseFloat(data.total_debits || 0) - parseFloat(data.total_credits || 0);
+
+        // REVENUE totals
+        const revenue = {
+            actual: calculateRevenue(revenueActual),
+            cumulative: calculateRevenue(revenueCumulative),
+            previous: calculateRevenue(revenuePrevious)
+        };
+
+        // DIRECT COST totals
+        const directCost = {
+            actual: calculateExpense(costsActual),
+            cumulative: calculateExpense(costsCumulative),
+            previous: calculateExpense(costsPrevious)
+        };
+
+        // EXPENSES totals
+        const expenses = {
+            actual: calculateExpense(expensesActual),
+            cumulative: calculateExpense(expensesCumulative),
+            previous: calculateExpense(expensesPrevious)
+        };
+
+        // GROSS PROFIT = Revenue - Direct Cost
+        const grossProfit = {
+            actual: revenue.actual - directCost.actual,
+            cumulative: revenue.cumulative - directCost.cumulative,
+            previous: revenue.previous - directCost.previous
+        };
+
+        // NET PROFIT = Gross Profit - Expenses
+        const netProfit = {
+            actual: grossProfit.actual - expenses.actual,
+            cumulative: grossProfit.cumulative - expenses.cumulative,
+            previous: grossProfit.previous - expenses.previous
+        };
+
+        console.log(`✅ Complete P&L Generated:`);
+        console.log(`Revenue: ${revenue.actual} | ${revenue.cumulative} | ${revenue.previous}`);
+        console.log(`Direct Cost: ${directCost.actual} | ${directCost.cumulative} | ${directCost.previous}`);
+        console.log(`Expenses: ${expenses.actual} | ${expenses.cumulative} | ${expenses.previous}`);
+        console.log(`Net Profit: ${netProfit.actual} | ${netProfit.cumulative} | ${netProfit.previous}`);
+
+        res.json({
+            success: true,
+            data: {
+                period: `${year}-${String(month).padStart(2, '0')}`,
+                summary: {
+                    revenue: revenue,
+                    directCost: directCost,
+                    totalDirectCost: directCost, // Same as directCost for display
+                    grossProfit: grossProfit,
+                    expenses: expenses,
+                    totalExpenses: expenses, // Same as expenses for display
+                    netProfit: netProfit
+                },
+                generatedAt: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating complete P&L report:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating complete P&L report',
+            error: error.message
+        });
+    }
+});
+
+
+
+
+
+
 
 // Delete general ledger entry
 app.delete('/api/general-ledger/:id', async (req, res) => {
