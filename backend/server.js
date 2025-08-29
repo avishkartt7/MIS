@@ -1168,30 +1168,54 @@ app.get('/api/reports/pl-previous/:year/:month', async (req, res) => {
 app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
     try {
         const { year, month } = req.params;
-        console.log(`📊 Generating complete P&L report for ${year}-${month}...`);
+        console.log(`📊 Generating complete P&L summary for ${year}-${month}...`);
         
-        // Specific revenue accounts
-        const revenueAccounts = [
-            '42', '4102', '4103', '4104', '4105', '4109', '4201', 
-            '410101', '410102', '410103', '410104', '410105', '410106', '410107',
-            '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
-            '410301', '410401', '410501', '410502', '410503', '410901',
-            '419', '419001', '419002'
-        ];
+        // Specific account mappings for each category
+        const accountMappings = {
+            // REVENUE accounts
+            revenue: [
+                '42', '4102', '4103', '4104', '4105', '4109', '4201', 
+                '410101', '410102', '410103', '410104', '410105', '410106', '410107',
+                '410201', '410202', '410203', '410204', '410205', '410206', '410207', '410208', '410209',
+                '410301', '410401', '410501', '410502', '410503', '410901',
+                '419', '419001', '419002'
+            ],
+            
+            // DIRECT COST specific accounts
+            directPayroll: ['520101'], // Only this account for Direct Payroll
+            directExpenses: ['512101', '512102'], // Add your specific accounts here
+            materials: ['513101', '513102'], // Add your specific accounts here
+            subcontractorCharges: ['514101', '514102'], // Add your specific accounts here
+            transportationFuel: ['515101', '515102'], // Add your specific accounts here
+            freightCustomDuty: ['516101', '516102'], // Add your specific accounts here
+            provisionEmployees: ['517101', '517102'], // Add your specific accounts here
+            depreciation: ['518101', '518102'], // Add your specific accounts here
+            otherDirectExpenses: ['519101', '519102'], // Add your specific accounts here
+            rentalLabors: ['520102', '520103'], // Add your specific accounts here (excluding 520101 which is Direct Payroll)
+            workInProgress: ['521101', '521102'], // Add your specific accounts here
+            
+            // EXPENSES (6xxxx accounts - you can specify exact accounts or keep as wildcard)
+            totalExpenses: null // null means use wildcard pattern '6%'
+        };
 
         const previousMonth = month > 1 ? month - 1 : 12;
         const previousYear = month > 1 ? year : year - 1;
 
-        // Helper function to get category totals
-        async function getCategoryTotals(yearParam, monthCondition, accounts = null, accountType = null) {
+        // Helper function to get category totals for specific accounts
+        async function getCategoryTotals(yearParam, monthCondition, accounts) {
             let whereClause = '';
             let params = [yearParam];
             
-            if (accounts) {
+            if (accounts && Array.isArray(accounts)) {
+                // Specific accounts
                 whereClause = 'WHERE gl.account_number = ANY($2)';
                 params.push(accounts);
-            } else if (accountType) {
-                whereClause = `WHERE gl.account_number LIKE '${accountType}%'`;
+            } else if (accounts === null) {
+                // Use wildcard for expenses (6xxxx)
+                whereClause = "WHERE gl.account_number LIKE '6%'";
+            } else {
+                // No accounts specified, return zeros
+                return { total_credits: 0, total_debits: 0 };
             }
             
             whereClause += ` AND EXTRACT(YEAR FROM gl.transaction_date) = $1 ${monthCondition} AND gl.is_locked = false`;
@@ -1199,116 +1223,213 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
             const query = `
                 SELECT 
                     SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_credits,
-                    SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_debits
+                    SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_debits,
+                    COUNT(*) as transaction_count
                 FROM general_ledger gl
                 JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
                 ${whereClause}
             `;
             
+            console.log(`🔍 Query for ${JSON.stringify(accounts)}: ${query}`);
+            console.log(`📋 Params: ${JSON.stringify(params)}`);
+            
             const result = await queryDB(query, params);
-            return result.rows[0] || { total_credits: 0, total_debits: 0 };
+            const row = result.rows[0] || { total_credits: 0, total_debits: 0, transaction_count: 0 };
+            
+            console.log(`📊 Results for ${JSON.stringify(accounts)}: Credits=${row.total_credits}, Debits=${row.total_debits}, Count=${row.transaction_count}`);
+            
+            return row;
         }
 
         // Get all data in parallel
+        console.log('🔄 Fetching data for all categories...');
+        
         const [
             // ACTUAL (Current month only)
-            revenueActual,
-            costsActual,
-            expensesActual,
+            revenueActual, directPayrollActual, directExpensesActual, materialsActual,
+            subcontractorActual, transportationActual, freightActual, provisionActual,
+            depreciationActual, otherDirectActual, rentalActual, wipActual, expensesActual,
             
             // CUMULATIVE (Jan to current month)
-            revenueCumulative,
-            costsCumulative,
-            expensesCumulative,
+            revenueCumulative, directPayrollCumulative, directExpensesCumulative, materialsCumulative,
+            subcontractorCumulative, transportationCumulative, freightCumulative, provisionCumulative,
+            depreciationCumulative, otherDirectCumulative, rentalCumulative, wipCumulative, expensesCumulative,
             
             // PREVIOUS (Jan to previous month)
-            revenuePrevious,
-            costsPrevious,
-            expensesPrevious
+            revenuePrevious, directPayrollPrevious, directExpensesPrevious, materialsPrevious,
+            subcontractorPrevious, transportationPrevious, freightPrevious, provisionPrevious,
+            depreciationPrevious, otherDirectPrevious, rentalPrevious, wipPrevious, expensesPrevious
         ] = await Promise.all([
             // ACTUAL
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, revenueAccounts),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, null, '5'),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, null, '6'),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.revenue),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.directPayroll),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.directExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.materials),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.subcontractorCharges),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.transportationFuel),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.freightCustomDuty),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.provisionEmployees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.depreciation),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.otherDirectExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.rentalLabors),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.workInProgress),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.totalExpenses),
             
             // CUMULATIVE
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, revenueAccounts),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, null, '5'),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, null, '6'),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.revenue),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.directPayroll),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.directExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.materials),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.subcontractorCharges),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.transportationFuel),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.freightCustomDuty),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.provisionEmployees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.depreciation),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.otherDirectExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.rentalLabors),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.workInProgress),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.totalExpenses),
             
             // PREVIOUS
-            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, revenueAccounts),
-            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, null, '5'),
-            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, null, '6')
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.revenue),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.directPayroll),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.directExpenses),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.materials),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.subcontractorCharges),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.transportationFuel),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.freightCustomDuty),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.provisionEmployees),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.depreciation),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.otherDirectExpenses),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.rentalLabors),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.workInProgress),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.totalExpenses)
         ]);
 
         // Calculate net amounts (Revenue: Credit-Debit, Costs/Expenses: Debit-Credit)
         const calculateRevenue = (data) => parseFloat(data.total_credits || 0) - parseFloat(data.total_debits || 0);
         const calculateExpense = (data) => parseFloat(data.total_debits || 0) - parseFloat(data.total_credits || 0);
 
-        // REVENUE totals
-        const revenue = {
-            actual: calculateRevenue(revenueActual),
-            cumulative: calculateRevenue(revenueCumulative),
-            previous: calculateRevenue(revenuePrevious)
+        // Build response according to Excel template structure
+        const reportData = {
+            // REVENUE
+            revenue: {
+                actual: calculateRevenue(revenueActual),
+                cumulative: calculateRevenue(revenueCumulative),
+                previous: calculateRevenue(revenuePrevious)
+            },
+            
+            // DIRECT COSTS breakdown with specific accounts
+            directPayroll: {
+                actual: calculateExpense(directPayrollActual),
+                cumulative: calculateExpense(directPayrollCumulative),
+                previous: calculateExpense(directPayrollPrevious)
+            },
+            directExpenses: {
+                actual: calculateExpense(directExpensesActual),
+                cumulative: calculateExpense(directExpensesCumulative),
+                previous: calculateExpense(directExpensesPrevious)
+            },
+            materials: {
+                actual: calculateExpense(materialsActual),
+                cumulative: calculateExpense(materialsCumulative),
+                previous: calculateExpense(materialsPrevious)
+            },
+            subcontractorCharges: {
+                actual: calculateExpense(subcontractorActual),
+                cumulative: calculateExpense(subcontractorCumulative),
+                previous: calculateExpense(subcontractorPrevious)
+            },
+            transportationFuel: {
+                actual: calculateExpense(transportationActual),
+                cumulative: calculateExpense(transportationCumulative),
+                previous: calculateExpense(transportationPrevious)
+            },
+            freightCustomDuty: {
+                actual: calculateExpense(freightActual),
+                cumulative: calculateExpense(freightCumulative),
+                previous: calculateExpense(freightPrevious)
+            },
+            provisionEmployees: {
+                actual: calculateExpense(provisionActual),
+                cumulative: calculateExpense(provisionCumulative),
+                previous: calculateExpense(provisionPrevious)
+            },
+            depreciation: {
+                actual: calculateExpense(depreciationActual),
+                cumulative: calculateExpense(depreciationCumulative),
+                previous: calculateExpense(depreciationPrevious)
+            },
+            otherDirectExpenses: {
+                actual: calculateExpense(otherDirectActual),
+                cumulative: calculateExpense(otherDirectCumulative),
+                previous: calculateExpense(otherDirectPrevious)
+            },
+            rentalLabors: {
+                actual: calculateExpense(rentalActual),
+                cumulative: calculateExpense(rentalCumulative),
+                previous: calculateExpense(rentalPrevious)
+            },
+            workInProgress: {
+                actual: calculateExpense(wipActual),
+                cumulative: calculateExpense(wipCumulative),
+                previous: calculateExpense(wipPrevious)
+            },
+            
+            // EXPENSES (6xxxx accounts)
+            totalExpenses: {
+                actual: calculateExpense(expensesActual),
+                cumulative: calculateExpense(expensesCumulative),
+                previous: calculateExpense(expensesPrevious)
+            }
         };
 
-        // DIRECT COST totals
-        const directCost = {
-            actual: calculateExpense(costsActual),
-            cumulative: calculateExpense(costsCumulative),
-            previous: calculateExpense(costsPrevious)
+        // Calculate totals
+        const directCostCategories = [
+            'directPayroll', 'directExpenses', 'materials', 'subcontractorCharges',
+            'transportationFuel', 'freightCustomDuty', 'provisionEmployees',
+            'depreciation', 'otherDirectExpenses', 'rentalLabors', 'workInProgress'
+        ];
+
+        reportData.totalDirectCost = {
+            actual: directCostCategories.reduce((sum, cat) => sum + reportData[cat].actual, 0),
+            cumulative: directCostCategories.reduce((sum, cat) => sum + reportData[cat].cumulative, 0),
+            previous: directCostCategories.reduce((sum, cat) => sum + reportData[cat].previous, 0)
         };
 
-        // EXPENSES totals
-        const expenses = {
-            actual: calculateExpense(expensesActual),
-            cumulative: calculateExpense(expensesCumulative),
-            previous: calculateExpense(expensesPrevious)
+        // Calculate derived totals
+        reportData.grossProfit = {
+            actual: reportData.revenue.actual - reportData.totalDirectCost.actual,
+            cumulative: reportData.revenue.cumulative - reportData.totalDirectCost.cumulative,
+            previous: reportData.revenue.previous - reportData.totalDirectCost.previous
         };
 
-        // GROSS PROFIT = Revenue - Direct Cost
-        const grossProfit = {
-            actual: revenue.actual - directCost.actual,
-            cumulative: revenue.cumulative - directCost.cumulative,
-            previous: revenue.previous - directCost.previous
+        reportData.netProfit = {
+            actual: reportData.grossProfit.actual - reportData.totalExpenses.actual,
+            cumulative: reportData.grossProfit.cumulative - reportData.totalExpenses.cumulative,
+            previous: reportData.grossProfit.previous - reportData.totalExpenses.previous
         };
 
-        // NET PROFIT = Gross Profit - Expenses
-        const netProfit = {
-            actual: grossProfit.actual - expenses.actual,
-            cumulative: grossProfit.cumulative - expenses.cumulative,
-            previous: grossProfit.previous - expenses.previous
-        };
-
-        console.log(`✅ Complete P&L Generated:`);
-        console.log(`Revenue: ${revenue.actual} | ${revenue.cumulative} | ${revenue.previous}`);
-        console.log(`Direct Cost: ${directCost.actual} | ${directCost.cumulative} | ${directCost.previous}`);
-        console.log(`Expenses: ${expenses.actual} | ${expenses.cumulative} | ${expenses.previous}`);
-        console.log(`Net Profit: ${netProfit.actual} | ${netProfit.cumulative} | ${netProfit.previous}`);
+        console.log(`✅ P&L Summary Generated:`);
+        console.log(`Revenue: ${reportData.revenue.actual} | ${reportData.revenue.cumulative} | ${reportData.revenue.previous}`);
+        console.log(`Direct Payroll (520101): ${reportData.directPayroll.actual} | ${reportData.directPayroll.cumulative} | ${reportData.directPayroll.previous}`);
+        console.log(`Direct Cost Total: ${reportData.totalDirectCost.actual} | ${reportData.totalDirectCost.cumulative} | ${reportData.totalDirectCost.previous}`);
+        console.log(`Gross Profit: ${reportData.grossProfit.actual} | ${reportData.grossProfit.cumulative} | ${reportData.grossProfit.previous}`);
+        console.log(`Net Profit: ${reportData.netProfit.actual} | ${reportData.netProfit.cumulative} | ${reportData.netProfit.previous}`);
 
         res.json({
             success: true,
-            data: {
-                period: `${year}-${String(month).padStart(2, '0')}`,
-                summary: {
-                    revenue: revenue,
-                    directCost: directCost,
-                    totalDirectCost: directCost, // Same as directCost for display
-                    grossProfit: grossProfit,
-                    expenses: expenses,
-                    totalExpenses: expenses, // Same as expenses for display
-                    netProfit: netProfit
-                },
-                generatedAt: new Date().toISOString()
-            }
+            data: reportData,
+            period: `${year}-${String(month).padStart(2, '0')}`,
+            accountMappings: accountMappings, // Include mappings for reference
+            generatedAt: new Date().toISOString()
         });
 
     } catch (error) {
-        console.error('❌ Error generating complete P&L report:', error.message);
+        console.error('❌ Error generating P&L summary:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Error generating complete P&L report',
+            message: 'Error generating P&L summary',
             error: error.message
         });
     }

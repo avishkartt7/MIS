@@ -7,82 +7,188 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* P&L Report Specific Styles */
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #0038A8, #002F88);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: #ffd700;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-1px);
+        }
+
+        /* Main Container */
         .pl-container {
             background: white;
-            height: calc(100vh - 80px);
+            min-height: calc(100vh - 80px);
             display: flex;
             flex-direction: column;
         }
 
+        /* P&L Header Section */
         .pl-header {
-            background: #f8f9fa;
-            border-bottom: 2px solid #0038A8;
-            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 3px solid #0038A8;
+            padding: 30px 20px;
             text-align: center;
         }
 
         .pl-title {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
             color: #0038A8;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .pl-subtitle {
-            font-size: 16px;
+            font-size: 18px;
             color: #6c757d;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
 
+        /* Controls Section */
         .pl-controls {
             display: flex;
             justify-content: center;
-            gap: 16px;
+            gap: 20px;
             align-items: center;
-            margin-top: 16px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #ffffff, #f5f5f5);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .pl-control-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .pl-control-group label {
             font-weight: 600;
             color: #495057;
             white-space: nowrap;
+            font-size: 14px;
         }
 
-        .pl-select, .pl-input {
-            padding: 8px 12px;
+        .pl-select {
+            padding: 10px 14px;
             border: 2px solid #ced4da;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        .pl-select:focus, .pl-input:focus {
+        .pl-select:focus {
             outline: none;
             border-color: #0038A8;
-            box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
+            box-shadow: 0 0 0 4px rgba(0, 56, 168, 0.1);
+            transform: translateY(-1px);
         }
 
         .pl-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: #0038A8;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 600;
+            border-radius: 8px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         .pl-btn:hover {
             background: #002F88;
             transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
         }
 
         .pl-btn-export {
@@ -93,15 +199,20 @@
             background: #1e7e34;
         }
 
+        /* Content Area */
         .pl-content {
             flex: 1;
             overflow: auto;
-            padding: 0;
+            padding: 20px;
+            background: white;
         }
 
         .pl-table-wrapper {
             width: 100%;
             overflow: auto;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
         }
 
         .pl-table {
@@ -109,128 +220,152 @@
             border-collapse: collapse;
             background: white;
             font-size: 13px;
-            min-width: 1000px;
+            min-width: 1200px;
         }
 
+        /* Table Header */
         .pl-table th {
             background: linear-gradient(135deg, #0038A8, #002F88);
             color: white;
             padding: 16px 12px;
-            text-align: left;
+            text-align: center;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border: 1px solid #002F88;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .pl-table th:first-child {
+            text-align: left;
+            width: 280px;
         }
 
         .pl-table th.amount-header {
-            text-align: right;
-            width: 120px;
+            width: 140px;
+            text-align: center;
         }
 
+        /* Table Body */
         .pl-table td {
             padding: 12px;
             border: 1px solid #e9ecef;
             vertical-align: middle;
+            background: white;
         }
 
         .pl-table tbody tr:hover {
-            background: #f8f9fa;
+            background: #f8f9ff;
+            transition: all 0.2s ease;
         }
 
         /* Category Headers */
         .pl-category-header {
-            background: #f1f3f5 !important;
-            font-weight: 700;
-            font-size: 14px;
-            color: #0038A8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #0038A8, #004bcc) !important;
+            color: white !important;
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            text-transform: uppercase !important;
         }
 
         .pl-category-header td {
-            padding: 16px 12px;
-            border-top: 2px solid #0038A8;
-            border-bottom: 2px solid #0038A8;
+            padding: 16px 12px !important;
+            border: 1px solid #002F88 !important;
+            font-weight: 700 !important;
         }
 
-        /* Subcategory Headers */
-        .pl-subcategory-header {
-            background: #f8f9fa !important;
-            font-weight: 600;
+        .pl-category-header:hover {
+            background: linear-gradient(135deg, #0038A8, #004bcc) !important;
+            transform: none !important;
+        }
+
+        /* Data Rows */
+        .pl-data-row {
+            background: white !important;
+        }
+
+        .pl-data-row td {
+            padding: 10px 12px !important;
+            border: 1px solid #e9ecef !important;
+            font-size: 13px !important;
+        }
+
+        .pl-data-row td:first-child {
+            font-weight: 500;
             color: #495057;
+            text-align: left;
+            padding-left: 24px !important;
         }
 
-        .pl-subcategory-header td {
-            padding: 14px 12px;
-            font-size: 13px;
-            border-top: 1px solid #dee2e6;
-        }
-
-        /* Account Rows */
-        .pl-account-row td {
-            padding: 8px 12px;
-        }
-
-        .account-number {
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-            color: #0066cc;
-            font-size: 12px;
-        }
-
-        .account-name {
-            color: #495057;
-            font-size: 12px;
-        }
-
+        /* Amount Cells */
         .amount-cell {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-            font-size: 13px;
-            white-space: nowrap;
+            text-align: right !important;
+            font-family: 'Courier New', monospace !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            white-space: nowrap !important;
         }
 
         .amount-positive {
-            color: #28a745;
+            color: #2e7d32 !important;
         }
 
         .amount-negative {
-            color: #dc3545;
+            color: #c62828 !important;
         }
 
         .amount-zero {
-            color: #6c757d;
+            color: #9e9e9e !important;
+            font-style: italic !important;
         }
 
         /* Total Rows */
         .pl-total-row {
-            background: #fff3cd !important;
-            font-weight: 700;
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7) !important;
+            font-weight: 700 !important;
+            color: #856404 !important;
         }
 
         .pl-total-row td {
-            padding: 14px 12px;
-            border-top: 2px solid #ffc107;
-            border-bottom: 2px solid #ffc107;
-            font-size: 14px;
+            padding: 14px 12px !important;
+            border: 2px solid #ffc107 !important;
+            font-size: 14px !important;
         }
 
-        .pl-grand-total-row {
-            background: #d4edda !important;
-            font-weight: 700;
-            font-size: 15px;
+        .pl-gross-profit-row {
+            background: linear-gradient(135deg, #e1f5fe, #b3e5fc) !important;
+            font-weight: 700 !important;
+            color: #01579b !important;
+            font-size: 15px !important;
         }
 
-        .pl-grand-total-row td {
-            padding: 16px 12px;
-            border-top: 3px solid #28a745;
-            border-bottom: 3px solid #28a745;
+        .pl-gross-profit-row td {
+            padding: 16px 12px !important;
+            border: 2px solid #03a9f4 !important;
+        }
+
+        .pl-net-profit-row {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9) !important;
+            font-weight: 700 !important;
+            color: #1b5e20 !important;
+            font-size: 16px !important;
+        }
+
+        .pl-net-profit-row td {
+            padding: 18px 12px !important;
+            border: 3px solid #4caf50 !important;
+        }
+
+        /* Spacer Row */
+        .pl-spacer-row {
+            height: 8px !important;
+        }
+
+        .pl-spacer-row td {
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
         }
 
         /* Loading and Error States */
@@ -241,16 +376,17 @@
             justify-content: center;
             flex: 1;
             color: #6c757d;
+            min-height: 400px;
         }
 
         .pl-loading-spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #0038A8;
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #0038A8;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         @keyframes spin {
@@ -259,38 +395,22 @@
         }
 
         .pl-error-icon {
-            font-size: 48px;
-            color: #dc3545;
-            margin-bottom: 16px;
+            font-size: 60px;
+            color: #d32f2f;
+            margin-bottom: 20px;
         }
 
         /* Status Bar */
         .pl-status-bar {
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-top: 2px solid #0038A8;
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 12px;
             color: #6c757d;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .pl-controls {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .pl-control-group {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .pl-table {
-                min-width: 800px;
-            }
+            font-weight: 500;
         }
     </style>
 </head>
@@ -332,6 +452,7 @@
                             <option value="2023">2023</option>
                             <option value="2024">2024</option>
                             <option value="2025" selected>2025</option>
+                            <option value="2026">2026</option>
                         </select>
                     </div>
                     
@@ -370,32 +491,33 @@
             <!-- Loading State -->
             <div class="pl-loading" id="plLoading">
                 <div class="pl-loading-spinner"></div>
-                <div>Generating Profit & Loss Report...</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Generating Profit & Loss Report...</div>
+                <div style="font-size: 14px; color: #8d8d8d;">Please wait while we compile your financial data</div>
             </div>
 
             <!-- Error State -->
             <div class="pl-error" id="plError">
                 <i class="fas fa-exclamation-triangle pl-error-icon"></i>
-                <div>Error generating report</div>
-                <button class="pl-btn" onclick="loadPLReport()" style="margin-top: 16px;">
-                    Try Again
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #d32f2f;">Error generating report</div>
+                <div style="font-size: 14px; margin-bottom: 20px;">Unable to load financial data. Please try again.</div>
+                <button class="pl-btn" onclick="loadPLReport()">
+                    <i class="fas fa-redo"></i> Try Again
                 </button>
             </div>
 
             <!-- Report Content -->
-            <div class="pl-content" id="plContent">
+            <div class="pl-content" id="plContent" style="display: none;">
                 <div class="pl-table-wrapper">
                     <table class="pl-table" id="plTable">
                         <thead>
                             <tr>
-                                <th style="width: 120px;">Account</th>
-                                <th style="width: 250px;">Particulars</th>
-                                <th class="amount-header">Actual</th>
-                                <th class="amount-header">Accum System<br><span id="plAccumHeader">Jun 2025</span></th>
-                                <th class="amount-header">Last Report<br>MIS</th>
-                                <th class="amount-header">Budget</th>
-                                <th class="amount-header">Variance</th>
-                                <th class="amount-header">Last Year</th>
+                                <th>PARTICULARS</th>
+                                <th class="amount-header">ACTUAL</th>
+                                <th class="amount-header">ACCUM SYSTEM<br><span id="plAccumHeader">JUN 2025</span></th>
+                                <th class="amount-header">LAST REPORT<br>MIS</th>
+                                <th class="amount-header">BUDGET</th>
+                                <th class="amount-header">VARIANCE</th>
+                                <th class="amount-header">LAST YEAR</th>
                             </tr>
                         </thead>
                         <tbody id="plTableBody">
@@ -408,29 +530,318 @@
             <!-- Status Bar -->
             <div class="pl-status-bar">
                 <span id="plStatusInfo">Ready to generate report</span>
-                <span id="plTimestamp"></span>
+                <span>
+                    <i class="fas fa-clock" style="margin-right: 4px;"></i>
+                    <span id="plTimestamp">--</span>
+                </span>
             </div>
 
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/pl-report.js"></script>
-    
+    <!-- JavaScript -->
     <script>
+        class PLReportManager {
+            constructor() {
+                this.currentYear = new Date().getFullYear();
+                this.currentMonth = new Date().getMonth() + 1;
+                this.reportData = {};
+                this.isLoading = false;
+                this.init();
+            }
+            
+            init() {
+                console.log('Initializing P&L Report Manager...');
+                this.bindEvents();
+            }
+            
+            bindEvents() {
+                console.log('P&L Report events bound successfully');
+            }
+            
+            async loadPLReport() {
+                if (this.isLoading) return;
+                
+                this.isLoading = true;
+                this.showLoading(true);
+                this.hideError();
+                
+                try {
+                    const year = parseInt(document.getElementById('plYear').value);
+                    const month = parseInt(document.getElementById('plMonth').value);
+                    
+                    console.log(`Loading P&L Report for ${year}-${month}...`);
+                    
+                    const response = await fetch(`/api/reports/pl-complete/${year}/${month}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const responseText = await response.text();
+                    console.log('Raw API Response:', responseText);
+                    
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON Parse Error:', parseError);
+                        throw new Error('Server returned invalid JSON. Check server logs.');
+                    }
+                    
+                    console.log('Parsed API Result:', result);
+                    
+                    if (!result.success) {
+                        throw new Error(result.message || 'Failed to fetch P&L data');
+                    }
+                    
+                    if (!result.data) {
+                        throw new Error('No data returned from API');
+                    }
+                    
+                    this.reportData = this.validateAndDefaultData(result.data);
+                    console.log('Validated Report Data:', this.reportData);
+                    
+                    this.renderReport();
+                    this.updateStatusBar(`Report generated for ${this.getMonthName(month)} ${year}`);
+                    
+                } catch (error) {
+                    console.error('Error loading P&L report:', error);
+                    this.showError();
+                    this.updateStatusBar(`Error: ${error.message}`);
+                } finally {
+                    this.isLoading = false;
+                    this.showLoading(false);
+                }
+            }
+            
+            validateAndDefaultData(data) {
+                const defaultAmounts = { actual: 0, cumulative: 0, previous: 0 };
+                
+                const validatedData = {
+                    revenue: data.revenue || defaultAmounts,
+                    directPayroll: data.directPayroll || defaultAmounts,
+                    directExpenses: data.directExpenses || defaultAmounts,
+                    materials: data.materials || defaultAmounts,
+                    subcontractorCharges: data.subcontractorCharges || defaultAmounts,
+                    transportationFuel: data.transportationFuel || defaultAmounts,
+                    freightCustomDuty: data.freightCustomDuty || defaultAmounts,
+                    provisionEmployees: data.provisionEmployees || defaultAmounts,
+                    depreciation: data.depreciation || defaultAmounts,
+                    otherDirectExpenses: data.otherDirectExpenses || defaultAmounts,
+                    rentalLabors: data.rentalLabors || defaultAmounts,
+                    workInProgress: data.workInProgress || defaultAmounts,
+                    totalDirectCost: data.totalDirectCost || defaultAmounts,
+                    grossProfit: data.grossProfit || defaultAmounts,
+                    totalExpenses: data.totalExpenses || defaultAmounts,
+                    netProfit: data.netProfit || defaultAmounts
+                };
+                
+                Object.keys(validatedData).forEach(key => {
+                    if (!validatedData[key].hasOwnProperty('actual')) {
+                        validatedData[key].actual = 0;
+                    }
+                    if (!validatedData[key].hasOwnProperty('cumulative')) {
+                        validatedData[key].cumulative = 0;
+                    }
+                    if (!validatedData[key].hasOwnProperty('previous')) {
+                        validatedData[key].previous = 0;
+                    }
+                });
+                
+                return validatedData;
+            }
+            
+            renderReport() {
+                console.log('Rendering P&L report...');
+                
+                const tbody = document.getElementById('plTableBody');
+                let html = '';
+                
+                try {
+                    // REVENUE Section
+                    html += this.renderCategoryHeader('REVENUE');
+                    html += this.renderDataRow('REVENUE', this.reportData.revenue);
+                    html += this.renderSpacerRow();
+                    
+                    // DIRECT COST Section
+                    html += this.renderCategoryHeader('DIRECT COST');
+                    html += this.renderDataRow('Direct Payroll', this.reportData.directPayroll);
+                    html += this.renderDataRow('Direct Expenses', this.reportData.directExpenses);
+                    html += this.renderDataRow('Materials', this.reportData.materials);
+                    html += this.renderDataRow('Subcontractor Charges', this.reportData.subcontractorCharges);
+                    html += this.renderDataRow('Transportation & Fuel', this.reportData.transportationFuel);
+                    html += this.renderDataRow('Freight and Custom Duty', this.reportData.freightCustomDuty);
+                    html += this.renderDataRow('Prov for Employees End of Service Benefits-Direct', this.reportData.provisionEmployees);
+                    html += this.renderDataRow('Dep on Property and Equipment (Projects)-Direct', this.reportData.depreciation);
+                    html += this.renderDataRow('Other Direct Expenses', this.reportData.otherDirectExpenses);
+                    html += this.renderDataRow('Rental Labors', this.reportData.rentalLabors);
+                    html += this.renderDataRow('Work in Progress', this.reportData.workInProgress);
+                    html += this.renderTotalRow('TOTAL DIRECT COST', this.reportData.totalDirectCost, 'pl-total-row');
+                    html += this.renderSpacerRow();
+                    
+                    // GROSS PROFIT
+                    html += this.renderTotalRow('TOTAL GROSS PROFIT', this.reportData.grossProfit, 'pl-gross-profit-row');
+                    html += this.renderSpacerRow();
+                    
+                    // EXPENSES Section
+                    html += this.renderCategoryHeader('EXPENSES');
+                    html += this.renderDataRow('Total Expenses', this.reportData.totalExpenses);
+                    html += this.renderTotalRow('TOTAL EXPENSES', this.reportData.totalExpenses, 'pl-total-row');
+                    html += this.renderSpacerRow();
+                    
+                    // NET PROFIT
+                    html += this.renderTotalRow('TOTAL NET PROFIT', this.reportData.netProfit, 'pl-net-profit-row');
+                    
+                    tbody.innerHTML = html;
+                    document.getElementById('plContent').style.display = 'block';
+                    
+                    console.log('P&L report rendered successfully');
+                    
+                } catch (renderError) {
+                    console.error('Error rendering report:', renderError);
+                    this.showError();
+                    this.updateStatusBar(`Render Error: ${renderError.message}`);
+                }
+            }
+            
+            renderCategoryHeader(title) {
+                return `
+                    <tr class="pl-category-header">
+                        <td><strong>${title}</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                `;
+            }
+            
+            renderDataRow(description, amounts) {
+                const actualAmount = amounts && amounts.actual !== undefined ? amounts.actual : 0;
+                const cumulativeAmount = amounts && amounts.cumulative !== undefined ? amounts.cumulative : 0;
+                const previousAmount = amounts && amounts.previous !== undefined ? amounts.previous : 0;
+                
+                return `
+                    <tr class="pl-data-row">
+                        <td>${description}</td>
+                        <td class="amount-cell">${this.formatAmount(actualAmount)}</td>
+                        <td class="amount-cell">${this.formatAmount(cumulativeAmount)}</td>
+                        <td class="amount-cell">${this.formatAmount(previousAmount)}</td>
+                        <td class="amount-cell">-</td>
+                        <td class="amount-cell">-</td>
+                        <td class="amount-cell">-</td>
+                    </tr>
+                `;
+            }
+            
+            renderTotalRow(title, totals, cssClass) {
+                const actualAmount = totals && totals.actual !== undefined ? totals.actual : 0;
+                const cumulativeAmount = totals && totals.cumulative !== undefined ? totals.cumulative : 0;
+                const previousAmount = totals && totals.previous !== undefined ? totals.previous : 0;
+                
+                return `
+                    <tr class="${cssClass}">
+                        <td><strong>${title}</strong></td>
+                        <td class="amount-cell"><strong>${this.formatAmount(actualAmount)}</strong></td>
+                        <td class="amount-cell"><strong>${this.formatAmount(cumulativeAmount)}</strong></td>
+                        <td class="amount-cell"><strong>${this.formatAmount(previousAmount)}</strong></td>
+                        <td class="amount-cell"><strong>-</strong></td>
+                        <td class="amount-cell"><strong>-</strong></td>
+                        <td class="amount-cell"><strong>-</strong></td>
+                    </tr>
+                `;
+            }
+            
+            renderSpacerRow() {
+                return `
+                    <tr class="pl-spacer-row">
+                        <td colspan="7"></td>
+                    </tr>
+                `;
+            }
+            
+            formatAmount(amount) {
+                const numAmount = parseFloat(amount);
+                if (isNaN(numAmount) || numAmount === 0) {
+                    return '<span class="amount-zero">-</span>';
+                }
+                
+                const formatted = Math.abs(numAmount).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                const cssClass = numAmount > 0 ? 'amount-positive' : 'amount-negative';
+                const display = numAmount < 0 ? `(${formatted})` : formatted;
+                
+                return `<span class="${cssClass}">${display}</span>`;
+            }
+            
+            exportToExcel() {
+                console.log('Exporting P&L report...');
+                alert('Export functionality ready - implement CSV download here');
+            }
+            
+            showLoading(show) {
+                document.getElementById('plLoading').style.display = show ? 'flex' : 'none';
+                document.getElementById('plContent').style.display = show ? 'none' : 'block';
+            }
+            
+            showError() {
+                document.getElementById('plError').style.display = 'flex';
+                document.getElementById('plContent').style.display = 'none';
+            }
+            
+            hideError() {
+                document.getElementById('plError').style.display = 'none';
+            }
+            
+            updateStatusBar(message) {
+                document.getElementById('plStatusInfo').textContent = message;
+                document.getElementById('plTimestamp').textContent = new Date().toLocaleString();
+            }
+            
+            getMonthName(monthNumber) {
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                return months[monthNumber - 1];
+            }
+        }
+
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Set current month and year
+            console.log('DOM loaded, initializing P&L Report Manager...');
+            
             const now = new Date();
             document.getElementById('plYear').value = now.getFullYear();
             document.getElementById('plMonth').value = now.getMonth() + 1;
             
-            // Update header
             updateReportHeader();
             
-            // Load initial report
-            loadPLReport();
+            window.plManager = new PLReportManager();
+            
+            setTimeout(() => {
+                loadPLReport();
+            }, 500);
         });
+
+        // Global functions for HTML onclick events
+        window.loadPLReport = () => {
+            if (window.plManager) {
+                window.plManager.loadPLReport();
+            }
+        };
+
+        window.exportPLReport = () => {
+            if (window.plManager) {
+                window.plManager.exportToExcel();
+            }
+        };
 
         function updateReportHeader() {
             const year = document.getElementById('plYear').value;
@@ -444,12 +855,27 @@
             document.getElementById('plReportPeriod').textContent = 
                 `For the Month Ended ${monthName} ${year}`;
             document.getElementById('plAccumHeader').textContent = 
-                `${monthName.substring(0, 3)} ${year}`;
+                `${monthName.substring(0, 3).toUpperCase()} ${year}`;
         }
 
         // Update header when controls change
         document.getElementById('plYear').addEventListener('change', updateReportHeader);
         document.getElementById('plMonth').addEventListener('change', updateReportHeader);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                loadPLReport();
+            }
+            
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                exportPLReport();
+            }
+        });
+
+        console.log('P&L Report JavaScript loaded successfully');
     </script>
 </body>
 </html>

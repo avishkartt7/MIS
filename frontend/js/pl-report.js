@@ -1,7 +1,6 @@
 // =====================================================
-// P&L REPORT JAVASCRIPT - COMPLETE VERSION
-// File: frontend/js/pl-report.js
-// Uses the new backend API endpoints
+// UPDATED P&L REPORT JAVASCRIPT - TEMPLATE FORMAT
+// File: frontend/js/pl-report.js (REPLACE EXISTING)
 // =====================================================
 
 class PLReportManager {
@@ -36,17 +35,17 @@ class PLReportManager {
             
             console.log(`📊 Loading P&L Report for ${year}-${month}...`);
             
-            // Get data from the three new API endpoints
-            const [actualData, cumulativeData, previousData] = await Promise.all([
-                this.fetchData(`/api/reports/pl-summary/${year}/${month}`),
-                this.fetchData(`/api/reports/pl-cumulative/${year}/${month}`),
-                this.fetchData(`/api/reports/pl-previous/${year}/${month}`)
-            ]);
+            // Get summary data from new API endpoint
+            const response = await fetch(`/api/reports/pl-complete/${year}/${month}`);
+            const result = await response.json();
             
-            // Process the data into display format
-            this.reportData = this.combineReportData(actualData, cumulativeData, previousData);
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to fetch P&L data');
+            }
             
-            // Render the report
+            this.reportData = result.data;
+            
+            // Render the report in Excel template format
             this.renderReport();
             
             this.updateStatusBar(`Report generated for ${this.getMonthName(month)} ${year}`);
@@ -61,208 +60,121 @@ class PLReportManager {
         }
     }
     
-    async fetchData(endpoint) {
-        const response = await fetch(endpoint);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.message || 'Failed to fetch data');
-        }
-        
-        return result.data;
-    }
-    
-    combineReportData(actualData, cumulativeData, previousData) {
-        console.log('🔄 Combining report data...');
-        
-        // Create a map of all unique accounts
-        const accountMap = new Map();
-        
-        // Helper function to add accounts to map
-        const addAccountsToMap = (accounts, type) => {
-            accounts.forEach(account => {
-                const key = account.account_number;
-                if (!accountMap.has(key)) {
-                    accountMap.set(key, {
-                        account_number: account.account_number,
-                        account_name: account.account_name,
-                        type: type,
-                        amounts: { actual: 0, cumulative: 0, previous: 0 }
-                    });
-                }
-            });
-        };
-        
-        // Add accounts from all periods
-        addAccountsToMap(actualData.revenue.accounts, 'REVENUE');
-        addAccountsToMap(actualData.directCosts.accounts, 'DIRECT_COST');
-        addAccountsToMap(actualData.expenses.accounts, 'EXPENSES');
-        
-        addAccountsToMap(cumulativeData.revenue.accounts, 'REVENUE');
-        addAccountsToMap(cumulativeData.directCosts.accounts, 'DIRECT_COST');
-        addAccountsToMap(cumulativeData.expenses.accounts, 'EXPENSES');
-        
-        addAccountsToMap(previousData.revenue.accounts, 'REVENUE');
-        addAccountsToMap(previousData.directCosts.accounts, 'DIRECT_COST');
-        addAccountsToMap(previousData.expenses.accounts, 'EXPENSES');
-        
-        // Helper function to populate amounts
-        const populateAmounts = (accounts, period) => {
-            accounts.forEach(account => {
-                const key = account.account_number;
-                if (accountMap.has(key)) {
-                    accountMap.get(key).amounts[period] = parseFloat(account.net_amount || 0);
-                }
-            });
-        };
-        
-        // Populate amounts for each period
-        populateAmounts(actualData.revenue.accounts, 'actual');
-        populateAmounts(actualData.directCosts.accounts, 'actual');
-        populateAmounts(actualData.expenses.accounts, 'actual');
-        
-        populateAmounts(cumulativeData.revenue.accounts, 'cumulative');
-        populateAmounts(cumulativeData.directCosts.accounts, 'cumulative');
-        populateAmounts(cumulativeData.expenses.accounts, 'cumulative');
-        
-        populateAmounts(previousData.revenue.accounts, 'previous');
-        populateAmounts(previousData.directCosts.accounts, 'previous');
-        populateAmounts(previousData.expenses.accounts, 'previous');
-        
-        // Group accounts by category
-        const report = {
-            REVENUE: { accounts: [], total: { actual: 0, cumulative: 0, previous: 0 } },
-            DIRECT_COST: { accounts: [], total: { actual: 0, cumulative: 0, previous: 0 } },
-            EXPENSES: { accounts: [], total: { actual: 0, cumulative: 0, previous: 0 } }
-        };
-        
-        // Populate report structure
-        accountMap.forEach(account => {
-            if (account.type === 'REVENUE') {
-                report.REVENUE.accounts.push(account);
-                report.REVENUE.total.actual += account.amounts.actual;
-                report.REVENUE.total.cumulative += account.amounts.cumulative;
-                report.REVENUE.total.previous += account.amounts.previous;
-            } else if (account.type === 'DIRECT_COST') {
-                report.DIRECT_COST.accounts.push(account);
-                report.DIRECT_COST.total.actual += account.amounts.actual;
-                report.DIRECT_COST.total.cumulative += account.amounts.cumulative;
-                report.DIRECT_COST.total.previous += account.amounts.previous;
-            } else if (account.type === 'EXPENSES') {
-                report.EXPENSES.accounts.push(account);
-                report.EXPENSES.total.actual += account.amounts.actual;
-                report.EXPENSES.total.cumulative += account.amounts.cumulative;
-                report.EXPENSES.total.previous += account.amounts.previous;
-            }
-        });
-        
-        // Sort accounts within each category by account number
-        report.REVENUE.accounts.sort((a, b) => a.account_number.localeCompare(b.account_number));
-        report.DIRECT_COST.accounts.sort((a, b) => a.account_number.localeCompare(b.account_number));
-        report.EXPENSES.accounts.sort((a, b) => a.account_number.localeCompare(b.account_number));
-        
-        // Calculate derived totals
-        report.GROSS_PROFIT = {
-            total: {
-                actual: report.REVENUE.total.actual - report.DIRECT_COST.total.actual,
-                cumulative: report.REVENUE.total.cumulative - report.DIRECT_COST.total.cumulative,
-                previous: report.REVENUE.total.previous - report.DIRECT_COST.total.previous
-            }
-        };
-        
-        report.NET_PROFIT = {
-            total: {
-                actual: report.GROSS_PROFIT.total.actual - report.EXPENSES.total.actual,
-                cumulative: report.GROSS_PROFIT.total.cumulative - report.EXPENSES.total.cumulative,
-                previous: report.GROSS_PROFIT.total.previous - report.EXPENSES.total.previous
-            }
-        };
-        
-        return report;
-    }
-    
     renderReport() {
-        console.log('Rendering P&L report...');
-        
-        const tbody = document.getElementById('plTableBody');
-        let html = '';
-        
+    console.log('🎨 Rendering P&L report in Excel template format...');
+    
+    const tbody = document.getElementById('plTableBody');
+    let html = '';
+    
+    try {
         // REVENUE Section
-        html += this.renderSection('REVENUE', 'REVENUE', this.reportData.REVENUE);
+        html += this.renderCategoryHeader('REVENUE');
+        html += this.renderDataRow('REVENUE', this.reportData.revenue);
+        html += this.renderSpacerRow();
         
-        // DIRECT COST Section  
-        html += this.renderSection('DIRECT_COST', 'DIRECT COST', this.reportData.DIRECT_COST);
+        // DIRECT COST Section
+        html += this.renderCategoryHeader('DIRECT COST');
+        html += this.renderDataRow('Direct Payroll', this.reportData.directPayroll);
+        html += this.renderDataRow('Direct Expenses', this.reportData.directExpenses);
+        html += this.renderDataRow('Materials', this.reportData.materials);
+        html += this.renderDataRow('Subcontractor Charges', this.reportData.subcontractorCharges);
+        html += this.renderDataRow('Transportation & Fuel', this.reportData.transportationFuel);
+        html += this.renderDataRow('Freight and Custom Duty', this.reportData.freightCustomDuty);
+        html += this.renderDataRow('Prov for Employees End of Service Benefits-Direct', this.reportData.provisionEmployees);
+        html += this.renderDataRow('Dep on Property and Equipment (Projects)-Direct', this.reportData.depreciation);
+        html += this.renderDataRow('Other Direct Expenses', this.reportData.otherDirectExpenses);
+        html += this.renderDataRow('Rental Labors', this.reportData.rentalLabors);
+        html += this.renderDataRow('Work in Progress', this.reportData.workInProgress);
+        html += this.renderTotalRow('TOTAL DIRECT COST', this.reportData.totalDirectCost, 'pl-total-row');
+        html += this.renderSpacerRow();
         
         // GROSS PROFIT
-        html += this.renderTotalRow('TOTAL GROSS PROFIT', this.reportData.GROSS_PROFIT.total, 'pl-total-row');
+        html += this.renderTotalRow('TOTAL GROSS PROFIT', this.reportData.grossProfit, 'pl-gross-profit-row');
+        html += this.renderSpacerRow();
         
         // EXPENSES Section
-        html += this.renderSection('EXPENSES', 'EXPENSES', this.reportData.EXPENSES);
+        html += this.renderCategoryHeader('EXPENSES');
+        html += this.renderDataRow('Total Expenses', this.reportData.totalExpenses);
+        html += this.renderTotalRow('TOTAL EXPENSES', this.reportData.totalExpenses, 'pl-total-row');
+        html += this.renderSpacerRow();
         
         // NET PROFIT
-        html += this.renderTotalRow('TOTAL NET PROFIT', this.reportData.NET_PROFIT.total, 'pl-grand-total-row');
+        html += this.renderTotalRow('TOTAL NET PROFIT', this.reportData.netProfit, 'pl-net-profit-row');
         
         tbody.innerHTML = html;
         
         // Show content
         document.getElementById('plContent').style.display = 'block';
         
-        console.log('P&L report rendered successfully');
+        console.log('✅ P&L report rendered successfully');
+        
+    } catch (renderError) {
+        console.error('❌ Error rendering report:', renderError);
+        this.showError();
+        this.updateStatusBar(`Render Error: ${renderError.message}`);
     }
+}
     
-    renderSection(sectionKey, sectionTitle, sectionData) {
-        let html = '';
-        
-        // Section header
-        html += `
-            <tr class="pl-category-header">
-                <td colspan="8">${sectionTitle}</td>
-            </tr>
-        `;
-        
-        // Account rows
-        if (sectionData.accounts && sectionData.accounts.length > 0) {
-            sectionData.accounts.forEach(account => {
-                const amounts = account.amounts;
-                
-                // Only show accounts with non-zero amounts
-                if (amounts.actual !== 0 || amounts.cumulative !== 0 || amounts.previous !== 0) {
-                    html += `
-                        <tr class="pl-account-row">
-                            <td><span class="account-number">${account.account_number}</span></td>
-                            <td><span class="account-name">${account.account_name || 'Unnamed Account'}</span></td>
-                            <td class="amount-cell">${this.formatAmount(amounts.actual)}</td>
-                            <td class="amount-cell">${this.formatAmount(amounts.cumulative)}</td>
-                            <td class="amount-cell">${this.formatAmount(amounts.previous)}</td>
-                            <td class="amount-cell">-</td>
-                            <td class="amount-cell">-</td>
-                            <td class="amount-cell">-</td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-        
-        // Section total
-        html += this.renderTotalRow(`TOTAL ${sectionTitle}`, sectionData.total, 'pl-subcategory-header');
-        
-        return html;
-    }
+    renderCategoryHeader(title) {
+    return `
+        <tr class="pl-category-header">
+            <td><strong>${title}</strong></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    `;
+}
+
+
+    
+    renderDataRow(description, amounts) {
+    // Remove account parameter, only use description
+    const actualAmount = amounts && amounts.actual !== undefined ? amounts.actual : 0;
+    const cumulativeAmount = amounts && amounts.cumulative !== undefined ? amounts.cumulative : 0;
+    const previousAmount = amounts && amounts.previous !== undefined ? amounts.previous : 0;
+    
+    return `
+        <tr class="pl-account-row">
+            <td><span class="account-name">${description}</span></td>
+            <td class="amount-cell">${this.formatAmount(actualAmount)}</td>
+            <td class="amount-cell">${this.formatAmount(cumulativeAmount)}</td>
+            <td class="amount-cell">${this.formatAmount(previousAmount)}</td>
+            <td class="amount-cell">-</td>
+            <td class="amount-cell">-</td>
+            <td class="amount-cell">-</td>
+        </tr>
+    `;
+}
     
     renderTotalRow(title, totals, cssClass) {
-        return `
-            <tr class="${cssClass}">
-                <td></td>
-                <td><strong>${title}</strong></td>
-                <td class="amount-cell"><strong>${this.formatAmount(totals.actual)}</strong></td>
-                <td class="amount-cell"><strong>${this.formatAmount(totals.cumulative)}</strong></td>
-                <td class="amount-cell"><strong>${this.formatAmount(totals.previous)}</strong></td>
-                <td class="amount-cell"><strong>-</strong></td>
-                <td class="amount-cell"><strong>-</strong></td>
-                <td class="amount-cell"><strong>-</strong></td>
-            </tr>
-        `;
-    }
+    const actualAmount = totals && totals.actual !== undefined ? totals.actual : 0;
+    const cumulativeAmount = totals && totals.cumulative !== undefined ? totals.cumulative : 0;
+    const previousAmount = totals && totals.previous !== undefined ? totals.previous : 0;
+    
+    return `
+        <tr class="${cssClass}">
+            <td><strong>${title}</strong></td>
+            <td class="amount-cell"><strong>${this.formatAmount(actualAmount)}</strong></td>
+            <td class="amount-cell"><strong>${this.formatAmount(cumulativeAmount)}</strong></td>
+            <td class="amount-cell"><strong>${this.formatAmount(previousAmount)}</strong></td>
+            <td class="amount-cell"><strong>-</strong></td>
+            <td class="amount-cell"><strong>-</strong></td>
+            <td class="amount-cell"><strong>-</strong></td>
+        </tr>
+    `;
+}
+    
+    renderSpacerRow() {
+    return `
+        <tr class="pl-spacer-row">
+            <td colspan="7" style="height: 8px; border: none;"></td>
+        </tr>
+    `;
+}
     
     formatAmount(amount) {
         if (!amount || amount === 0) {
@@ -282,7 +194,7 @@ class PLReportManager {
     
     // Export functionality
     exportToExcel() {
-        console.log('Exporting P&L report...');
+        console.log('📁 Exporting P&L report...');
         
         if (!this.reportData || Object.keys(this.reportData).length === 0) {
             alert('No report data to export. Please generate a report first.');
@@ -299,39 +211,38 @@ class PLReportManager {
         csvContent += `Account,Particulars,Actual,Accum System,Last Report MIS,Budget,Variance,Last Year\n`;
         
         // Add sections
-        this.addCSVSection(csvContent, 'REVENUE', this.reportData.REVENUE);
-        this.addCSVSection(csvContent, 'DIRECT COST', this.reportData.DIRECT_COST);
+        csvContent += `\nREVENUE\n`;
+        csvContent += `,"REVENUE",${this.reportData.revenue.actual},${this.reportData.revenue.cumulative},${this.reportData.revenue.previous},-,-,-\n\n`;
+        
+        csvContent += `DIRECT COST\n`;
+        csvContent += `,"Direct Payroll",${this.reportData.directPayroll.actual},${this.reportData.directPayroll.cumulative},${this.reportData.directPayroll.previous},-,-,-\n`;
+        csvContent += `,"Direct Expenses",${this.reportData.directExpenses.actual},${this.reportData.directExpenses.cumulative},${this.reportData.directExpenses.previous},-,-,-\n`;
+        csvContent += `,"Materials",${this.reportData.materials.actual},${this.reportData.materials.cumulative},${this.reportData.materials.previous},-,-,-\n`;
+        csvContent += `,"Subcontractor Charges",${this.reportData.subcontractorCharges.actual},${this.reportData.subcontractorCharges.cumulative},${this.reportData.subcontractorCharges.previous},-,-,-\n`;
+        csvContent += `,"Transportation & Fuel",${this.reportData.transportationFuel.actual},${this.reportData.transportationFuel.cumulative},${this.reportData.transportationFuel.previous},-,-,-\n`;
+        csvContent += `,"Freight and Custom Duty",${this.reportData.freightCustomDuty.actual},${this.reportData.freightCustomDuty.cumulative},${this.reportData.freightCustomDuty.previous},-,-,-\n`;
+        csvContent += `,"Prov for Employees End of Service Benefits-Direct",${this.reportData.provisionEmployees.actual},${this.reportData.provisionEmployees.cumulative},${this.reportData.provisionEmployees.previous},-,-,-\n`;
+        csvContent += `,"Dep on Property and Equipment (Projects)-Direct",${this.reportData.depreciation.actual},${this.reportData.depreciation.cumulative},${this.reportData.depreciation.previous},-,-,-\n`;
+        csvContent += `,"Other Direct Expenses",${this.reportData.otherDirectExpenses.actual},${this.reportData.otherDirectExpenses.cumulative},${this.reportData.otherDirectExpenses.previous},-,-,-\n`;
+        csvContent += `,"Rental Labors",${this.reportData.rentalLabors.actual},${this.reportData.rentalLabors.cumulative},${this.reportData.rentalLabors.previous},-,-,-\n`;
+        csvContent += `,"Work in Progress",${this.reportData.workInProgress.actual},${this.reportData.workInProgress.cumulative},${this.reportData.workInProgress.previous},-,-,-\n`;
+        csvContent += `,"TOTAL DIRECT COST",${this.reportData.totalDirectCost.actual},${this.reportData.totalDirectCost.cumulative},${this.reportData.totalDirectCost.previous},-,-,-\n\n`;
         
         // Add gross profit
-        csvContent += `,"TOTAL GROSS PROFIT",${this.reportData.GROSS_PROFIT.total.actual},${this.reportData.GROSS_PROFIT.total.cumulative},${this.reportData.GROSS_PROFIT.total.previous},-,-,-\n\n`;
+        csvContent += `,"TOTAL GROSS PROFIT",${this.reportData.grossProfit.actual},${this.reportData.grossProfit.cumulative},${this.reportData.grossProfit.previous},-,-,-\n\n`;
         
-        this.addCSVSection(csvContent, 'EXPENSES', this.reportData.EXPENSES);
+        csvContent += `EXPENSES\n`;
+        csvContent += `,"Total Expenses",${this.reportData.totalExpenses.actual},${this.reportData.totalExpenses.cumulative},${this.reportData.totalExpenses.previous},-,-,-\n`;
+        csvContent += `,"TOTAL EXPENSES",${this.reportData.totalExpenses.actual},${this.reportData.totalExpenses.cumulative},${this.reportData.totalExpenses.previous},-,-,-\n\n`;
         
         // Add net profit
-        csvContent += `,"TOTAL NET PROFIT",${this.reportData.NET_PROFIT.total.actual},${this.reportData.NET_PROFIT.total.cumulative},${this.reportData.NET_PROFIT.total.previous},-,-,-\n`;
+        csvContent += `,"TOTAL NET PROFIT",${this.reportData.netProfit.actual},${this.reportData.netProfit.cumulative},${this.reportData.netProfit.previous},-,-,-\n`;
         
         // Download file
         const filename = `PL_Report_${monthName}_${year}.csv`;
         this.downloadCSV(csvContent, filename);
         
-        console.log('P&L report exported successfully');
-    }
-    
-    addCSVSection(csvContent, title, sectionData) {
-        csvContent += `${title}\n`;
-        
-        if (sectionData.accounts) {
-            sectionData.accounts.forEach(account => {
-                const amounts = account.amounts;
-                if (amounts.actual !== 0 || amounts.cumulative !== 0 || amounts.previous !== 0) {
-                    csvContent += `${account.account_number},"${account.account_name}",${amounts.actual},${amounts.cumulative},${amounts.previous},-,-,-\n`;
-                }
-            });
-        }
-        
-        csvContent += `,"TOTAL ${title}",${sectionData.total.actual},${sectionData.total.cumulative},${sectionData.total.previous},-,-,-\n\n`;
-        
-        return csvContent;
+        console.log('✅ P&L report exported successfully');
     }
     
     downloadCSV(content, filename) {
