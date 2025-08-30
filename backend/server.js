@@ -1165,12 +1165,24 @@ app.get('/api/reports/pl-previous/:year/:month', async (req, res) => {
 
 
 
+// =====================================================
+// COMPLETE P&L REPORT API WITH ALL ACCOUNT MAPPINGS
+// Add this to your existing backend/server.js
+// Replace the existing pl-complete route
+// =====================================================
+
+// =====================================================
+// COMPLETE P&L REPORT API WITH ALL ACCOUNT MAPPINGS
+// Add this to your existing backend/server.js
+// Replace the existing pl-complete route
+// =====================================================
+
 app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
     try {
         const { year, month } = req.params;
-        console.log(`📊 Generating complete P&L summary for ${year}-${month}...`);
+        console.log(`📊 Generating COMPLETE P&L summary for ${year}-${month}...`);
         
-        // COMPLETE Account mappings for each category
+        // COMPLETE Account mappings for ALL categories
         const accountMappings = {
             // REVENUE accounts - Specific accounts only
             revenue: [
@@ -1228,8 +1240,139 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
                 '510108'
             ],
             
-            // EXPENSES (6xxxx accounts - use wildcard pattern)
-            totalExpenses: null // null means use wildcard pattern '6%'
+            // ======================================
+            // GENERAL & ADMINISTRATIVE EXPENSES
+            // ======================================
+            
+            // Indirect Payroll
+            indirectPayroll: [
+                '520102'
+            ],
+            
+            // Other Administration Expenses - REMOVE ACCOUNTS (will be calculated as sum)
+            otherAdminExpenses: [],
+            
+            // Employees Allowances (Leave Salaries,Accom,EOS,Car,Bonus)
+            employeesAllowances: [
+                '6101', '610101', '610102', '610103', '610104', '610105', 
+                '610108', '610110', '610503', '610504', '610506', 
+                '63', '6301', '630101', '630110', '630201', '630301'
+            ],
+            
+            // Motor Vehicle Petrol and Maintenance
+            motorVehicle: [
+                '6504', '650401', '650402', '650403', '650404', '650405', 
+                '650406', '650407', '650408', '650409', '650410', '650411'
+            ],
+            
+            // Professional and Government Fees
+            professionalFees: [
+                '6508', '650801', '650806', '650807', '650808', '650809', 
+                '6509', '650901', '650902', '650903'
+            ],
+            
+            // Licenses and Visa Fees
+            licensesVisaFees: [
+                '650802', '650803', '650804', '6510', '651001', 
+                '6511', '651101', '651102', '651103', '651104', '651105', '651106'
+            ],
+            
+            // Rent
+            rent: [
+                '520211', '610502', '6501', '650101', '650102', '650103', 
+                '650104', '650105', '650106', '650107', '650108', '650109', '65025'
+            ],
+            
+            // Marketing (Clients Inquiries and Tender Costs)
+            marketing: [
+                '6520', '652001', '652002', '652003', '652004', '652005', 
+                '652006', '652007', '652008', '652009', '6523', '652301', '652302'
+            ],
+            
+            // Insurance
+            insurance: [
+                '6518', '651801', '651802', '651803', '651804', '651805', '651806', '651810'
+            ],
+            
+            // Travel & Entertainment (Tickets)
+            travelEntertainment: [
+                '6506', '650602', '650603', '650605', '650610', 
+                '6507', '650701', '650702', '650706'
+            ],
+            
+            // Telephone
+            telephone: [
+                '6503', '650301', '650302'
+            ],
+            
+            // Depreciation of Property and Equipment-Indirect - CORRECTED ACCOUNTS
+            depreciationIndirect: [
+                '652602', '652603', '652604', '652606', '652607', '652608', '652609', '652610', '652612', '6527', '652701'
+            ],
+            
+            // Printing & Stationery
+            printingStationery: [
+                '651501', '651508'
+            ],
+            
+            // Electricity & Water
+            electricityWater: [
+                '6502', '650201', '650202', '650203'
+            ],
+            
+            // Office Supplies
+            officeSupplies: [
+                '651502', '651503', '651504', '651505', '651506', '651507'
+            ],
+            
+            // Depreciation of Right to use asset
+            depreciationRightToUse: [
+                '652608'
+            ],
+            
+            // Repairs & Maintenance & Uniforms & IT
+            repairsMaintenance: [
+                '6505', '650501', '650502', '650503', '650504', '650509', '650805',
+                '6513', '651301', '651302', '651303', 
+                '6514', '651401', '651402', '651403', '652303'
+            ],
+            
+            // Prov for Employees End of Service Benefits-Indirect
+            provisionEmployeesIndirect: [
+                '610106', '610505'
+            ],
+            
+            // Other General & Admin Expenses (same as Other Administration Expenses)
+            otherGeneralAdmin: [
+                '6524', '652401', '652402', '6528', '652801', '6529', 
+                '652901', '652902', '6530', '653001', '690101', '999999'
+            ],
+            
+            // Impairment of Trade Receivables
+            impairmentTradeReceivables: [
+                '6519', '651901', '651902'
+            ],
+            
+            // Impairment of Retention Receivables - KEEP BLANK (no accounts mapped)
+            impairmentRetentionReceivables: [],
+            
+            // Loss on Liquidated Bank Guarantees (no accounts mapped - blank)
+            lossLiquidatedBankGuarantees: [],
+            
+            // ======================================
+            // OTHER INCOME/EXPENSES
+            // ======================================
+            
+            // Borrowings Costs
+            borrowingsCosts: [
+                '520205', '520206', '610107', '6525', '652501', '652502', '652503', '652504'
+            ],
+            
+            // Other Income
+            otherIncome: [
+                '43', '4301', '430101', '45', '4501', '450101', 
+                '47', '4701', '470101', '470102', '6531', '653101'
+            ]
         };
 
         const previousMonth = month > 1 ? month - 1 : 12;
@@ -1237,22 +1380,16 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
 
         // Helper function to get category totals for specific accounts
         async function getCategoryTotals(yearParam, monthCondition, accounts) {
-            let whereClause = '';
-            let params = [yearParam];
-            
-            if (accounts && Array.isArray(accounts) && accounts.length > 0) {
-                // Specific accounts
-                whereClause = 'WHERE gl.account_number = ANY($2)';
-                params.push(accounts);
-            } else if (accounts === null) {
-                // Use wildcard for expenses (6xxxx)
-                whereClause = "WHERE gl.account_number LIKE '6%'";
-            } else {
-                // Empty array or no accounts specified, return zeros
+            if (!accounts || accounts.length === 0) {
                 return { total_credits: 0, total_debits: 0, transaction_count: 0 };
             }
             
-            whereClause += ` AND EXTRACT(YEAR FROM gl.transaction_date) = $1 ${monthCondition} AND gl.is_locked = false`;
+            const whereClause = `
+                WHERE gl.account_number = ANY($2)
+                AND EXTRACT(YEAR FROM gl.transaction_date) = $1 
+                ${monthCondition} 
+                AND gl.is_locked = false
+            `;
             
             const query = `
                 SELECT 
@@ -1264,35 +1401,71 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
                 ${whereClause}
             `;
             
-            console.log(`🔍 Query for ${JSON.stringify(accounts)}: ${query}`);
-            console.log(`📋 Params: ${JSON.stringify(params)}`);
+            console.log(`🔍 Query for ${JSON.stringify(accounts.slice(0, 5))}... (${accounts.length} accounts)`);
             
-            const result = await queryDB(query, params);
+            const result = await queryDB(query, [yearParam, accounts]);
             const row = result.rows[0] || { total_credits: 0, total_debits: 0, transaction_count: 0 };
             
-            console.log(`📊 Results for ${JSON.stringify(accounts)}: Credits=${row.total_credits}, Debits=${row.total_debits}, Count=${row.transaction_count}`);
+            console.log(`📊 Results: Credits=${row.total_credits}, Debits=${row.total_debits}, Count=${row.transaction_count}`);
             
             return row;
         }
 
         // Get all data in parallel
-        console.log('🔄 Fetching data for all categories...');
+        console.log('🔄 Fetching data for ALL categories...');
         
         const [
             // ACTUAL (Current month only)
             revenueActual, directPayrollActual, materialsActual, subcontractorActual, 
             transportationActual, freightActual, provisionActual, depreciationActual, 
-            otherDirectActual, rentalActual, wipActual, expensesActual,
+            otherDirectActual, rentalActual, wipActual,
+            
+            // General & Administrative Expenses - ACTUAL
+            indirectPayrollActual, otherAdminActual, employeesAllowancesActual,
+            motorVehicleActual, professionalFeesActual, licensesVisaActual,
+            rentActual, marketingActual, insuranceActual, travelActual,
+            telephoneActual, depreciationIndirectActual, printingActual,
+            electricityActual, officeSuppliesActual, depreciationRightActual,
+            repairsMaintenanceActual, provisionIndirectActual, otherGeneralActual,
+            impairmentTradeActual, impairmentRetentionActual, lossGuaranteesActual,
+            
+            // Other Income/Expenses - ACTUAL
+            borrowingsCostsActual, otherIncomeActual,
             
             // CUMULATIVE (Jan to current month)
             revenueCumulative, directPayrollCumulative, materialsCumulative, subcontractorCumulative,
             transportationCumulative, freightCumulative, provisionCumulative, depreciationCumulative,
-            otherDirectCumulative, rentalCumulative, wipCumulative, expensesCumulative,
+            otherDirectCumulative, rentalCumulative, wipCumulative,
+            
+            // General & Administrative Expenses - CUMULATIVE
+            indirectPayrollCumulative, otherAdminCumulative, employeesAllowancesCumulative,
+            motorVehicleCumulative, professionalFeesCumulative, licensesVisaCumulative,
+            rentCumulative, marketingCumulative, insuranceCumulative, travelCumulative,
+            telephoneCumulative, depreciationIndirectCumulative, printingCumulative,
+            electricityCumulative, officeSuppliesCumulative, depreciationRightCumulative,
+            repairsMaintenanceCumulative, provisionIndirectCumulative, otherGeneralCumulative,
+            impairmentTradeCumulative, impairmentRetentionCumulative, lossGuaranteesCumulative,
+            
+            // Other Income/Expenses - CUMULATIVE
+            borrowingsCostsCumulative, otherIncomeCumulative,
             
             // PREVIOUS (Jan to previous month)
             revenuePrevious, directPayrollPrevious, materialsPrevious, subcontractorPrevious,
             transportationPrevious, freightPrevious, provisionPrevious, depreciationPrevious,
-            otherDirectPrevious, rentalPrevious, wipPrevious, expensesPrevious
+            otherDirectPrevious, rentalPrevious, wipPrevious,
+            
+            // General & Administrative Expenses - PREVIOUS
+            indirectPayrollPrevious, otherAdminPrevious, employeesAllowancesPrevious,
+            motorVehiclePrevious, professionalFeesPrevious, licensesVisaPrevious,
+            rentPrevious, marketingPrevious, insurancePrevious, travelPrevious,
+            telephonePrevious, depreciationIndirectPrevious, printingPrevious,
+            electricityPrevious, officeSuppliesPrevious, depreciationRightPrevious,
+            repairsMaintenancePrevious, provisionIndirectPrevious, otherGeneralPrevious,
+            impairmentTradePrevious, impairmentRetentionPrevious, lossGuaranteesPrevious,
+            
+            // Other Income/Expenses - PREVIOUS
+            borrowingsCostsPrevious, otherIncomePrevious
+            
         ] = await Promise.all([
             // ACTUAL (Current month)
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.revenue),
@@ -1306,9 +1479,36 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.otherDirectExpenses),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.rentalLabors),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.workInProgress),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.totalExpenses),
             
-            // CUMULATIVE (Jan to current month)
+            // G&A Expenses - ACTUAL
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.indirectPayroll),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.otherAdminExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.employeesAllowances),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.motorVehicle),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.professionalFees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.licensesVisaFees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.rent),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.marketing),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.insurance),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.travelEntertainment),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.telephone),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.depreciationIndirect),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.printingStationery),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.electricityWater),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.officeSupplies),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.depreciationRightToUse),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.repairsMaintenance),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.provisionEmployeesIndirect),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.otherGeneralAdmin),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.impairmentTradeReceivables),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.impairmentRetentionReceivables),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.lossLiquidatedBankGuarantees),
+            
+            // Other Income/Expenses - ACTUAL
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.borrowingsCosts),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) = ${month}`, accountMappings.otherIncome),
+            
+            // CUMULATIVE (Jan to current month) - ALL CATEGORIES
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.revenue),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.directPayroll),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.materials),
@@ -1320,9 +1520,36 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.otherDirectExpenses),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.rentalLabors),
             getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.workInProgress),
-            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.totalExpenses),
             
-            // PREVIOUS (Jan to previous month)
+            // G&A Expenses - CUMULATIVE
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.indirectPayroll),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.otherAdminExpenses),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.employeesAllowances),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.motorVehicle),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.professionalFees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.licensesVisaFees),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.rent),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.marketing),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.insurance),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.travelEntertainment),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.telephone),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.depreciationIndirect),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.printingStationery),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.electricityWater),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.officeSupplies),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.depreciationRightToUse),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.repairsMaintenance),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.provisionEmployeesIndirect),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.otherGeneralAdmin),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.impairmentTradeReceivables),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.impairmentRetentionReceivables),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.lossLiquidatedBankGuarantees),
+            
+            // Other Income/Expenses - CUMULATIVE
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.borrowingsCosts),
+            getCategoryTotals(year, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${month}`, accountMappings.otherIncome),
+            
+            // PREVIOUS (Jan to previous month) - ALL CATEGORIES
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.revenue),
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.directPayroll),
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.materials),
@@ -1334,14 +1561,41 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.otherDirectExpenses),
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.rentalLabors),
             getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.workInProgress),
-            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.totalExpenses)
+            
+            // G&A Expenses - PREVIOUS
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.indirectPayroll),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.otherAdminExpenses),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.employeesAllowances),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.motorVehicle),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.professionalFees),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.licensesVisaFees),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.rent),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.marketing),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.insurance),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.travelEntertainment),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.telephone),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.depreciationIndirect),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.printingStationery),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.electricityWater),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.officeSupplies),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.depreciationRightToUse),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.repairsMaintenance),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.provisionEmployeesIndirect),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.otherGeneralAdmin),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.impairmentTradeReceivables),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.impairmentRetentionReceivables),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.lossLiquidatedBankGuarantees),
+            
+            // Other Income/Expenses - PREVIOUS
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.borrowingsCosts),
+            getCategoryTotals(previousYear, `AND EXTRACT(MONTH FROM gl.transaction_date) <= ${previousMonth}`, accountMappings.otherIncome)
         ]);
 
         // Calculate net amounts (Revenue: Credit-Debit, Costs/Expenses: Debit-Credit)
         const calculateRevenue = (data) => parseFloat(data.total_credits || 0) - parseFloat(data.total_debits || 0);
         const calculateExpense = (data) => parseFloat(data.total_debits || 0) - parseFloat(data.total_credits || 0);
 
-        // Build response according to Excel template structure
+        // Build response according to complete P&L structure
         const reportData = {
             // REVENUE
             revenue: {
@@ -1411,11 +1665,156 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
                 previous: calculateExpense(wipPrevious)
             },
             
-            // EXPENSES (6xxxx accounts)
-            totalExpenses: {
-                actual: calculateExpense(expensesActual),
-                cumulative: calculateExpense(expensesCumulative),
-                previous: calculateExpense(expensesPrevious)
+            // ======================================
+            // GENERAL & ADMINISTRATIVE EXPENSES
+            // ======================================
+            
+            indirectPayroll: {
+                actual: calculateExpense(indirectPayrollActual),
+                cumulative: calculateExpense(indirectPayrollCumulative),
+                previous: calculateExpense(indirectPayrollPrevious)
+            },
+            
+            otherAdminExpenses: {
+                actual: calculateExpense(otherAdminActual),
+                cumulative: calculateExpense(otherAdminCumulative),
+                previous: calculateExpense(otherAdminPrevious)
+            },
+            
+            employeesAllowances: {
+                actual: calculateExpense(employeesAllowancesActual),
+                cumulative: calculateExpense(employeesAllowancesCumulative),
+                previous: calculateExpense(employeesAllowancesPrevious)
+            },
+            
+            motorVehicle: {
+                actual: calculateExpense(motorVehicleActual),
+                cumulative: calculateExpense(motorVehicleCumulative),
+                previous: calculateExpense(motorVehiclePrevious)
+            },
+            
+            professionalFees: {
+                actual: calculateExpense(professionalFeesActual),
+                cumulative: calculateExpense(professionalFeesCumulative),
+                previous: calculateExpense(professionalFeesPrevious)
+            },
+            
+            licensesVisaFees: {
+                actual: calculateExpense(licensesVisaActual),
+                cumulative: calculateExpense(licensesVisaCumulative),
+                previous: calculateExpense(licensesVisaPrevious)
+            },
+            
+            rent: {
+                actual: calculateExpense(rentActual),
+                cumulative: calculateExpense(rentCumulative),
+                previous: calculateExpense(rentPrevious)
+            },
+            
+            marketing: {
+                actual: calculateExpense(marketingActual),
+                cumulative: calculateExpense(marketingCumulative),
+                previous: calculateExpense(marketingPrevious)
+            },
+            
+            insurance: {
+                actual: calculateExpense(insuranceActual),
+                cumulative: calculateExpense(insuranceCumulative),
+                previous: calculateExpense(insurancePrevious)
+            },
+            
+            travelEntertainment: {
+                actual: calculateExpense(travelActual),
+                cumulative: calculateExpense(travelCumulative),
+                previous: calculateExpense(travelPrevious)
+            },
+            
+            telephone: {
+                actual: calculateExpense(telephoneActual),
+                cumulative: calculateExpense(telephoneCumulative),
+                previous: calculateExpense(telephonePrevious)
+            },
+            
+            depreciationIndirect: {
+                actual: calculateExpense(depreciationIndirectActual),
+                cumulative: calculateExpense(depreciationIndirectCumulative),
+                previous: calculateExpense(depreciationIndirectPrevious)
+            },
+            
+            printingStationery: {
+                actual: calculateExpense(printingActual),
+                cumulative: calculateExpense(printingCumulative),
+                previous: calculateExpense(printingPrevious)
+            },
+            
+            electricityWater: {
+                actual: calculateExpense(electricityActual),
+                cumulative: calculateExpense(electricityCumulative),
+                previous: calculateExpense(electricityPrevious)
+            },
+            
+            officeSupplies: {
+                actual: calculateExpense(officeSuppliesActual),
+                cumulative: calculateExpense(officeSuppliesCumulative),
+                previous: calculateExpense(officeSuppliesPrevious)
+            },
+            
+            depreciationRightToUse: {
+                actual: calculateExpense(depreciationRightActual),
+                cumulative: calculateExpense(depreciationRightCumulative),
+                previous: calculateExpense(depreciationRightPrevious)
+            },
+            
+            repairsMaintenance: {
+                actual: calculateExpense(repairsMaintenanceActual),
+                cumulative: calculateExpense(repairsMaintenanceCumulative),
+                previous: calculateExpense(repairsMaintenancePrevious)
+            },
+            
+            provisionEmployeesIndirect: {
+                actual: calculateExpense(provisionIndirectActual),
+                cumulative: calculateExpense(provisionIndirectCumulative),
+                previous: calculateExpense(provisionIndirectPrevious)
+            },
+            
+            otherGeneralAdmin: {
+                actual: calculateExpense(otherGeneralActual),
+                cumulative: calculateExpense(otherGeneralCumulative),
+                previous: calculateExpense(otherGeneralPrevious)
+            },
+            
+            impairmentTradeReceivables: {
+                actual: calculateExpense(impairmentTradeActual),
+                cumulative: calculateExpense(impairmentTradeCumulative),
+                previous: calculateExpense(impairmentTradePrevious)
+            },
+            
+            impairmentRetentionReceivables: {
+                actual: calculateExpense(impairmentRetentionActual),
+                cumulative: calculateExpense(impairmentRetentionCumulative),
+                previous: calculateExpense(impairmentRetentionPrevious)
+            },
+            
+            lossLiquidatedBankGuarantees: {
+                actual: calculateExpense(lossGuaranteesActual),
+                cumulative: calculateExpense(lossGuaranteesCumulative),
+                previous: calculateExpense(lossGuaranteesPrevious)
+            },
+            
+            // ======================================
+            // OTHER INCOME/EXPENSES
+            // ======================================
+            
+            borrowingsCosts: {
+                actual: calculateExpense(borrowingsCostsActual),
+                cumulative: calculateExpense(borrowingsCostsCumulative),
+                previous: calculateExpense(borrowingsCostsPrevious)
+            },
+            
+            otherIncome: {
+                actual: calculateRevenue(otherIncomeActual), // Income = Credit - Debit
+                cumulative: calculateRevenue(otherIncomeCumulative),
+                previous: calculateRevenue(otherIncomePrevious)
             }
         };
 
@@ -1445,19 +1844,53 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
             previous: reportData.revenue.previous - reportData.totalDirectCost.previous
         };
 
-        // Calculate NET PROFIT = Gross Profit - Total Expenses
-        reportData.netProfit = {
-            actual: reportData.grossProfit.actual - reportData.totalExpenses.actual,
-            cumulative: reportData.grossProfit.cumulative - reportData.totalExpenses.cumulative,
-            previous: reportData.grossProfit.previous - reportData.totalExpenses.previous
+        // Calculate TOTAL GENERAL & ADMINISTRATIVE EXPENSES = Indirect Payroll + Other Administration Expenses + Impairment of Trade Receivables
+        const otherAdminExpenseCategories = [
+            'employeesAllowances', 'motorVehicle', 'professionalFees', 'licensesVisaFees', 'rent', 
+            'marketing', 'insurance', 'travelEntertainment', 'telephone', 'depreciationIndirect', 
+            'printingStationery', 'electricityWater', 'officeSupplies', 'depreciationRightToUse', 
+            'repairsMaintenance', 'provisionEmployeesIndirect', 'otherGeneralAdmin'
+        ];
+
+        // Calculate Other Administration Expenses (sum of all individual categories)
+        reportData.otherAdminExpenses = {
+            actual: otherAdminExpenseCategories.reduce((sum, cat) => sum + reportData[cat].actual, 0),
+            cumulative: otherAdminExpenseCategories.reduce((sum, cat) => sum + reportData[cat].cumulative, 0),
+            previous: otherAdminExpenseCategories.reduce((sum, cat) => sum + reportData[cat].previous, 0)
         };
 
-        console.log(`✅ P&L Summary Generated:`);
+        // Calculate TOTAL GENERAL & ADMINISTRATIVE EXPENSES = Indirect Payroll + Other Administration Expenses + Impairment of Trade Receivables
+        reportData.totalGeneralAdmin = {
+            actual: reportData.indirectPayroll.actual + reportData.otherAdminExpenses.actual + reportData.impairmentTradeReceivables.actual,
+            cumulative: reportData.indirectPayroll.cumulative + reportData.otherAdminExpenses.cumulative + reportData.impairmentTradeReceivables.cumulative,
+            previous: reportData.indirectPayroll.previous + reportData.otherAdminExpenses.previous + reportData.impairmentTradeReceivables.previous
+        };
+
+        // Calculate TOTAL OPERATING PROFIT = Gross Profit - Total General & Administrative Expenses
+        reportData.totalOperatingProfit = {
+            actual: reportData.grossProfit.actual - reportData.totalGeneralAdmin.actual,
+            cumulative: reportData.grossProfit.cumulative - reportData.totalGeneralAdmin.cumulative,
+            previous: reportData.grossProfit.previous - reportData.totalGeneralAdmin.previous
+        };
+
+        // Calculate NET PROFIT = Operating Profit - Borrowings Costs + Other Income
+        reportData.netProfit = {
+            actual: reportData.totalOperatingProfit.actual - reportData.borrowingsCosts.actual + reportData.otherIncome.actual,
+            cumulative: reportData.totalOperatingProfit.cumulative - reportData.borrowingsCosts.cumulative + reportData.otherIncome.cumulative,
+            previous: reportData.totalOperatingProfit.previous - reportData.borrowingsCosts.previous + reportData.otherIncome.previous
+        };
+
+        // Add headcount data (placeholder - will need separate mapping)
+        reportData.directHeadcount = { actual: 0, cumulative: 0, previous: 0 };
+        reportData.indirectHeadcount = { actual: 0, cumulative: 0, previous: 0 };
+        reportData.totalHeadcount = { actual: 0, cumulative: 0, previous: 0 };
+
+        console.log(`✅ COMPLETE P&L Summary Generated:`);
         console.log(`Revenue: ${reportData.revenue.actual} | ${reportData.revenue.cumulative} | ${reportData.revenue.previous}`);
         console.log(`Direct Payroll: ${reportData.directPayroll.actual} | ${reportData.directPayroll.cumulative} | ${reportData.directPayroll.previous}`);
-        console.log(`Direct Expenses: ${reportData.directExpenses.actual} | ${reportData.directExpenses.cumulative} | ${reportData.directExpenses.previous}`);
-        console.log(`Total Direct Cost: ${reportData.totalDirectCost.actual} | ${reportData.totalDirectCost.cumulative} | ${reportData.totalDirectCost.previous}`);
         console.log(`Gross Profit: ${reportData.grossProfit.actual} | ${reportData.grossProfit.cumulative} | ${reportData.grossProfit.previous}`);
+        console.log(`Total G&A: ${reportData.totalGeneralAdmin.actual} | ${reportData.totalGeneralAdmin.cumulative} | ${reportData.totalGeneralAdmin.previous}`);
+        console.log(`Operating Profit: ${reportData.totalOperatingProfit.actual} | ${reportData.totalOperatingProfit.cumulative} | ${reportData.totalOperatingProfit.previous}`);
         console.log(`Net Profit: ${reportData.netProfit.actual} | ${reportData.netProfit.cumulative} | ${reportData.netProfit.previous}`);
 
         res.json({
@@ -1469,7 +1902,7 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Error generating P&L summary:', error.message);
+        console.error('❌ Error generating COMPLETE P&L summary:', error.message);
         res.status(500).json({
             success: false,
             message: 'Error generating P&L summary',
@@ -1516,9 +1949,6 @@ app.get('/api/reports/verify-accounts/:year/:month', async (req, res) => {
         });
     }
 });
-
-
-
 
 
 

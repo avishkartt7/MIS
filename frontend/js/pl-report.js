@@ -61,19 +61,17 @@ class PLReportManager {
     }
     
     renderReport() {
-    console.log('🎨 Rendering P&L report in Excel template format...');
+    console.log('Rendering P&L report...');
     
     const tbody = document.getElementById('plTableBody');
     let html = '';
     
     try {
-        // REVENUE Section
+        // REVENUE Section (NO blank row above)
         html += this.renderCategoryHeader('REVENUE');
         html += this.renderDataRow('REVENUE', this.reportData.revenue);
-        html += this.renderSpacerRow();
         
-        // DIRECT COST Section
-        html += this.renderCategoryHeader('DIRECT COST');
+        // DIRECT COST Section (NO blank row between Revenue and Direct Payroll)
         html += this.renderDataRow('Direct Payroll', this.reportData.directPayroll);
         html += this.renderDataRow('Direct Expenses', this.reportData.directExpenses);
         html += this.renderDataRow('Materials', this.reportData.materials);
@@ -86,30 +84,64 @@ class PLReportManager {
         html += this.renderDataRow('Rental Labors', this.reportData.rentalLabors);
         html += this.renderDataRow('Work in Progress', this.reportData.workInProgress);
         html += this.renderTotalRow('TOTAL DIRECT COST', this.reportData.totalDirectCost, 'pl-total-row');
-        html += this.renderSpacerRow();
         
         // GROSS PROFIT
         html += this.renderTotalRow('TOTAL GROSS PROFIT', this.reportData.grossProfit, 'pl-gross-profit-row');
-        html += this.renderSpacerRow();
+        // GOP% Row
+        html += this.renderPercentageRow('GOP%', this.calculateGOPPercentage());
         
-        // EXPENSES Section
-        html += this.renderCategoryHeader('EXPENSES');
-        html += this.renderDataRow('Total Expenses', this.reportData.totalExpenses);
-        html += this.renderTotalRow('TOTAL EXPENSES', this.reportData.totalExpenses, 'pl-total-row');
-        html += this.renderSpacerRow();
+        // GENERAL & ADMINISTRATIVE EXPENSES Section
+        html += this.renderCategoryHeader('GENERAL & ADMINISTRATIVE EXPENSES');
+        html += this.renderDataRow('Indirect Payroll', this.reportData.indirectPayroll);
+        html += this.renderDataRow('Other Administration Expenses', this.reportData.otherAdminExpenses);
+        html += this.renderDataRow('Employees Allowances (Leave Salaries,Accom,EOS,Car,Bonus)', this.reportData.employeesAllowances);
+        html += this.renderDataRow('Motor Vehicle Petrol and Maintenance', this.reportData.motorVehicle);
+        html += this.renderDataRow('Professional and Government Fees', this.reportData.professionalFees);
+        html += this.renderDataRow('Licenses and Visa Fees', this.reportData.licensesVisaFees);
+        html += this.renderDataRow('Rent', this.reportData.rent);
+        html += this.renderDataRow('Marketing (Clients Inquiries and Tender Costs)', this.reportData.marketing);
+        html += this.renderDataRow('Insurance', this.reportData.insurance);
+        html += this.renderDataRow('Travel & Entertainment (Tickets)', this.reportData.travelEntertainment);
+        html += this.renderDataRow('Telephone', this.reportData.telephone);
+        html += this.renderDataRow('Depreciation of Property and Equipment-Indirect', this.reportData.depreciationIndirect);
+        html += this.renderDataRow('Printing & Stationery', this.reportData.printingStationery);
+        html += this.renderDataRow('Electricity & Water', this.reportData.electricityWater);
+        html += this.renderDataRow('Office Supplies', this.reportData.officeSupplies);
+        html += this.renderDataRow('Depreciation of Right to use asset', this.reportData.depreciationRightToUse);
+        html += this.renderDataRow('Repairs & Maintenance & Uniforms & IT', this.reportData.repairsMaintenance);
+        html += this.renderDataRow('Prov for Employees End of Service Benefits-Indirect', this.reportData.provisionEmployeesIndirect);
+        html += this.renderDataRow('Other General & Admin Expenses', this.reportData.otherGeneralAdmin);
+        html += this.renderDataRow('Impairment of Trade Receivables', this.reportData.impairmentTradeReceivables);
+        html += this.renderDataRow('Impairment of Retention Receivables', this.reportData.impairmentRetentionReceivables);
+        html += this.renderDataRow('Loss on Liquidated Bank Guarantees', this.reportData.lossLiquidatedBankGuarantees);
+        html += this.renderTotalRow('TOTAL GENERAL & ADMINISTRATIVE EXPENSES', this.reportData.totalGeneralAdmin, 'pl-total-row');
+        
+        // OPERATING PROFIT
+        html += this.renderTotalRow('TOTAL OPERATING PROFIT', this.reportData.totalOperatingProfit, 'pl-operating-profit-row');
+        
+        // OTHER INCOME/EXPENSES
+        html += this.renderCategoryHeader('OTHER INCOME/EXPENSES');
+        html += this.renderDataRow('Borrowings Costs', this.reportData.borrowingsCosts);
+        html += this.renderDataRow('Other Income', this.reportData.otherIncome);
         
         // NET PROFIT
-        html += this.renderTotalRow('TOTAL NET PROFIT', this.reportData.netProfit, 'pl-net-profit-row');
+        html += this.renderTotalRow('TOTAL NET PROFIT FOR THE YEAR', this.reportData.netProfit, 'pl-net-profit-row');
+        // NOP% Row
+        html += this.renderPercentageRow('NOP%', this.calculateNOPPercentage());
+        
+        // HEADCOUNT Section
+        html += this.renderCategoryHeader('HEADCOUNT');
+        html += this.renderHeadcountRow('Direct Headcount', this.reportData.directHeadcount);
+        html += this.renderHeadcountRow('Indirect Headcount', this.reportData.indirectHeadcount);
+        html += this.renderHeadcountTotalRow('Total Headcount', this.reportData.totalHeadcount);
         
         tbody.innerHTML = html;
-        
-        // Show content
         document.getElementById('plContent').style.display = 'block';
         
-        console.log('✅ P&L report rendered successfully');
+        console.log('P&L report rendered successfully');
         
     } catch (renderError) {
-        console.error('❌ Error rendering report:', renderError);
+        console.error('Error rendering report:', renderError);
         this.showError();
         this.updateStatusBar(`Render Error: ${renderError.message}`);
     }
