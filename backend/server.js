@@ -1893,6 +1893,94 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
         console.log(`Operating Profit: ${reportData.totalOperatingProfit.actual} | ${reportData.totalOperatingProfit.cumulative} | ${reportData.totalOperatingProfit.previous}`);
         console.log(`Net Profit: ${reportData.netProfit.actual} | ${reportData.netProfit.cumulative} | ${reportData.netProfit.previous}`);
 
+
+        // ADD THIS CODE TO YOUR EXISTING PL-COMPLETE ROUTE - BEFORE res.json()
+
+try {
+    // Fetch budget data for the selected month
+    console.log('🎯 Fetching budget data for P&L report...');
+    
+    const budgetResponse = await fetch(`http://localhost:${PORT}/api/budget/${year}/${month}`);
+    const budgetResult = await budgetResponse.json();
+    
+    let budgetData = {};
+    if (budgetResult.success) {
+        budgetData = budgetResult.data;
+        console.log('✅ Budget data integrated successfully');
+    } else {
+        console.log('⚠️ No budget data found, using zeros');
+    }
+    
+    // Add budget amounts to each category in reportData
+    Object.keys(reportData).forEach(key => {
+        if (reportData[key] && typeof reportData[key] === 'object' && reportData[key].actual !== undefined) {
+            // Map P&L categories to budget table names
+            const budgetKey = getBudgetKey(key);
+            reportData[key].budget = budgetData[budgetKey] ? budgetData[budgetKey].amount : 0;
+        }
+    });
+    
+} catch (budgetError) {
+    console.error('❌ Error fetching budget data:', budgetError);
+    // Continue without budget data
+    Object.keys(reportData).forEach(key => {
+        if (reportData[key] && typeof reportData[key] === 'object' && reportData[key].actual !== undefined) {
+            reportData[key].budget = 0;
+        }
+    });
+}
+
+// Helper function to map P&L categories to budget table particular_names
+function getBudgetKey(plKey) {
+    const budgetMapping = {
+        'revenue': 'REVENUE',
+        'directPayroll': 'Direct Payroll', 
+        'directExpenses': 'Direct Expenses',
+        'materials': 'Materials',
+        'subcontractorCharges': 'Subcontractor Charges',
+        'transportationFuel': 'Transportation & Fuel',
+        'freightCustomDuty': 'Freight And Custom Duty',
+        'provisionEmployees': 'Prov for Employees End of Service Benefits-Direct',
+        'depreciation': 'Dep on Property and Equipment (Projects)-Direct',
+        'otherDirectExpenses': 'Other Direct Expenses',
+        'rentalLabors': 'Rental Labors',
+        'workInProgress': 'Work In Progress',
+        'totalDirectCost': 'TOTAL DIRECT COST',
+        'grossProfit': 'TOTAL GROSS PROFIT',
+        'indirectPayroll': 'INDIRECT PAYROLL',
+        'otherAdminExpenses': 'OTHER ADMINISTRATION EXPENSES',
+        'employeesAllowances': 'Employees Allowances (Leave Salaries,Accom,EOS,Car,Bonus)',
+        'motorVehicle': 'Motor Vehicle Petrol And Maintenance',
+        'professionalFees': 'Professional And Government Fees',
+        'licensesVisaFees': 'Licenses And Visa Fees',
+        'rent': 'Rent',
+        'marketing': 'Marketing (Clients Inquiries and Tender Costs)',
+        'insurance': 'Insurance',
+        'travelEntertainment': 'Travel & Entertainment (Tickets)',
+        'telephone': 'Telephone',
+        'depreciationIndirect': 'Depreciation of Property and Equipment-Indirect',
+        'printingStationery': 'Printing & Stationery',
+        'electricityWater': 'Electricity & Water',
+        'officeSupplies': 'Office Supplies',
+        'depreciationRightToUse': 'Depreciation of Right to use asset',
+        'repairsMaintenance': 'Repairs & Maintenance & Uniforms & IT',
+        'provisionEmployeesIndirect': 'Prov For Employees End Of Service Benefits-Indirect',
+        'otherGeneralAdmin': 'Other General & Admin Expenses',
+        'impairmentTradeReceivables': 'Impairment Of Trade Receivables',
+        'impairmentRetentionReceivables': 'Impairment Of Retention Receivables',
+        'lossLiquidatedBankGuarantees': 'Loss on liquidated bank guarantees',
+        'totalGeneralAdmin': 'TOTAL GENERAL & ADMINISTRATIVE EXPENSES',
+        'totalOperatingProfit': 'TOTAL OPERATING PROFIT',
+        'borrowingsCosts': 'BORROWINGS COSTS',
+        'otherIncome': 'OTHER INCOME',
+        'netProfit': 'TOTAL NET PROFIT FOR THE YEAR',
+        'directHeadcount': 'Direct Headcount',
+        'indirectHeadcount': 'Indirect Headcount'
+    };
+    
+    return budgetMapping[plKey] || plKey;
+}
+
         res.json({
             success: true,
             data: reportData,
@@ -1906,6 +1994,72 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error generating P&L summary',
+            error: error.message
+        });
+    }
+});
+
+
+
+app.get('/api/budget/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        console.log(`📊 Fetching budget data for ${year}-${month}...`);
+        
+        // Month column mapping
+        const monthColumns = [
+            'jan_amount', 'feb_amount', 'mar_amount', 'apr_amount', 
+            'may_amount', 'jun_amount', 'jul_amount', 'aug_amount', 
+            'sep_amount', 'oct_amount', 'nov_amount', 'dec_amount'
+        ];
+        
+        const monthColumn = monthColumns[month - 1];
+        if (!monthColumn) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid month parameter'
+            });
+        }
+        
+        const query = `
+            SELECT 
+                particular_name,
+                category,
+                ${monthColumn} as budget_amount,
+                is_percentage
+            FROM budget_data
+            WHERE budget_year = $1
+            AND budget_type = 'Consolidated'
+            ORDER BY display_order
+        `;
+        
+        const result = await queryDB(query, [year]);
+        
+        // Create a budget mapping object
+        const budgetMap = {};
+        result.rows.forEach(row => {
+            budgetMap[row.particular_name] = {
+                amount: parseFloat(row.budget_amount) || 0,
+                isPercentage: row.is_percentage
+            };
+        });
+        
+        console.log(`✅ Found ${result.rows.length} budget entries for month ${month}, year ${year}`);
+        
+        res.json({
+            success: true,
+            data: budgetMap,
+            period: `${year}-${String(month).padStart(2, '0')}`,
+            month: month,
+            year: year,
+            generatedAt: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error fetching budget data:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching budget data',
             error: error.message
         });
     }
@@ -1949,6 +2103,8 @@ app.get('/api/reports/verify-accounts/:year/:month', async (req, res) => {
         });
     }
 });
+
+
 
 
 
