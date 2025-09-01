@@ -1,5 +1,6 @@
 // =====================================================
-// UPDATED P&L REPORT WITH CORRECTED VARIANCE FORMULAS
+// COMPLETE P&L REPORT WITH CORRECTED VARIANCE FORMULAS
+// File: frontend/js/pl-report.js
 // Revenue: (ACTUAL - BUDGET) / BUDGET × 100
 // All Others: (BUDGET - ACTUAL) / BUDGET × 100
 // =====================================================
@@ -17,7 +18,9 @@ class PLReportManager {
     }
     
     init() {
-        console.log('📊 Initializing P&L Report Manager with Corrected Variance Logic...');
+        console.log('📊 Initializing P&L Report Manager with CORRECTED Variance Logic...');
+        console.log('📈 Revenue Formula: (ACTUAL - BUDGET) / BUDGET × 100');
+        console.log('💰 Cost Formula: (BUDGET - ACTUAL) / BUDGET × 100');
         this.bindEvents();
         this.setupScrollIndicator();
         this.setCurrentDate();
@@ -54,9 +57,9 @@ class PLReportManager {
     setupScrollIndicator() {
         window.addEventListener('scroll', () => {
             const scrollIndicator = document.getElementById('scrollToTop');
-            if (window.scrollY > 300) {
+            if (scrollIndicator && window.scrollY > 300) {
                 scrollIndicator.classList.add('show');
-            } else {
+            } else if (scrollIndicator) {
                 scrollIndicator.classList.remove('show');
             }
         });
@@ -98,8 +101,8 @@ class PLReportManager {
             const year = parseInt(document.getElementById('plYear').value);
             const month = parseInt(document.getElementById('plMonth').value);
             
-            console.log(`📊 Loading P&L Report with Corrected Variance for ${year}-${month}...`);
-            this.updateStatusBar('Loading financial data...');
+            console.log(`📊 Loading P&L Report with CORRECTED Variance for ${year}-${month}...`);
+            this.updateStatusBar('Loading financial data with corrected variance formulas...');
             
             const response = await fetch(`/api/reports/pl-complete/${year}/${month}`);
             
@@ -119,10 +122,13 @@ class PLReportManager {
             
             this.reportData = this.validateAndProcessData(result.data);
             this.renderCompleteReport();
-            this.updateStatusBar(`Report generated successfully for ${this.getMonthName(month)} ${year}`);
+            this.updateStatusBar(`Report generated successfully for ${this.getMonthName(month)} ${year} with corrected variance`);
             
             this.retryCount = 0;
-            console.log('✅ P&L Report loaded successfully');
+            console.log('✅ P&L Report with CORRECTED Variance loaded successfully');
+            
+            // Test variance calculations after loading
+            this.testVarianceCalculations();
             
         } catch (error) {
             console.error('❌ Error loading P&L report:', error);
@@ -198,68 +204,79 @@ class PLReportManager {
     
     // =====================================================
     // CORRECTED VARIANCE CALCULATION FUNCTIONS
-    // Revenue: (ACTUAL - BUDGET) / BUDGET × 100
-    // Others: (BUDGET - ACTUAL) / BUDGET × 100
     // =====================================================
     
     calculateVarianceForRevenue(actual, budget) {
-        // REVENUE FORMULA: (ACTUAL - BUDGET) / BUDGET × 100
-        if (!budget || budget === 0) {
-            if (!actual || actual === 0) {
-                return 0; // Both zero = no variance
-            }
-            return actual > 0 ? 999 : -999; // Infinite variance indicator
+    console.log(`🔢 REVENUE Variance: Actual=${actual}, Budget=${budget}`);
+    
+    // Handle budget being negative (shown in parentheses)
+    const budgetNum = parseFloat(budget) || 0;
+    const actualBudget = Math.abs(budgetNum); // Use absolute value for calculations
+    
+    if (!actualBudget || actualBudget === 0) {
+        if (!actual || actual === 0) {
+            return 0; // Both zero = no variance
         }
-        
-        const actualNum = parseFloat(actual) || 0;
-        const budgetNum = parseFloat(budget) || 0;
-        
-        // Revenue variance: (Actual - Budget) / Budget × 100
-        const varianceDecimal = ((actualNum - budgetNum) / budgetNum) * 100;
-        
-        // Proper rounding
-        return Math.round(varianceDecimal);
+        return actual > 0 ? 999 : -999; // Infinite variance
     }
     
+    const actualNum = parseFloat(actual) || 0;
+    
+    // REVENUE FORMULA: (ACTUAL - BUDGET) / BUDGET × 100
+    // NOTE: Already multiply by 100 here, don't multiply again in display
+    const variancePercent = ((actualNum - actualBudget) / actualBudget) * 100;
+    const rounded = Math.round(variancePercent);
+    
+    console.log(`📈 REVENUE CALC: (${actualNum} - ${actualBudget}) / ${actualBudget} × 100 = ${rounded}%`);
+    return rounded;
+}
+    
     calculateVarianceForOthers(actual, budget) {
-        // ALL OTHER CATEGORIES: (BUDGET - ACTUAL) / BUDGET × 100
-        if (!budget || budget === 0) {
-            if (!actual || actual === 0) {
-                return 0; // Both zero = no variance
-            }
-            return actual > 0 ? -999 : 999; // Infinite variance indicator (reversed for costs)
+    console.log(`🔢 COST/EXPENSE Variance: Actual=${actual}, Budget=${budget}`);
+    
+    // Handle budget being negative (shown in parentheses)  
+    const budgetNum = parseFloat(budget) || 0;
+    const actualBudget = Math.abs(budgetNum); // Use absolute value for calculations
+    
+    if (!actualBudget || actualBudget === 0) {
+        if (!actual || actual === 0) {
+            return 0; // Both zero = no variance
         }
-        
-        const actualNum = parseFloat(actual) || 0;
-        const budgetNum = parseFloat(budget) || 0;
-        
-        // Cost/Expense variance: (Budget - Actual) / Budget × 100
-        const varianceDecimal = ((budgetNum - actualNum) / budgetNum) * 100;
-        
-        // Proper rounding
-        return Math.round(varianceDecimal);
+        return actual > 0 ? -999 : 999; // Infinite variance (reversed)
     }
+    
+    const actualNum = parseFloat(actual) || 0;
+    
+    // COST/EXPENSE FORMULA: (BUDGET - ACTUAL) / BUDGET × 100
+    // NOTE: Already multiply by 100 here, don't multiply again in display
+    const variancePercent = ((actualBudget - actualNum) / actualBudget) * 100;
+    const rounded = Math.round(variancePercent);
+    
+    console.log(`💰 COST CALC: (${actualBudget} - ${actualNum}) / ${actualBudget} × 100 = ${rounded}%`);
+    return rounded;
+}
     
     // Format variance percentage for display
     formatVariancePercentage(variancePercent) {
-        if (variancePercent === 999) {
-            return '<span class="variance-infinite-positive">+∞%</span>';
-        }
-        if (variancePercent === -999) {
-            return '<span class="variance-infinite-negative">-∞%</span>';
-        }
-        if (variancePercent === 0) {
-            return '<span class="variance-zero">0%</span>';
-        }
-        
-        const cssClass = variancePercent > 0 ? 'variance-positive' : 'variance-negative';
-        const display = variancePercent > 0 ? `+${variancePercent}%` : `${variancePercent}%`;
-        
-        return `<span class="${cssClass}">${display}</span>`;
+    if (variancePercent === 999) {
+        return '<span class="variance-infinite-positive">+∞%</span>';
+    }
+    if (variancePercent === -999) {
+        return '<span class="variance-infinite-negative">-∞%</span>';
+    }
+    if (variancePercent === 0) {
+        return '<span class="variance-zero">0%</span>';
     }
     
+    const cssClass = variancePercent > 0 ? 'variance-positive' : 'variance-negative';
+    // Don't multiply by 100 - it's already a percentage
+    const display = variancePercent > 0 ? `+${variancePercent}%` : `${variancePercent}%`;
+    
+    return `<span class="${cssClass}">${display}</span>`;
+}
+    
     renderCompleteReport() {
-        console.log('📊 Rendering Complete P&L Report with Corrected Variance Logic...');
+        console.log('📊 Rendering Complete P&L Report with CORRECTED Variance Logic...');
         
         const tbody = document.getElementById('plTableBody');
         let html = '';
@@ -270,6 +287,7 @@ class PLReportManager {
             html += this.renderRevenueRow('REVENUE', this.reportData.revenue);
             
             // DIRECT COST Section (uses cost variance formula)
+            html += this.renderCategoryHeader('DIRECT COSTS');
             html += this.renderDataRow('Direct Payroll', this.reportData.directPayroll);
             html += this.renderDataRow('Direct Expenses', this.reportData.directExpenses);
             html += this.renderDataRow('Materials', this.reportData.materials);
@@ -334,7 +352,7 @@ class PLReportManager {
             tbody.innerHTML = html;
             document.getElementById('plContent').style.display = 'block';
             
-            console.log('✅ Complete P&L Report with Corrected Variance rendered successfully');
+            console.log('✅ Complete P&L Report with CORRECTED Variance rendered successfully');
             
         } catch (renderError) {
             console.error('❌ Error rendering report:', renderError);
@@ -357,18 +375,20 @@ class PLReportManager {
     }
     
     // =====================================================
-    // SEPARATE RENDER FUNCTIONS FOR DIFFERENT VARIANCE LOGIC
+    // RENDER FUNCTIONS WITH CORRECT VARIANCE LOGIC
     // =====================================================
     
-    // Revenue row - uses revenue variance formula
+    // Revenue row - uses REVENUE variance formula
     renderRevenueRow(description, amounts) {
         const actualAmount = amounts?.actual ?? 0;
         const cumulativeAmount = amounts?.cumulative ?? 0;
         const previousAmount = amounts?.previous ?? 0;
         const budgetAmount = amounts?.budget ?? 0;
         
-        // Calculate variance using REVENUE formula: (Actual - Budget) / Budget × 100
+        // Use REVENUE formula: (Actual - Budget) / Budget × 100
         const variancePercent = this.calculateVarianceForRevenue(actualAmount, budgetAmount);
+        
+        console.log(`📊 REVENUE ROW: ${description} - Actual: ${actualAmount}, Budget: ${budgetAmount}, Variance: ${variancePercent}%`);
         
         return `
             <tr class="pl-data-row">
@@ -383,15 +403,17 @@ class PLReportManager {
         `;
     }
     
-    // Income row - uses revenue variance formula (for Other Income)
+    // Income row - uses REVENUE variance formula (for Other Income)
     renderIncomeRow(description, amounts) {
         const actualAmount = amounts?.actual ?? 0;
         const cumulativeAmount = amounts?.cumulative ?? 0;
         const previousAmount = amounts?.previous ?? 0;
         const budgetAmount = amounts?.budget ?? 0;
         
-        // Calculate variance using REVENUE formula: (Actual - Budget) / Budget × 100
+        // Use REVENUE formula for income: (Actual - Budget) / Budget × 100
         const variancePercent = this.calculateVarianceForRevenue(actualAmount, budgetAmount);
+        
+        console.log(`📊 INCOME ROW: ${description} - Actual: ${actualAmount}, Budget: ${budgetAmount}, Variance: ${variancePercent}%`);
         
         return `
             <tr class="pl-data-row">
@@ -406,15 +428,17 @@ class PLReportManager {
         `;
     }
     
-    // Cost/Expense row - uses cost variance formula
+    // Cost/Expense row - uses COST variance formula
     renderDataRow(description, amounts) {
         const actualAmount = amounts?.actual ?? 0;
         const cumulativeAmount = amounts?.cumulative ?? 0;
         const previousAmount = amounts?.previous ?? 0;
         const budgetAmount = amounts?.budget ?? 0;
         
-        // Calculate variance using COST formula: (Budget - Actual) / Budget × 100
+        // Use COST formula: (Budget - Actual) / Budget × 100
         const variancePercent = this.calculateVarianceForOthers(actualAmount, budgetAmount);
+        
+        console.log(`📊 COST ROW: ${description} - Actual: ${actualAmount}, Budget: ${budgetAmount}, Variance: ${variancePercent}%`);
         
         return `
             <tr class="pl-data-row">
@@ -436,15 +460,27 @@ class PLReportManager {
         const previousAmount = totals?.previous ?? 0;
         const budgetAmount = totals?.budget ?? 0;
         
-        // Determine which formula to use based on title
         let variancePercent;
-        if (title.includes('GROSS PROFIT') || title.includes('OPERATING PROFIT') || title.includes('NET PROFIT')) {
-            // Profit rows use revenue formula
+        let formulaUsed = '';
+        
+        // Determine which formula based on title
+        const titleUpper = title.toUpperCase();
+        
+        if (titleUpper.includes('REVENUE')) {
+            // REVENUE uses revenue formula
             variancePercent = this.calculateVarianceForRevenue(actualAmount, budgetAmount);
+            formulaUsed = 'REVENUE';
+        } else if (titleUpper.includes('GROSS PROFIT') || titleUpper.includes('OPERATING PROFIT') || titleUpper.includes('NET PROFIT') || titleUpper.includes('PROFIT')) {
+            // PROFIT rows use revenue formula (higher is better)
+            variancePercent = this.calculateVarianceForRevenue(actualAmount, budgetAmount);
+            formulaUsed = 'PROFIT (Revenue Formula)';
         } else {
-            // Cost total rows use cost formula
+            // All COST/EXPENSE totals use cost formula
             variancePercent = this.calculateVarianceForOthers(actualAmount, budgetAmount);
+            formulaUsed = 'COST';
         }
+        
+        console.log(`📊 TOTAL ROW: ${title} - Using ${formulaUsed} formula - Actual: ${actualAmount}, Budget: ${budgetAmount}, Variance: ${variancePercent}%`);
         
         return `
             <tr class="${cssClass}">
@@ -483,7 +519,7 @@ class PLReportManager {
         const previousCount = counts?.previous ?? 0;
         const budgetCount = counts?.budget ?? 0;
         
-        // Headcount uses cost formula (lower is better)
+        // Headcount uses cost formula (lower actual is better)
         const variancePercent = this.calculateVarianceForOthers(actualCount, budgetCount);
         
         return `
@@ -505,7 +541,7 @@ class PLReportManager {
         const previousCount = counts?.previous ?? 0;
         const budgetCount = counts?.budget ?? 0;
         
-        // Total headcount uses cost formula (lower is better)
+        // Total headcount uses cost formula (lower actual is better)
         const variancePercent = this.calculateVarianceForOthers(actualCount, budgetCount);
         
         return `
@@ -582,8 +618,55 @@ class PLReportManager {
         return `<span class="${cssClass}">${display}</span>`;
     }
     
+    // =====================================================
+    // TESTING FUNCTION FOR VARIANCE CALCULATIONS
+    // =====================================================
+    
+    testVarianceCalculations() {
+        console.log('\n🧪 TESTING CORRECTED VARIANCE CALCULATIONS');
+        console.log('===============================================');
+        
+        console.log('\n📈 REVENUE TESTS (Formula: (Actual - Budget) / Budget × 100)');
+        console.log('Expected: Higher Actual = Positive Variance (Good)');
+        
+        const revenueTests = [
+            { actual: 1200, budget: 1000, expected: 20 },   // Better than budget
+            { actual: 800, budget: 1000, expected: -20 },   // Worse than budget
+            { actual: 1000, budget: 1000, expected: 0 },    // Exactly on budget
+            { actual: 1150, budget: 1000, expected: 15 }    // 15% better
+        ];
+        
+        revenueTests.forEach((test, index) => {
+            const result = this.calculateVarianceForRevenue(test.actual, test.budget);
+            const status = result === test.expected ? '✅ PASS' : '❌ FAIL';
+            console.log(`Revenue Test ${index + 1}: Actual=${test.actual}, Budget=${test.budget} → ${result}% (Expected: ${test.expected}%) ${status}`);
+        });
+        
+        console.log('\n💰 COST/EXPENSE TESTS (Formula: (Budget - Actual) / Budget × 100)');
+        console.log('Expected: Lower Actual = Positive Variance (Good)');
+        
+        const costTests = [
+            { actual: 800, budget: 1000, expected: 20 },    // Spent less = good
+            { actual: 1200, budget: 1000, expected: -20 },  // Spent more = bad
+            { actual: 1000, budget: 1000, expected: 0 },    // Exactly on budget
+            { actual: 850, budget: 1000, expected: 15 }     // 15% under budget
+        ];
+        
+        costTests.forEach((test, index) => {
+            const result = this.calculateVarianceForOthers(test.actual, test.budget);
+            const status = result === test.expected ? '✅ PASS' : '❌ FAIL';
+            console.log(`Cost Test ${index + 1}: Actual=${test.actual}, Budget=${test.budget} → ${result}% (Expected: ${test.expected}%) ${status}`);
+        });
+        
+        console.log('\n✅ VARIANCE LOGIC SUMMARY:');
+        console.log('Revenue: (Actual - Budget) / Budget × 100');
+        console.log('Costs: (Budget - Actual) / Budget × 100');
+        console.log('Both formulas: Positive = Good Performance, Negative = Poor Performance');
+        console.log('===============================================\n');
+    }
+    
     async exportToCSV() {
-        console.log('📁 Exporting P&L Report with Corrected Variance to CSV...');
+        console.log('📁 Exporting P&L Report with CORRECTED Variance to CSV...');
         
         if (!this.reportData || Object.keys(this.reportData).length === 0) {
             this.showToast('No report data to export. Please generate a report first.', 'warning');
@@ -633,7 +716,7 @@ class PLReportManager {
             const filename = `PL_Report_Corrected_Variance_${monthName}_${year}.csv`;
             this.downloadFile(csvContent, filename, 'text/csv');
             
-            this.showToast('Report with Corrected Variance exported successfully!', 'success');
+            this.showToast('Report with CORRECTED Variance exported successfully!', 'success');
             console.log('✅ CSV export with corrected variance completed');
             
         } catch (error) {
@@ -675,17 +758,34 @@ class PLReportManager {
     }
     
     showLoading(show) {
-        document.getElementById('plLoading').style.display = show ? 'flex' : 'none';
-        document.getElementById('plContent').style.display = show ? 'none' : 'block';
+        const loadingElement = document.getElementById('plLoading');
+        const contentElement = document.getElementById('plContent');
+        
+        if (loadingElement) {
+            loadingElement.style.display = show ? 'flex' : 'none';
+        }
+        if (contentElement) {
+            contentElement.style.display = show ? 'none' : 'block';
+        }
     }
     
     showError() {
-        document.getElementById('plError').style.display = 'flex';
-        document.getElementById('plContent').style.display = 'none';
+        const errorElement = document.getElementById('plError');
+        const contentElement = document.getElementById('plContent');
+        
+        if (errorElement) {
+            errorElement.style.display = 'flex';
+        }
+        if (contentElement) {
+            contentElement.style.display = 'none';
+        }
     }
     
     hideError() {
-        document.getElementById('plError').style.display = 'none';
+        const errorElement = document.getElementById('plError');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
     }
     
     disableButtons(disable) {
@@ -700,8 +800,15 @@ class PLReportManager {
     }
     
     updateStatusBar(message) {
-        document.getElementById('plStatusInfo').textContent = message;
-        document.getElementById('plTimestamp').textContent = new Date().toLocaleString();
+        const statusInfo = document.getElementById('plStatusInfo');
+        const timestamp = document.getElementById('plTimestamp');
+        
+        if (statusInfo) {
+            statusInfo.textContent = message;
+        }
+        if (timestamp) {
+            timestamp.textContent = new Date().toLocaleString();
+        }
     }
     
     showToast(message, type = 'info') {
@@ -751,87 +858,56 @@ class PLReportManager {
 }
 
 // =====================================================
-// TESTING THE CORRECTED VARIANCE CALCULATION
-// Console examples to verify proper formulas
+// GLOBAL FUNCTIONS FOR HTML ONCLICK EVENTS
 // =====================================================
 
-function testCorrectedVarianceCalculation() {
-    console.log('🧪 Testing CORRECTED Variance Calculation...');
-    
-    const plManager = new PLReportManager();
-    
-    console.log('\n📈 REVENUE FORMULA: (Actual - Budget) / Budget × 100');
-    console.log('Revenue Test Cases:');
-    
-    const revenueTests = [
-        { actual: 1200, budget: 1000, expected: 20 },   // +20% (actual higher = good)
-        { actual: 800, budget: 1000, expected: -20 },   // -20% (actual lower = bad)
-        { actual: 1166, budget: 1000, expected: 17 },   // +16.6% → +17%
-        { actual: 834, budget: 1000, expected: -17 }    // -16.6% → -17%
-    ];
-    
-    revenueTests.forEach((test, index) => {
-        const result = plManager.calculateVarianceForRevenue(test.actual, test.budget);
-        const passed = result === test.expected;
-        console.log(`Revenue Test ${index + 1}: Actual=${test.actual}, Budget=${test.budget} → ${result}% (Expected: ${test.expected}%) ${passed ? '✅' : '❌'}`);
-    });
-    
-    console.log('\n💰 COST FORMULA: (Budget - Actual) / Budget × 100');
-    console.log('Cost Test Cases:');
-    
-    const costTests = [
-        { actual: 800, budget: 1000, expected: 20 },    // +20% (actual lower = good)
-        { actual: 1200, budget: 1000, expected: -20 },  // -20% (actual higher = bad)
-        { actual: 834, budget: 1000, expected: 17 },    // +16.6% → +17%
-        { actual: 1166, budget: 1000, expected: -17 }   // -16.6% → -17%
-    ];
-    
-    costTests.forEach((test, index) => {
-        const result = plManager.calculateVarianceForOthers(test.actual, test.budget);
-        const passed = result === test.expected;
-        console.log(`Cost Test ${index + 1}: Actual=${test.actual}, Budget=${test.budget} → ${result}% (Expected: ${test.expected}%) ${passed ? '✅' : '❌'}`);
-    });
-    
-    console.log('\n✅ Variance logic: Positive = Good, Negative = Bad (for both Revenue and Costs)');
-}
-
-// Global functions for HTML onclick events
 let plManager;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📊 DOM loaded, initializing P&L Report with CORRECTED Variance Logic...');
+    
+    // Initialize the P&L Manager
     plManager = new PLReportManager();
     
-    // Run corrected variance calculation tests
-    testCorrectedVarianceCalculation();
+    // Make it globally accessible for debugging
+    window.plManager = plManager;
     
-    // Auto-generate report after 1 second
+    console.log('✅ P&L Manager initialized with corrected variance formulas');
+    
+    // Auto-generate report after 1.5 seconds
     setTimeout(() => {
+        console.log('🚀 Auto-loading P&L Report...');
         loadPLReport();
-    }, 1000);
+    }, 1500);
 });
 
 function loadPLReport() {
     if (plManager) {
+        console.log('📊 Loading P&L Report via global function...');
         plManager.loadPLReport();
     } else {
         console.error('❌ PLManager not initialized');
+        alert('P&L Manager not initialized. Please refresh the page.');
     }
 }
 
 function exportPLReport() {
     if (plManager) {
+        console.log('📁 Exporting P&L Report via global function...');
         plManager.exportToCSV();
     } else {
         console.error('❌ PLManager not initialized');
+        alert('P&L Manager not initialized. Please refresh the page.');
     }
 }
 
 function printReport() {
     if (plManager) {
+        console.log('🖨️ Printing P&L Report via global function...');
         plManager.printReport();
     } else {
         console.error('❌ PLManager not initialized');
+        alert('P&L Manager not initialized. Please refresh the page.');
     }
 }
 
@@ -842,4 +918,63 @@ function scrollToTop() {
     });
 }
 
-console.log('✅ P&L Report with CORRECTED Variance Calculation loaded successfully');
+// =====================================================
+// MANUAL TESTING FUNCTION FOR CONSOLE
+// =====================================================
+
+function testVarianceManually() {
+    console.log('\n🔬 MANUAL VARIANCE TESTING');
+    console.log('============================');
+    
+    if (!window.plManager) {
+        console.error('❌ plManager not available. Load the report first.');
+        return;
+    }
+    
+    console.log('\n📈 Testing REVENUE Formula: (Actual - Budget) / Budget × 100');
+    
+    // Test revenue scenarios
+    const revenueScenarios = [
+        { name: 'Revenue Higher than Budget', actual: 120000, budget: 100000 },
+        { name: 'Revenue Lower than Budget', actual: 80000, budget: 100000 },
+        { name: 'Revenue Exactly on Budget', actual: 100000, budget: 100000 },
+        { name: 'Revenue with Zero Budget', actual: 50000, budget: 0 }
+    ];
+    
+    revenueScenarios.forEach(scenario => {
+        const variance = window.plManager.calculateVarianceForRevenue(scenario.actual, scenario.budget);
+        console.log(`${scenario.name}: Actual=${scenario.actual}, Budget=${scenario.budget} → ${variance}%`);
+    });
+    
+    console.log('\n💰 Testing COST Formula: (Budget - Actual) / Budget × 100');
+    
+    // Test cost scenarios
+    const costScenarios = [
+        { name: 'Cost Lower than Budget (Good)', actual: 80000, budget: 100000 },
+        { name: 'Cost Higher than Budget (Bad)', actual: 120000, budget: 100000 },
+        { name: 'Cost Exactly on Budget', actual: 100000, budget: 100000 },
+        { name: 'Cost with Zero Budget', actual: 50000, budget: 0 }
+    ];
+    
+    costScenarios.forEach(scenario => {
+        const variance = window.plManager.calculateVarianceForOthers(scenario.actual, scenario.budget);
+        console.log(`${scenario.name}: Actual=${scenario.actual}, Budget=${scenario.budget} → ${variance}%`);
+    });
+    
+    console.log('\n✅ Manual testing complete. Check results above.');
+}
+
+// =====================================================
+// INITIALIZATION MESSAGE
+// =====================================================
+
+console.log('🚀 COMPLETE P&L REPORT WITH CORRECTED VARIANCE LOADED');
+console.log('📈 Revenue Formula: (ACTUAL - BUDGET) / BUDGET × 100');
+console.log('💰 Cost Formula: (BUDGET - ACTUAL) / BUDGET × 100');
+console.log('✅ Both formulas result in: Positive = Good, Negative = Bad');
+console.log('🔧 Available functions: loadPLReport(), exportPLReport(), printReport(), testVarianceManually()');
+
+// Export for module systems if needed
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = PLReportManager;
+}

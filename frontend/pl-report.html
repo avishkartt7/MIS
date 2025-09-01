@@ -265,16 +265,6 @@
             text-align: center;
         }
 
-        /* ENHANCED VARIANCE COLUMN STYLING */
-        .pl-table th:nth-child(6) {
-            background: linear-gradient(135deg, #f39c12, #e67e22) !important;
-            color: white !important;
-            font-weight: 700 !important;
-            text-align: center !important;
-            border: 2px solid #d68910 !important;
-            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-        }
-
         .pl-table td {
             padding: 8px 10px;
             border: 1px solid #ecf0f1;
@@ -283,100 +273,9 @@
             line-height: 1.3;
         }
 
-        .pl-table td:nth-child(6) {
-            background: #fffbf0 !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            border: 1px solid #f39c12 !important;
-            padding: 8px 4px !important;
-        }
-
         .pl-table tbody tr:hover {
             background: #f8f9fa;
             transition: all 0.2s ease;
-        }
-
-        .pl-table tbody tr:hover td:nth-child(6) {
-            background: #fff8e1 !important;
-            border-color: #f57c00 !important;
-        }
-
-        /* VARIANCE DISPLAY STYLES */
-        .variance-positive {
-            color: #27ae60 !important;
-            font-weight: 700 !important;
-            background: linear-gradient(135deg, #d5f4e6, #c8f7c5) !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            border: 1px solid #27ae60 !important;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .variance-negative {
-            color: #e74c3c !important;
-            font-weight: 700 !important;
-            background: linear-gradient(135deg, #fadbd8, #f1948a) !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            border: 1px solid #e74c3c !important;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .variance-zero {
-            color: #95a5a6 !important;
-            font-weight: 500 !important;
-            font-style: italic !important;
-            background: #f8f9fa !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            border: 1px solid #dee2e6 !important;
-            display: inline-block;
-        }
-
-        .variance-infinite-positive {
-            color: #8e44ad !important;
-            font-weight: 700 !important;
-            background: linear-gradient(135deg, #e8daef, #d5b7d5) !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            border: 1px solid #8e44ad !important;
-            display: inline-block;
-            animation: pulse 2s infinite;
-            box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);
-        }
-
-        .variance-infinite-negative {
-            color: #c0392b !important;
-            font-weight: 700 !important;
-            background: linear-gradient(135deg, #f9ebea, #fadbd8) !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            border: 1px solid #c0392b !important;
-            display: inline-block;
-            animation: pulse 2s infinite;
-            box-shadow: 0 2px 4px rgba(192, 57, 43, 0.2);
-        }
-
-        /* Hover effects for variance */
-        .variance-positive:hover,
-        .variance-negative:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
 
         .pl-category-header {
@@ -435,6 +334,110 @@
         .amount-zero {
             color: #95a5a6 !important;
             font-style: italic !important;
+        }
+
+        /* =====================================================
+           CLEAN VARIANCE COLUMN STYLING - NO HOVER EFFECTS
+           ===================================================== */
+
+        /* Variance column - same as other columns */
+        .pl-table td:nth-child(6) {
+            background: white !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            border: 1px solid #ecf0f1 !important;
+            padding: 8px 10px !important;
+            font-family: 'Consolas', 'Courier New', monospace !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+        }
+
+        /* Variance column hover - same as other columns */
+        .pl-table tbody tr:hover td:nth-child(6) {
+            background: #f8f9fa !important;
+            border-color: #ecf0f1 !important;
+        }
+
+        /* CLEAN variance text styling - NO backgrounds, borders, animations */
+        .variance-positive {
+            color: #27ae60 !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            /* Remove all special styling */
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            display: inline !important;
+            transition: none !important;
+        }
+
+        .variance-negative {
+            color: #e74c3c !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            /* Remove all special styling */
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            display: inline !important;
+            transition: none !important;
+        }
+
+        .variance-zero {
+            color: #95a5a6 !important;
+            font-weight: 500 !important;
+            font-style: italic !important;
+            font-size: 12px !important;
+            /* Remove all special styling */
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            display: inline !important;
+        }
+
+        .variance-infinite-positive {
+            color: #8e44ad !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            /* Remove all special styling */
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            display: inline !important;
+            animation: none !important;
+        }
+
+        .variance-infinite-negative {
+            color: #c0392b !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            /* Remove all special styling */
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            display: inline !important;
+            animation: none !important;
+        }
+
+        /* REMOVE all hover effects for variance text */
+        .variance-positive:hover,
+        .variance-negative:hover,
+        .variance-zero:hover,
+        .variance-infinite-positive:hover,
+        .variance-infinite-negative:hover {
+            transform: none !important;
+            box-shadow: none !important;
+            background: none !important;
+            scale: none !important;
         }
 
         .pl-total-row {
@@ -630,8 +633,7 @@
             .variance-zero,
             .variance-infinite-positive,
             .variance-infinite-negative {
-                font-size: 9px !important;
-                padding: 2px 4px !important;
+                font-size: 10px !important;
             }
         }
 
@@ -655,11 +657,9 @@
             .variance-infinite-positive,
             .variance-infinite-negative {
                 background: none !important;
-                border: 1px solid #333 !important;
+                border: none !important;
                 color: #333 !important;
-                animation: none !important;
                 font-size: 8px !important;
-                padding: 1px 3px !important;
             }
         }
 
@@ -783,18 +783,18 @@
                 <div class="pl-table-wrapper">
                     <table class="pl-table" id="plTable">
                         <thead>
-                            <tr>
-                                <th>PARTICULARS</th>
-                                <th class="amount-header">ACTUAL<br><span id="plActualHeader" style="font-size: 9px;">JUN 2025</span></th>
-                                <th class="amount-header">ACCUM SYSTEM<br><span id="plAccumHeader" style="font-size: 9px;">JAN-JUN 2025</span></th>
-                                <th class="amount-header">LAST REPORT<br><span style="font-size: 9px;">MIS</span></th>
-                                <th class="amount-header">BUDGET<br><span style="font-size: 9px;">PLANNED</span></th>
-                                <th class="amount-header">VARIANCE<br><span style="font-size: 9px;">DIFF %</span></th>
-                                <th class="amount-header">LAST YEAR<br><span style="font-size: 9px;">COMPARISON</span></th>
-                            </tr>
-                        </thead>
+    <tr>
+        <th>PARTICULARS</th>
+        <th class="amount-header">ACTUAL<br><span id="plActualHeader" style="font-size: 9px;">JUN 2025</span></th>
+        <th class="amount-header">ACCUM SYSTEM<br><span id="plAccumHeader" style="font-size: 9px;">JAN-JUN 2025</span></th>
+        <th class="amount-header">LAST REPORT<br><span style="font-size: 9px;">MIS</span></th>
+        <th class="amount-header">BUDGET<br><span style="font-size: 9px;">PLANNED</span></th>
+        <th class="amount-header">VARIANCE<br><span style="font-size: 9px;">DIFF %</span></th>
+        <th class="amount-header">LAST YEAR<br><span id="plLastYearHeader" style="font-size: 9px;">JUN 2024</span></th>
+    </tr>
+</thead>
                         <tbody id="plTableBody">
-                            <!-- Data will be loaded here by JavaScript with corrected variance calculations -->
+                            <!-- Data will be loaded here by JavaScript with clean variance styling -->
                         </tbody>
                     </table>
                 </div>
@@ -804,7 +804,7 @@
             <div class="pl-status-bar">
                 <span>
                     <i class="fas fa-info-circle"></i>
-                    <span id="plStatusInfo">Ready to generate report with corrected variance analysis</span>
+                    <span id="plStatusInfo">Ready to generate report with clean variance styling</span>
                 </span>
                 <span>
                     <i class="fas fa-clock"></i>
@@ -824,16 +824,17 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <!-- Include the JavaScript from the updated artifact -->
+    <!-- Include the JavaScript -->
     <script src="js/pl-report.js"></script>
     
     <script>
-        // Additional inline JavaScript for testing and demo
-        console.log('🚀 P&L Report with Corrected Variance Analysis Loaded');
+        // Additional inline JavaScript
+        console.log('🚀 P&L Report with Clean Variance Column Loaded');
+        console.log('✅ Variance styling: Green/Red text only, no hover effects');
         
-        // Auto-load report on page load for demo
+        // Auto-load report on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📊 Auto-loading P&L Report with Corrected Variance...');
+            console.log('📊 Auto-loading P&L Report with clean variance styling...');
             setTimeout(() => {
                 if (typeof loadPLReport === 'function') {
                     loadPLReport();
@@ -841,21 +842,16 @@
             }, 1500);
         });
 
-        // Test variance calculations in console
-        function testVarianceExamples() {
-            console.log('🧪 Testing Corrected Variance Calculation Examples:');
-            console.log('📈 REVENUE Examples (Higher Actual = Good):');
-            console.log('Revenue: Actual=1200, Budget=1000 → +20% (Good - Higher revenue)');
-            console.log('Revenue: Actual=800, Budget=1000 → -20% (Bad - Lower revenue)'); 
-            console.log('');
-            console.log('💰 COST Examples (Lower Actual = Good):');
-            console.log('Cost: Actual=800, Budget=1000 → +20% (Good - Saved money)');
-            console.log('Cost: Actual=1200, Budget=1000 → -20% (Bad - Overspent)');
-            console.log('');
-            console.log('✅ Both formulas result in: Positive = Good Performance, Negative = Poor Performance');
+        // Test function for clean styling
+        function testCleanVarianceStyling() {
+            console.log('🎨 Testing Clean Variance Styling:');
+            console.log('✅ Positive percentages: GREEN text only');
+            console.log('✅ Negative percentages: RED text only'); 
+            console.log('❌ No backgrounds, borders, or hover effects');
+            console.log('✅ Consistent with other amount columns');
         }
         
-        testVarianceExamples();
+        setTimeout(testCleanVarianceStyling, 2000);
     </script>
 </body>
 </html>
