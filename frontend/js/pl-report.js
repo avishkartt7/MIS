@@ -164,18 +164,18 @@ class PLReportManager {
 
     
     renderDataRow(description, amounts) {
-    // Remove account parameter, only use description
-    const actualAmount = amounts && amounts.actual !== undefined ? amounts.actual : 0;
-    const cumulativeAmount = amounts && amounts.cumulative !== undefined ? amounts.cumulative : 0;
-    const previousAmount = amounts && amounts.previous !== undefined ? amounts.previous : 0;
+    const actualAmount = amounts?.actual ?? 0;
+    const cumulativeAmount = amounts?.cumulative ?? 0;
+    const previousAmount = amounts?.previous ?? 0;
+    const budgetAmount = amounts?.budget ?? 0; // NEW: Add budget amount
     
     return `
-        <tr class="pl-account-row">
-            <td><span class="account-name">${description}</span></td>
+        <tr class="pl-data-row">
+            <td>${description}</td>
             <td class="amount-cell">${this.formatAmount(actualAmount)}</td>
             <td class="amount-cell">${this.formatAmount(cumulativeAmount)}</td>
             <td class="amount-cell">${this.formatAmount(previousAmount)}</td>
-            <td class="amount-cell">-</td>
+            <td class="amount-cell">${this.formatAmount(budgetAmount)}</td>
             <td class="amount-cell">-</td>
             <td class="amount-cell">-</td>
         </tr>
@@ -183,9 +183,10 @@ class PLReportManager {
 }
     
     renderTotalRow(title, totals, cssClass) {
-    const actualAmount = totals && totals.actual !== undefined ? totals.actual : 0;
-    const cumulativeAmount = totals && totals.cumulative !== undefined ? totals.cumulative : 0;
-    const previousAmount = totals && totals.previous !== undefined ? totals.previous : 0;
+    const actualAmount = totals?.actual ?? 0;
+    const cumulativeAmount = totals?.cumulative ?? 0;
+    const previousAmount = totals?.previous ?? 0;
+    const budgetAmount = totals?.budget ?? 0; // NEW: Add budget amount
     
     return `
         <tr class="${cssClass}">
@@ -193,7 +194,7 @@ class PLReportManager {
             <td class="amount-cell"><strong>${this.formatAmount(actualAmount)}</strong></td>
             <td class="amount-cell"><strong>${this.formatAmount(cumulativeAmount)}</strong></td>
             <td class="amount-cell"><strong>${this.formatAmount(previousAmount)}</strong></td>
-            <td class="amount-cell"><strong>-</strong></td>
+            <td class="amount-cell"><strong>${this.formatAmount(budgetAmount)}</strong></td>
             <td class="amount-cell"><strong>-</strong></td>
             <td class="amount-cell"><strong>-</strong></td>
         </tr>

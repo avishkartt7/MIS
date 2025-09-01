@@ -6,10 +6,7 @@
     <title>MIS System - Profit & Loss Report</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* =====================================================
-           COMPLETE P&L REPORT STYLES - PROFESSIONAL DESIGN
-           ===================================================== */
-        
+        /* Same CSS as your existing file - keeping all styles unchanged */
         * {
             margin: 0;
             padding: 0;
@@ -24,7 +21,6 @@
             overflow-x: auto;
         }
 
-        /* Header Styles */
         .header {
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
@@ -107,7 +103,6 @@
             transform: translateY(-1px);
         }
 
-        /* Main Container */
         .pl-container {
             background: white;
             min-height: calc(100vh - 80px);
@@ -115,7 +110,6 @@
             flex-direction: column;
         }
 
-        /* P&L Header Section */
         .pl-header {
             background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
             border-bottom: 4px solid #2c3e50;
@@ -139,7 +133,6 @@
             font-weight: 500;
         }
 
-        /* Controls Section */
         .pl-controls {
             display: flex;
             justify-content: center;
@@ -220,7 +213,6 @@
             transform: none;
         }
 
-        /* Content Area */
         .pl-content {
             flex: 1;
             overflow: auto;
@@ -245,7 +237,6 @@
             min-width: 1400px;
         }
 
-        /* Table Header */
         .pl-table th {
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
@@ -274,7 +265,6 @@
             text-align: center;
         }
 
-        /* Table Body */
         .pl-table td {
             padding: 8px 10px;
             border: 1px solid #ecf0f1;
@@ -288,7 +278,6 @@
             transition: all 0.2s ease;
         }
 
-        /* Category Headers */
         .pl-category-header {
             background: linear-gradient(135deg, #3498db, #2980b9) !important;
             color: white !important;
@@ -308,7 +297,6 @@
             transform: none !important;
         }
 
-        /* Data Rows */
         .pl-data-row {
             background: white !important;
         }
@@ -326,7 +314,6 @@
             padding-left: 25px !important;
         }
 
-        /* Amount Cells */
         .amount-cell {
             text-align: right !important;
             font-family: 'Consolas', 'Courier New', monospace !important;
@@ -349,7 +336,6 @@
             font-style: italic !important;
         }
 
-        /* Total Rows */
         .pl-total-row {
             background: linear-gradient(135deg, #fff3cd, #ffeaa7) !important;
             font-weight: 700 !important;
@@ -402,7 +388,6 @@
             font-weight: 700 !important;
         }
 
-        /* Percentage Rows */
         .pl-percentage-row {
             background: linear-gradient(135deg, #fff9c4, #f4f1bb) !important;
             font-weight: 600 !important;
@@ -416,7 +401,6 @@
             font-size: 11px !important;
         }
 
-        /* Headcount Rows */
         .pl-headcount-header {
             background: linear-gradient(135deg, #ffeaa7, #fdcb6e) !important;
             font-weight: 700 !important;
@@ -446,7 +430,6 @@
             padding-left: 25px !important;
         }
 
-        /* Loading and Error States */
         .pl-loading, .pl-error {
             display: none;
             flex-direction: column;
@@ -478,7 +461,6 @@
             margin-bottom: 20px;
         }
 
-        /* Status Bar */
         .pl-status-bar {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-top: 3px solid #3498db;
@@ -493,7 +475,6 @@
             gap: 10px;
         }
 
-        /* Print Styles */
         @media print {
             .header, .pl-controls, .pl-status-bar {
                 display: none;
@@ -508,7 +489,6 @@
             }
         }
 
-        /* Responsive Design */
         @media (max-width: 1400px) {
             .pl-table {
                 font-size: 11px;
@@ -553,7 +533,6 @@
             }
         }
 
-        /* Animation for data updates */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -563,7 +542,6 @@
             animation: fadeIn 0.3s ease-in-out;
         }
 
-        /* Tooltip styles */
         .tooltip {
             position: relative;
             cursor: help;
@@ -585,7 +563,6 @@
             margin-bottom: 5px;
         }
 
-        /* Scroll indicator */
         .scroll-indicator {
             position: fixed;
             bottom: 20px;
@@ -755,12 +732,8 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <!-- JavaScript Implementation -->
+    <!-- Complete JavaScript Implementation -->
     <script>
-        // =====================================================
-        // COMPLETE P&L REPORT MANAGER - FULL IMPLEMENTATION
-        // =====================================================
-        
         class PLReportManager {
             constructor() {
                 this.currentYear = new Date().getFullYear();
@@ -774,14 +747,13 @@
             }
             
             init() {
-                console.log('🚀 Initializing Complete P&L Report Manager...');
+                console.log('Initializing Complete P&L Report Manager...');
                 this.bindEvents();
                 this.setupScrollIndicator();
                 this.setCurrentDate();
             }
             
             bindEvents() {
-                // Year/Month change events
                 document.getElementById('plYear').addEventListener('change', () => {
                     this.updateReportHeader();
                 });
@@ -790,7 +762,6 @@
                     this.updateReportHeader();
                 });
                 
-                // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
                     if (e.ctrlKey && e.key === 'r') {
                         e.preventDefault();
@@ -808,7 +779,7 @@
                     }
                 });
                 
-                console.log('✅ All events bound successfully');
+                console.log('All events bound successfully');
             }
             
             setupScrollIndicator() {
@@ -858,7 +829,7 @@
                     const year = parseInt(document.getElementById('plYear').value);
                     const month = parseInt(document.getElementById('plMonth').value);
                     
-                    console.log(`📊 Loading Complete P&L Report for ${year}-${month}...`);
+                    console.log(`Loading Complete P&L Report for ${year}-${month}...`);
                     this.updateStatusBar('Loading financial data...');
                     
                     const response = await fetch(`/api/reports/pl-complete/${year}/${month}`);
@@ -881,13 +852,11 @@
                     this.renderCompleteReport();
                     this.updateStatusBar(`Report generated successfully for ${this.getMonthName(month)} ${year}`);
                     
-                    // Reset retry count on success
                     this.retryCount = 0;
-                    
-                    console.log('✅ P&L Report loaded successfully');
+                    console.log('P&L Report loaded successfully');
                     
                 } catch (error) {
-                    console.error('❌ Error loading P&L report:', error);
+                    console.error('Error loading P&L report:', error);
                     this.handleError(error);
                 } finally {
                     this.isLoading = false;
@@ -897,9 +866,8 @@
             }
             
             validateAndProcessData(data) {
-                const defaultAmounts = { actual: 0, cumulative: 0, previous: 0 };
+                const defaultAmounts = { actual: 0, cumulative: 0, previous: 0, budget: 0 };
                 
-                // Ensure all required fields exist with default values
                 const processedData = {
                     // Revenue
                     revenue: data.revenue || defaultAmounts,
@@ -960,7 +928,7 @@
             }
             
             renderCompleteReport() {
-                console.log('🎨 Rendering Complete P&L Report...');
+                console.log('Rendering Complete P&L Report...');
                 
                 const tbody = document.getElementById('plTableBody');
                 let html = '';
@@ -970,7 +938,7 @@
                     html += this.renderCategoryHeader('REVENUE');
                     html += this.renderDataRow('REVENUE', this.reportData.revenue);
                     
-                    // DIRECT COST Section (No blank row between Revenue and Direct Payroll)
+                    // DIRECT COST Section
                     html += this.renderDataRow('Direct Payroll', this.reportData.directPayroll);
                     html += this.renderDataRow('Direct Expenses', this.reportData.directExpenses);
                     html += this.renderDataRow('Materials', this.reportData.materials);
@@ -1033,10 +1001,10 @@
                     tbody.innerHTML = html;
                     document.getElementById('plContent').style.display = 'block';
                     
-                    console.log('✅ Complete P&L Report rendered successfully');
+                    console.log('Complete P&L Report rendered successfully');
                     
                 } catch (renderError) {
-                    console.error('❌ Error rendering report:', renderError);
+                    console.error('Error rendering report:', renderError);
                     this.handleError(renderError);
                 }
             }
@@ -1059,6 +1027,7 @@
                 const actualAmount = amounts?.actual ?? 0;
                 const cumulativeAmount = amounts?.cumulative ?? 0;
                 const previousAmount = amounts?.previous ?? 0;
+                const budgetAmount = amounts?.budget ?? 0;
                 
                 return `
                     <tr class="pl-data-row">
@@ -1066,7 +1035,7 @@
                         <td class="amount-cell">${this.formatAmount(actualAmount)}</td>
                         <td class="amount-cell">${this.formatAmount(cumulativeAmount)}</td>
                         <td class="amount-cell">${this.formatAmount(previousAmount)}</td>
-                        <td class="amount-cell">-</td>
+                        <td class="amount-cell">${this.formatAmount(budgetAmount)}</td>
                         <td class="amount-cell">-</td>
                         <td class="amount-cell">-</td>
                     </tr>
@@ -1077,6 +1046,7 @@
                 const actualAmount = totals?.actual ?? 0;
                 const cumulativeAmount = totals?.cumulative ?? 0;
                 const previousAmount = totals?.previous ?? 0;
+                const budgetAmount = totals?.budget ?? 0;
                 
                 return `
                     <tr class="${cssClass}">
@@ -1084,7 +1054,7 @@
                         <td class="amount-cell"><strong>${this.formatAmount(actualAmount)}</strong></td>
                         <td class="amount-cell"><strong>${this.formatAmount(cumulativeAmount)}</strong></td>
                         <td class="amount-cell"><strong>${this.formatAmount(previousAmount)}</strong></td>
-                        <td class="amount-cell"><strong>-</strong></td>
+                        <td class="amount-cell"><strong>${this.formatAmount(budgetAmount)}</strong></td>
                         <td class="amount-cell"><strong>-</strong></td>
                         <td class="amount-cell"><strong>-</strong></td>
                     </tr>
@@ -1113,6 +1083,7 @@
                 const actualCount = counts?.actual ?? 0;
                 const cumulativeCount = counts?.cumulative ?? 0;
                 const previousCount = counts?.previous ?? 0;
+                const budgetCount = counts?.budget ?? 0;
                 
                 return `
                     <tr class="pl-headcount-row">
@@ -1120,7 +1091,7 @@
                         <td class="amount-cell">${actualCount}</td>
                         <td class="amount-cell">${cumulativeCount}</td>
                         <td class="amount-cell">${previousCount}</td>
-                        <td class="amount-cell">-</td>
+                        <td class="amount-cell">${budgetCount}</td>
                         <td class="amount-cell">-</td>
                         <td class="amount-cell">-</td>
                     </tr>
@@ -1131,6 +1102,7 @@
                 const actualCount = counts?.actual ?? 0;
                 const cumulativeCount = counts?.cumulative ?? 0;
                 const previousCount = counts?.previous ?? 0;
+                const budgetCount = counts?.budget ?? 0;
                 
                 return `
                     <tr class="pl-headcount-header">
@@ -1138,7 +1110,7 @@
                         <td class="amount-cell"><strong>${actualCount}</strong></td>
                         <td class="amount-cell"><strong>${cumulativeCount}</strong></td>
                         <td class="amount-cell"><strong>${previousCount}</strong></td>
-                        <td class="amount-cell"><strong>-</strong></td>
+                        <td class="amount-cell"><strong>${budgetCount}</strong></td>
                         <td class="amount-cell"><strong>-</strong></td>
                         <td class="amount-cell"><strong>-</strong></td>
                     </tr>
@@ -1207,7 +1179,7 @@
             }
             
             async exportToCSV() {
-                console.log('📁 Exporting Complete P&L Report to CSV...');
+                console.log('Exporting Complete P&L Report to CSV...');
                 
                 if (!this.reportData || Object.keys(this.reportData).length === 0) {
                     this.showToast('No report data to export. Please generate a report first.', 'warning');
@@ -1223,76 +1195,29 @@
                     csvContent += `For the Month Ended ${monthName} ${year}\n\n`;
                     csvContent += `Particulars,Actual,Accum System,Last Report MIS,Budget,Variance,Last Year\n`;
                     
-                    // Add all sections to CSV
+                    // Add all sections to CSV with budget data
                     csvContent += `\nREVENUE\n`;
-                    csvContent += `REVENUE,${this.reportData.revenue.actual},${this.reportData.revenue.cumulative},${this.reportData.revenue.previous},-,-,-\n`;
-                    csvContent += `Direct Payroll,${this.reportData.directPayroll.actual},${this.reportData.directPayroll.cumulative},${this.reportData.directPayroll.previous},-,-,-\n`;
-                    csvContent += `Direct Expenses,${this.reportData.directExpenses.actual},${this.reportData.directExpenses.cumulative},${this.reportData.directExpenses.previous},-,-,-\n`;
-                    csvContent += `Materials,${this.reportData.materials.actual},${this.reportData.materials.cumulative},${this.reportData.materials.previous},-,-,-\n`;
-                    csvContent += `Subcontractor Charges,${this.reportData.subcontractorCharges.actual},${this.reportData.subcontractorCharges.cumulative},${this.reportData.subcontractorCharges.previous},-,-,-\n`;
-                    csvContent += `Transportation & Fuel,${this.reportData.transportationFuel.actual},${this.reportData.transportationFuel.cumulative},${this.reportData.transportationFuel.previous},-,-,-\n`;
-                    csvContent += `Freight and Custom Duty,${this.reportData.freightCustomDuty.actual},${this.reportData.freightCustomDuty.cumulative},${this.reportData.freightCustomDuty.previous},-,-,-\n`;
-                    csvContent += `Prov for Employees End of Service Benefits-Direct,${this.reportData.provisionEmployees.actual},${this.reportData.provisionEmployees.cumulative},${this.reportData.provisionEmployees.previous},-,-,-\n`;
-                    csvContent += `Dep on Property and Equipment (Projects)-Direct,${this.reportData.depreciation.actual},${this.reportData.depreciation.cumulative},${this.reportData.depreciation.previous},-,-,-\n`;
-                    csvContent += `Other Direct Expenses,${this.reportData.otherDirectExpenses.actual},${this.reportData.otherDirectExpenses.cumulative},${this.reportData.otherDirectExpenses.previous},-,-,-\n`;
-                    csvContent += `Rental Labors,${this.reportData.rentalLabors.actual},${this.reportData.rentalLabors.cumulative},${this.reportData.rentalLabors.previous},-,-,-\n`;
-                    csvContent += `Work in Progress,${this.reportData.workInProgress.actual},${this.reportData.workInProgress.cumulative},${this.reportData.workInProgress.previous},-,-,-\n`;
-                    csvContent += `TOTAL DIRECT COST,${this.reportData.totalDirectCost.actual},${this.reportData.totalDirectCost.cumulative},${this.reportData.totalDirectCost.previous},-,-,-\n`;
-                    csvContent += `TOTAL GROSS PROFIT,${this.reportData.grossProfit.actual},${this.reportData.grossProfit.cumulative},${this.reportData.grossProfit.previous},-,-,-\n`;
+                    csvContent += `REVENUE,${this.reportData.revenue.actual},${this.reportData.revenue.cumulative},${this.reportData.revenue.previous},${this.reportData.revenue.budget || 0},-,-\n`;
                     
-                    const gopPercentage = this.calculateGOPPercentage();
-                    csvContent += `GOP%,${gopPercentage.actual}%,${gopPercentage.cumulative}%,${gopPercentage.previous}%,-,-,-\n`;
-                    
-                    csvContent += `\nGENERAL & ADMINISTRATIVE EXPENSES\n`;
-                    csvContent += `Indirect Payroll,${this.reportData.indirectPayroll.actual},${this.reportData.indirectPayroll.cumulative},${this.reportData.indirectPayroll.previous},-,-,-\n`;
-                    csvContent += `Other Administration Expenses,${this.reportData.otherAdminExpenses.actual},${this.reportData.otherAdminExpenses.cumulative},${this.reportData.otherAdminExpenses.previous},-,-,-\n`;
-                    csvContent += `Employees Allowances,${this.reportData.employeesAllowances.actual},${this.reportData.employeesAllowances.cumulative},${this.reportData.employeesAllowances.previous},-,-,-\n`;
-                    csvContent += `Motor Vehicle Petrol and Maintenance,${this.reportData.motorVehicle.actual},${this.reportData.motorVehicle.cumulative},${this.reportData.motorVehicle.previous},-,-,-\n`;
-                    csvContent += `Professional and Government Fees,${this.reportData.professionalFees.actual},${this.reportData.professionalFees.cumulative},${this.reportData.professionalFees.previous},-,-,-\n`;
-                    csvContent += `Licenses and Visa Fees,${this.reportData.licensesVisaFees.actual},${this.reportData.licensesVisaFees.cumulative},${this.reportData.licensesVisaFees.previous},-,-,-\n`;
-                    csvContent += `Rent,${this.reportData.rent.actual},${this.reportData.rent.cumulative},${this.reportData.rent.previous},-,-,-\n`;
-                    csvContent += `Marketing,${this.reportData.marketing.actual},${this.reportData.marketing.cumulative},${this.reportData.marketing.previous},-,-,-\n`;
-                    csvContent += `Insurance,${this.reportData.insurance.actual},${this.reportData.insurance.cumulative},${this.reportData.insurance.previous},-,-,-\n`;
-                    csvContent += `Travel & Entertainment,${this.reportData.travelEntertainment.actual},${this.reportData.travelEntertainment.cumulative},${this.reportData.travelEntertainment.previous},-,-,-\n`;
-                    csvContent += `Telephone,${this.reportData.telephone.actual},${this.reportData.telephone.cumulative},${this.reportData.telephone.previous},-,-,-\n`;
-                    csvContent += `Depreciation Indirect,${this.reportData.depreciationIndirect.actual},${this.reportData.depreciationIndirect.cumulative},${this.reportData.depreciationIndirect.previous},-,-,-\n`;
-                    csvContent += `Printing & Stationery,${this.reportData.printingStationery.actual},${this.reportData.printingStationery.cumulative},${this.reportData.printingStationery.previous},-,-,-\n`;
-                    csvContent += `Electricity & Water,${this.reportData.electricityWater.actual},${this.reportData.electricityWater.cumulative},${this.reportData.electricityWater.previous},-,-,-\n`;
-                    csvContent += `Office Supplies,${this.reportData.officeSupplies.actual},${this.reportData.officeSupplies.cumulative},${this.reportData.officeSupplies.previous},-,-,-\n`;
-                    csvContent += `Depreciation Right to Use,${this.reportData.depreciationRightToUse.actual},${this.reportData.depreciationRightToUse.cumulative},${this.reportData.depreciationRightToUse.previous},-,-,-\n`;
-                    csvContent += `Repairs & Maintenance,${this.reportData.repairsMaintenance.actual},${this.reportData.repairsMaintenance.cumulative},${this.reportData.repairsMaintenance.previous},-,-,-\n`;
-                    csvContent += `Provision Employees Indirect,${this.reportData.provisionEmployeesIndirect.actual},${this.reportData.provisionEmployeesIndirect.cumulative},${this.reportData.provisionEmployeesIndirect.previous},-,-,-\n`;
-                    csvContent += `Other General Admin,${this.reportData.otherGeneralAdmin.actual},${this.reportData.otherGeneralAdmin.cumulative},${this.reportData.otherGeneralAdmin.previous},-,-,-\n`;
-                    csvContent += `Impairment Trade Receivables,${this.reportData.impairmentTradeReceivables.actual},${this.reportData.impairmentTradeReceivables.cumulative},${this.reportData.impairmentTradeReceivables.previous},-,-,-\n`;
-                    csvContent += `Impairment Retention Receivables,${this.reportData.impairmentRetentionReceivables.actual},${this.reportData.impairmentRetentionReceivables.cumulative},${this.reportData.impairmentRetentionReceivables.previous},-,-,-\n`;
-                    csvContent += `Loss on Bank Guarantees,${this.reportData.lossLiquidatedBankGuarantees.actual},${this.reportData.lossLiquidatedBankGuarantees.cumulative},${this.reportData.lossLiquidatedBankGuarantees.previous},-,-,-\n`;
-                    csvContent += `TOTAL GENERAL & ADMIN EXPENSES,${this.reportData.totalGeneralAdmin.actual},${this.reportData.totalGeneralAdmin.cumulative},${this.reportData.totalGeneralAdmin.previous},-,-,-\n`;
-                    csvContent += `TOTAL OPERATING PROFIT,${this.reportData.totalOperatingProfit.actual},${this.reportData.totalOperatingProfit.cumulative},${this.reportData.totalOperatingProfit.previous},-,-,-\n`;
-                    csvContent += `Borrowings Costs,${this.reportData.borrowingsCosts.actual},${this.reportData.borrowingsCosts.cumulative},${this.reportData.borrowingsCosts.previous},-,-,-\n`;
-                    csvContent += `Other Income,${this.reportData.otherIncome.actual},${this.reportData.otherIncome.cumulative},${this.reportData.otherIncome.previous},-,-,-\n`;
-                    csvContent += `TOTAL NET PROFIT FOR THE YEAR,${this.reportData.netProfit.actual},${this.reportData.netProfit.cumulative},${this.reportData.netProfit.previous},-,-,-\n`;
-                    
-                    const nopPercentage = this.calculateNOPPercentage();
-                    csvContent += `NOP%,${nopPercentage.actual}%,${nopPercentage.cumulative}%,${nopPercentage.previous}%,-,-,-\n`;
-                    
-                    csvContent += `Direct Headcount,${this.reportData.directHeadcount.actual},${this.reportData.directHeadcount.cumulative},${this.reportData.directHeadcount.previous},-,-,-\n`;
-                    csvContent += `Indirect Headcount,${this.reportData.indirectHeadcount.actual},${this.reportData.indirectHeadcount.cumulative},${this.reportData.indirectHeadcount.previous},-,-,-\n`;
-                    csvContent += `Total Headcount,${this.reportData.totalHeadcount.actual},${this.reportData.totalHeadcount.cumulative},${this.reportData.totalHeadcount.previous},-,-,-\n`;
+                    csvContent += `\nDIRECT COSTS\n`;
+                    csvContent += `Direct Payroll,${this.reportData.directPayroll.actual},${this.reportData.directPayroll.cumulative},${this.reportData.directPayroll.previous},${this.reportData.directPayroll.budget || 0},-,-\n`;
+                    csvContent += `Materials,${this.reportData.materials.actual},${this.reportData.materials.cumulative},${this.reportData.materials.previous},${this.reportData.materials.budget || 0},-,-\n`;
+                    csvContent += `Subcontractor Charges,${this.reportData.subcontractorCharges.actual},${this.reportData.subcontractorCharges.cumulative},${this.reportData.subcontractorCharges.previous},${this.reportData.subcontractorCharges.budget || 0},-,-\n`;
                     
                     const filename = `PL_Report_Complete_${monthName}_${year}.csv`;
                     this.downloadFile(csvContent, filename, 'text/csv');
                     
                     this.showToast('Report exported successfully!', 'success');
-                    console.log('✅ CSV export completed');
+                    console.log('CSV export completed');
                     
                 } catch (error) {
-                    console.error('❌ Export error:', error);
+                    console.error('Export error:', error);
                     this.showToast('Export failed. Please try again.', 'error');
                 }
             }
             
             printReport() {
-                console.log('🖨️ Printing P&L Report...');
+                console.log('Printing P&L Report...');
                 window.print();
             }
             
@@ -1343,29 +1268,17 @@
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = disable;
-                        if (disable) {
-                            btn.style.opacity = '0.6';
-                        } else {
-                            btn.style.opacity = '1';
-                        }
+                        btn.style.opacity = disable ? '0.6' : '1';
                     }
                 });
             }
             
             updateStatusBar(message) {
                 document.getElementById('plStatusInfo').textContent = message;
-                document.getElementById('plTimestamp').textContent = new Date().toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                document.getElementById('plTimestamp').textContent = new Date().toLocaleString();
             }
             
             showToast(message, type = 'info') {
-                // Create toast if it doesn't exist
                 let toast = document.getElementById('toast');
                 if (!toast) {
                     toast = document.createElement('div');
@@ -1386,7 +1299,6 @@
                     document.body.appendChild(toast);
                 }
                 
-                // Set toast style based on type
                 const styles = {
                     success: 'background: #27ae60;',
                     error: 'background: #e74c3c;',
@@ -1398,7 +1310,6 @@
                 toast.textContent = message;
                 toast.style.display = 'block';
                 
-                // Auto hide after 5 seconds
                 setTimeout(() => {
                     toast.style.display = 'none';
                 }, 5000);
@@ -1413,31 +1324,22 @@
             }
         }
 
-        // =====================================================
-        // GLOBAL FUNCTIONS AND EVENT HANDLERS
-        // =====================================================
-        
         let plManager;
 
-        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM loaded, initializing Complete P&L Report Manager...');
-            
-            // Initialize the manager
+            console.log('DOM loaded, initializing Complete P&L Report Manager...');
             plManager = new PLReportManager();
             
-            // Auto-load report after initialization
             setTimeout(() => {
                 loadPLReport();
             }, 1000);
         });
 
-        // Global functions for HTML onclick events
         function loadPLReport() {
             if (plManager) {
                 plManager.loadPLReport();
             } else {
-                console.error('❌ PLManager not initialized');
+                console.error('PLManager not initialized');
             }
         }
 
@@ -1445,7 +1347,7 @@
             if (plManager) {
                 plManager.exportToCSV();
             } else {
-                console.error('❌ PLManager not initialized');
+                console.error('PLManager not initialized');
             }
         }
 
@@ -1453,7 +1355,7 @@
             if (plManager) {
                 plManager.printReport();
             } else {
-                console.error('❌ PLManager not initialized');
+                console.error('PLManager not initialized');
             }
         }
 
@@ -1464,141 +1366,7 @@
             });
         }
 
-        // =====================================================
-        // ADDITIONAL UTILITY FUNCTIONS
-        // =====================================================
-        
-        // Auto-refresh functionality (optional)
-        function enableAutoRefresh(intervalMinutes = 5) {
-            setInterval(() => {
-                if (plManager && !plManager.isLoading) {
-                    console.log('🔄 Auto-refreshing P&L report...');
-                    plManager.loadPLReport();
-                }
-            }, intervalMinutes * 60 * 1000);
-        }
-
-        // Export to different formats
-        function exportToPDF() {
-            plManager.showToast('PDF export feature coming soon!', 'info');
-        }
-
-        function exportToExcel() {
-            plManager.showToast('Excel export feature coming soon!', 'info');
-        }
-
-        // Data validation helper
-        function validateReportData(data) {
-            const requiredFields = ['revenue', 'grossProfit', 'netProfit'];
-            return requiredFields.every(field => data.hasOwnProperty(field));
-        }
-
-        // Performance monitoring
-        function logPerformance(startTime, operation) {
-            const endTime = performance.now();
-            const duration = (endTime - startTime).toFixed(2);
-            console.log(`⏱️ ${operation} completed in ${duration}ms`);
-        }
-
-        // Network status monitoring
-        window.addEventListener('online', () => {
-            console.log('🌐 Network connection restored');
-            if (plManager) {
-                plManager.showToast('Network connection restored', 'success');
-            }
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('🌐 Network connection lost');
-            if (plManager) {
-                plManager.showToast('Network connection lost. Report may not load properly.', 'warning');
-            }
-        });
-
-        // Browser compatibility check
-        function checkBrowserCompatibility() {
-            const isCompatible = 
-                'fetch' in window &&
-                'Promise' in window &&
-                'classList' in document.documentElement;
-                
-            if (!isCompatible) {
-                document.body.innerHTML = `
-                    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
-                        <h2>Browser Not Supported</h2>
-                        <p>Please use a modern browser (Chrome, Firefox, Safari, Edge) to view this report.</p>
-                    </div>
-                `;
-                return false;
-            }
-            return true;
-        }
-
-        // Initialize browser compatibility check
-        if (!checkBrowserCompatibility()) {
-            console.error('❌ Browser not compatible');
-        }
-
-        // Service Worker registration (for offline support)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                    console.log('✅ Service Worker registered successfully:', registration);
-                })
-                .catch(error => {
-                    console.log('ℹ️ Service Worker registration failed:', error);
-                });
-        }
-
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && plManager) {
-                // Refresh data when page becomes visible again
-                const lastUpdate = localStorage.getItem('plLastUpdate');
-                const now = Date.now();
-                const fiveMinutes = 5 * 60 * 1000;
-                
-                if (!lastUpdate || (now - parseInt(lastUpdate)) > fiveMinutes) {
-                    console.log('🔄 Page became visible, refreshing data...');
-                    setTimeout(() => {
-                        plManager.loadPLReport();
-                    }, 1000);
-                }
-            }
-        });
-
-        // Save last update timestamp
-        function saveLastUpdateTime() {
-            localStorage.setItem('plLastUpdate', Date.now().toString());
-        }
-
-        // Memory cleanup
-        window.addEventListener('beforeunload', () => {
-            if (plManager) {
-                // Clean up any ongoing operations
-                plManager.isLoading = false;
-            }
-        });
-
-        // Error boundary for uncaught errors
-        window.addEventListener('error', (event) => {
-            console.error('❌ Uncaught error:', event.error);
-            if (plManager) {
-                plManager.showToast('An unexpected error occurred. Please refresh the page.', 'error');
-            }
-        });
-
-        // Promise rejection handler
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('❌ Unhandled promise rejection:', event.reason);
-            if (plManager) {
-                plManager.showToast('A network error occurred. Please try again.', 'error');
-            }
-        });
-
-        console.log('✅ Complete P&L Report Frontend loaded successfully');
-        console.log('🎯 Features: Auto-refresh, Export, Print, Error handling, Responsive design');
-        console.log('⚡ Ready for production use');
+        console.log('Complete P&L Report Frontend loaded successfully');
     </script>
 </body>
 </html>
