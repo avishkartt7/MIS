@@ -151,6 +151,10 @@
             font-size: 12px;
             transition: background 0.2s;
             white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn:hover {
@@ -503,12 +507,21 @@
             padding: 20px;
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            opacity: 0;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
         }
 
         .card-title {
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
         }
 
         .card-value {
@@ -615,6 +628,67 @@
             margin-top: 8px;
             display: none;
         }
+
+        /* Animation keyframes */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-card {
+            opacity: 0;
+        }
+
+        /* Quick Actions Styling */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-action-btn {
+            padding: 15px;
+            text-align: left;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .quick-action-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quick-action-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quick-action-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .quick-action-desc {
+            font-size: 12px;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -633,34 +707,79 @@
     <nav class="sidebar">
         <ul class="sidebar-menu">
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link active" onclick="showSection('dashboard')">Dashboard</a>
+                <a href="#" class="sidebar-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt" style="margin-right: 8px;"></i>Dashboard
+                </a>
             </li>
 
+            <!-- Data Management Section -->
             <li class="sidebar-item">
-                <a href="general-ledger.html" class="sidebar-link">General Ledger</a>
+                <a href="#" class="sidebar-link" style="background: #f0f0f0; font-weight: 600; color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Data Management</a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link" onclick="showSection('accounts')">Chart of Accounts</a>
+                <a href="general-ledger.html" class="sidebar-link">
+                    <i class="fas fa-book" style="margin-right: 8px;"></i>General Ledger
+                </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link">Transactions</a>
+                <a href="#" class="sidebar-link" onclick="showSection('accounts')">
+                    <i class="fas fa-list-alt" style="margin-right: 8px;"></i>Chart of Accounts
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-exchange-alt" style="margin-right: 8px;"></i>Transactions
+                </a>
             </li>
 
+            <!-- Financial Reports Section -->
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link" style="background: #f0f0f0; font-weight: 600; color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Reports</a>
+                <a href="#" class="sidebar-link" style="background: #f0f0f0; font-weight: 600; color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Financial Reports</a>
             </li>
             <li class="sidebar-item">
-                <a href="pl-report.html" class="sidebar-link">P&L Statement</a>
-            </li>
-            
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">Trial Balance</a>
+                <a href="pl-report.html" class="sidebar-link">
+                    <i class="fas fa-chart-line" style="margin-right: 8px;"></i>P&L Statement
+                </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link">Reports</a>
+                <a href="assets-sheet.html" class="sidebar-link">
+                    <i class="fas fa-building" style="margin-right: 8px;"></i>Assets Schedule
+                </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link">Settings</a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-balance-scale" style="margin-right: 8px;"></i>Balance Sheet
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-calculator" style="margin-right: 8px;"></i>Trial Balance
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave" style="margin-right: 8px;"></i>Cash Flow Statement
+                </a>
+            </li>
+
+            <!-- Analysis & Tools Section -->
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" style="background: #f0f0f0; font-weight: 600; color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Analysis & Tools</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Financial Analysis
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-search-dollar" style="margin-right: 8px;"></i>Budget vs Actual
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-cogs" style="margin-right: 8px;"></i>Settings
+                </a>
             </li>
         </ul>
     </nav>
@@ -671,32 +790,191 @@
         <!-- Dashboard Section -->
         <div id="dashboard-section" class="section active">
             <div class="dashboard">
-                <h2 style="margin-bottom: 20px;">MIS System Dashboard</h2>
+                <h2 style="margin-bottom: 20px; display: flex; align-items: center;">
+                    <i class="fas fa-tachometer-alt" style="margin-right: 12px; color: #0078d4;"></i>
+                    MIS System Dashboard
+                </h2>
                 
+                <!-- Dashboard Cards -->
                 <div class="dashboard-cards">
+                    <!-- Chart of Accounts Card -->
                     <div class="dashboard-card">
-                        <div class="card-title">Total Accounts</div>
+                        <div class="card-title">
+                            <i class="fas fa-list-alt" style="margin-right: 8px; color: #3498db;"></i>
+                            Chart of Accounts
+                        </div>
                         <div class="card-value" id="totalAccounts">0</div>
-                        <div class="card-description">Chart of Accounts</div>
+                        <div class="card-description">Total accounts configured</div>
+                        <div style="margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="showSection('accounts')" style="font-size: 11px; padding: 6px 12px;">
+                                <i class="fas fa-eye"></i> View Accounts
+                            </button>
+                        </div>
                     </div>
                     
+                    <!-- General Ledger Card -->
                     <div class="dashboard-card">
-                        <div class="card-title">Complete Accounts</div>
-                        <div class="card-value" id="completeAccounts">0</div>
-                        <div class="card-description">With full details</div>
+                        <div class="card-title">
+                            <i class="fas fa-book" style="margin-right: 8px; color: #27ae60;"></i>
+                            General Ledger
+                        </div>
+                        <div class="card-value" id="totalTransactions">0</div>
+                        <div class="card-description">Total ledger entries</div>
+                        <div style="margin-top: 12px;">
+                            <a href="general-ledger.html" class="btn btn-success" style="font-size: 11px; padding: 6px 12px; text-decoration: none;">
+                                <i class="fas fa-external-link-alt"></i> Open Ledger
+                            </a>
+                        </div>
                     </div>
                     
+                    <!-- P&L Report Card -->
                     <div class="dashboard-card">
-                        <div class="card-title">Recent Updates</div>
+                        <div class="card-title">
+                            <i class="fas fa-chart-line" style="margin-right: 8px; color: #e74c3c;"></i>
+                            P&L Statement
+                        </div>
+                        <div class="card-value" id="currentProfit">--</div>
+                        <div class="card-description">Current month profit/loss</div>
+                        <div style="margin-top: 12px;">
+                            <a href="pl-report.html" class="btn" style="background: #e74c3c; color: white; font-size: 11px; padding: 6px 12px; text-decoration: none;">
+                                <i class="fas fa-chart-bar"></i> View P&L
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Assets Schedule Card -->
+                    <div class="dashboard-card">
+                        <div class="card-title">
+                            <i class="fas fa-building" style="margin-right: 8px; color: #9b59b6;"></i>
+                            Assets Schedule
+                        </div>
+                        <div class="card-value" id="totalAssets">--</div>
+                        <div class="card-description">Total current assets</div>
+                        <div style="margin-top: 12px;">
+                            <a href="assets-sheet.html" class="btn" style="background: #9b59b6; color: white; font-size: 11px; padding: 6px 12px; text-decoration: none;">
+                                <i class="fas fa-building"></i> View Assets
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Quality Card -->
+                    <div class="dashboard-card">
+                        <div class="card-title">
+                            <i class="fas fa-check-circle" style="margin-right: 8px; color: #f39c12;"></i>
+                            Data Quality
+                        </div>
+                        <div class="card-value" id="dataQuality">--</div>
+                        <div class="card-description">Accounts with complete data</div>
+                        <div style="margin-top: 12px;">
+                            <button class="btn" onclick="refreshData()" style="background: #f39c12; color: white; font-size: 11px; padding: 6px 12px;">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity Card -->
+                    <div class="dashboard-card">
+                        <div class="card-title">
+                            <i class="fas fa-clock" style="margin-right: 8px; color: #1abc9c;"></i>
+                            Recent Activity
+                        </div>
                         <div class="card-value" id="recentUpdates">0</div>
-                        <div class="card-description">Last 7 days</div>
+                        <div class="card-description">Updates in last 7 days</div>
+                        <div style="margin-top: 12px;">
+                            <button class="btn" onclick="showRecentActivity()" style="background: #1abc9c; color: white; font-size: 11px; padding: 6px 12px;">
+                                <i class="fas fa-history"></i> View Activity
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
+
+                <!-- Quick Actions Section -->
                 <div style="margin-top: 30px;">
-                    <button class="btn btn-primary" onclick="showSection('accounts')">Open Chart of Accounts</button>
-                    <button class="btn btn-success" onclick="addNewAccount()">Add New Account</button>
-                    <button class="btn" onclick="exportData()">Export Data</button>
+                    <h3 style="margin-bottom: 20px; color: #2c3e50; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-bolt" style="margin-right: 8px; color: #f39c12;"></i>
+                        Quick Actions
+                    </h3>
+                    <div class="quick-actions-grid">
+                        
+                        <!-- Accounts Management -->
+                        <button class="quick-action-btn btn-primary" onclick="showSection('accounts')">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-list-alt"></i> Chart of Accounts
+                                    </div>
+                                    <div class="quick-action-desc">Manage account structure</div>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </button>
+                        
+                        <!-- General Ledger -->
+                        <a href="general-ledger.html" class="quick-action-btn btn-success" style="text-decoration: none;">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-book"></i> General Ledger
+                                    </div>
+                                    <div class="quick-action-desc">View transactions</div>
+                                </div>
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- P&L Report -->
+                        <a href="pl-report.html" class="quick-action-btn" style="background: #e74c3c; color: white; text-decoration: none;">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-chart-line"></i> P&L Statement
+                                    </div>
+                                    <div class="quick-action-desc">Profit & Loss analysis</div>
+                                </div>
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- Assets Schedule -->
+                        <a href="assets-sheet.html" class="quick-action-btn" style="background: #9b59b6; color: white; text-decoration: none;">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-building"></i> Assets Schedule
+                                    </div>
+                                    <div class="quick-action-desc">Asset tracking report</div>
+                                </div>
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- Add New Account -->
+                        <button class="quick-action-btn" onclick="addNewAccount()" style="background: #f39c12; color: white;">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-plus"></i> Add Account
+                                    </div>
+                                    <div class="quick-action-desc">Create new account</div>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </button>
+                        
+                        <!-- Export Data -->
+                        <button class="quick-action-btn" onclick="exportData()" style="background: #1abc9c; color: white;">
+                            <div class="quick-action-content">
+                                <div class="quick-action-info">
+                                    <div class="quick-action-title">
+                                        <i class="fas fa-download"></i> Export Data
+                                    </div>
+                                    <div class="quick-action-desc">Download reports</div>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </button>
+                        
+                    </div>
                 </div>
             </div>
         </div>
@@ -851,6 +1129,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
         // Global variables
         let allAccounts = [];
@@ -865,29 +1144,323 @@
             loadDashboardStats();
             bindEvents();
             setupDragDrop();
+            
+            // Add loading animation to cards
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.dashboard-card');
+                cards.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.1}s`;
+                    card.style.animation = 'fadeInUp 0.6s ease-out forwards';
+                });
+            }, 100);
         });
+
+        // Enhanced dashboard statistics loading
+        async function loadDashboardStats() {
+            try {
+                console.log('📊 Loading enhanced dashboard statistics...');
+                
+                // Load Chart of Accounts stats
+                const accountsResponse = await fetch('/api/stats');
+                if (accountsResponse.ok) {
+                    const accountsResult = await accountsResponse.json();
+                    if (accountsResult.success) {
+                        document.getElementById('totalAccounts').textContent = accountsResult.data.totalAccounts.toLocaleString();
+                        document.getElementById('recentUpdates').textContent = accountsResult.data.recentAccounts.toLocaleString();
+                        
+                        // Calculate data quality percentage
+                        const qualityPercent = accountsResult.data.totalAccounts > 0 ? 
+                            Math.round((accountsResult.data.namedAccounts / accountsResult.data.totalAccounts) * 100) : 0;
+                        document.getElementById('dataQuality').textContent = `${qualityPercent}%`;
+                    }
+                }
+                
+                // Load General Ledger stats
+                try {
+                    const glResponse = await fetch('/api/general-ledger/stats');
+                    if (glResponse.ok) {
+                        const glResult = await glResponse.json();
+                        if (glResult.success) {
+                            document.getElementById('totalTransactions').textContent = glResult.data.totalEntries.toLocaleString();
+                        }
+                    }
+                } catch (error) {
+                    console.log('ℹ️ General Ledger stats not available:', error.message);
+                    document.getElementById('totalTransactions').textContent = 'N/A';
+                }
+                
+                // FIXED: Load PREVIOUS MONTH P&L data
+                try {
+                    const currentDate = new Date();
+                    
+                    // Calculate previous month and year
+                    let prevMonth = currentDate.getMonth(); // Current month (0-11)
+                    let prevYear = currentDate.getFullYear();
+                    
+                    // If current month is January (0), go to December of previous year
+                    if (prevMonth === 0) {
+                        prevMonth = 12; // December
+                        prevYear = prevYear - 1;
+                    }
+                    // Otherwise, just subtract 1 from current month
+                    // Note: prevMonth is already 0-based, so no need to add 1
+                    
+                    console.log(`📈 Loading P&L data for PREVIOUS month: ${prevYear}-${prevMonth} (instead of current month)`);
+                    
+                    const plResponse = await fetch(`/api/reports/pl-complete/${prevYear}/${prevMonth}`);
+                    if (plResponse.ok) {
+                        const plResult = await plResponse.json();
+                        if (plResult.success && plResult.data) {
+                            const netProfit = plResult.data.netProfit?.actual || 0;
+                            const formatted = formatCurrency(netProfit);
+                            
+                            // Update the card value
+                            document.getElementById('currentProfit').textContent = formatted;
+                            
+                            // Update the card description to show it's previous month
+                            const monthNames = [
+                                'January', 'February', 'March', 'April', 'May', 'June',
+                                'July', 'August', 'September', 'October', 'November', 'December'
+                            ];
+                            const prevMonthName = monthNames[prevMonth - 1];
+                            
+                            // Update card description to show previous month
+                            const cardDescription = document.querySelector('#currentProfit').parentElement.querySelector('.card-description');
+                            if (cardDescription) {
+                                cardDescription.textContent = `${prevMonthName} ${prevYear} profit/loss`;
+                            }
+                            
+                            // Color code based on profit/loss
+                            const profitElement = document.getElementById('currentProfit');
+                            if (netProfit > 0) {
+                                profitElement.style.color = '#27ae60'; // Green for profit
+                            } else if (netProfit < 0) {
+                                profitElement.style.color = '#e74c3c'; // Red for loss
+                            } else {
+                                profitElement.style.color = '#95a5a6'; // Gray for break-even
+                            }
+                            
+                            console.log(`✅ P&L data loaded for ${prevMonthName} ${prevYear}: ${formatted}`);
+                        }
+                    }
+                } catch (error) {
+                    console.log('ℹ️ P&L data not available:', error.message);
+                    document.getElementById('currentProfit').textContent = 'N/A';
+                }
+                
+                // FIXED: Load PREVIOUS MONTH Assets data  
+                try {
+                    const currentDate = new Date();
+                    
+                    // Calculate previous month and year (same logic as P&L)
+                    let prevMonth = currentDate.getMonth();
+                    let prevYear = currentDate.getFullYear();
+                    
+                    if (prevMonth === 0) {
+                        prevMonth = 12;
+                        prevYear = prevYear - 1;
+                    }
+                    
+                    console.log(`🏢 Loading Assets data for PREVIOUS month: ${prevYear}-${prevMonth}`);
+                    
+                    const assetsResponse = await fetch(`/api/reports/assets-summary/${prevYear}/${prevMonth}`);
+                    if (assetsResponse.ok) {
+                        const assetsResult = await assetsResponse.json();
+                        if (assetsResult.success && assetsResult.data) {
+                            const totalAssets = assetsResult.data.summary?.totalAssets || 0;
+                            const formatted = formatCurrency(totalAssets);
+                            
+                            // Update the card value
+                            document.getElementById('totalAssets').textContent = formatted;
+                            
+                            // Update card description to show previous month
+                            const monthNames = [
+                                'January', 'February', 'March', 'April', 'May', 'June',
+                                'July', 'August', 'September', 'October', 'November', 'December'
+                            ];
+                            const prevMonthName = monthNames[prevMonth - 1];
+                            
+                            const cardDescription = document.querySelector('#totalAssets').parentElement.querySelector('.card-description');
+                            if (cardDescription) {
+                                cardDescription.textContent = `${prevMonthName} ${prevYear} total assets`;
+                            }
+                            
+                            // Color code based on asset value
+                            const assetsElement = document.getElementById('totalAssets');
+                            if (totalAssets > 0) {
+                                assetsElement.style.color = '#9b59b6'; // Purple for assets
+                            } else {
+                                assetsElement.style.color = '#95a5a6'; // Gray for no assets
+                            }
+                            
+                            console.log(`✅ Assets data loaded for ${prevMonthName} ${prevYear}: ${formatted}`);
+                        }
+                    }
+                } catch (error) {
+                    console.log('ℹ️ Assets data not available:', error.message);
+                    document.getElementById('totalAssets').textContent = 'N/A';
+                }
+                
+                console.log('✅ Enhanced dashboard statistics loaded with PREVIOUS MONTH data');
+                
+            } catch (error) {
+                console.error('❌ Error loading dashboard statistics:', error);
+                // Set error states
+                ['totalAccounts', 'totalTransactions', 'currentProfit', 'totalAssets', 'dataQuality', 'recentUpdates'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = 'Error';
+                });
+            }
+        }
+
+        function getPreviousMonth() {
+            const currentDate = new Date();
+            let prevMonth = currentDate.getMonth();
+            let prevYear = currentDate.getFullYear();
+            
+            if (prevMonth === 0) {
+                prevMonth = 12;
+                prevYear = prevYear - 1;
+            }
+            
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            return {
+                month: prevMonth,
+                year: prevYear,
+                monthName: monthNames[prevMonth - 1],
+                displayText: `${monthNames[prevMonth - 1]} ${prevYear}`
+            };
+        }
+
+        // Helper function to format currency
+        function formatCurrency(amount) {
+            const numAmount = parseFloat(amount);
+            if (isNaN(numAmount)) return 'N/A';
+            
+            if (numAmount === 0) return '0';
+            
+            const formatted = Math.abs(numAmount).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+            
+            if (numAmount < 0) {
+                return `(${formatted})`;
+            }
+            return formatted;
+        }
+
+        // Show recent activity function
+        function showRecentActivity() {
+            showToast('Recent Activity feature will show:\n\n• Recent account updates\n• Latest transactions\n• Report generations\n• Data imports/exports\n\nThis feature will be implemented in the next update.', 'info');
+        }
+
+        // Enhanced refresh function
+        async function refreshData() {
+            console.log('🔄 Refreshing all dashboard data...');
+            
+            // Show loading state
+            const refreshElements = ['totalAccounts', 'totalTransactions', 'currentProfit', 'totalAssets', 'dataQuality', 'recentUpdates'];
+            refreshElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '...';
+            });
+            
+            // Reload all data
+            await loadDashboardStats();
+            if (document.getElementById('accounts-section').classList.contains('active')) {
+                loadAccounts();
+            }
+            
+            // Show success message
+            showToast('Dashboard data refreshed successfully!', 'success');
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            // Create toast element if it doesn't exist
+            let toast = document.getElementById('dashboardToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'dashboardToast';
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 600;
+                    z-index: 10000;
+                    display: none;
+                    max-width: 400px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    font-size: 14px;
+                `;
+                document.body.appendChild(toast);
+            }
+            
+            const styles = {
+                success: 'background: #27ae60;',
+                error: 'background: #e74c3c;',
+                warning: 'background: #f39c12;',
+                info: 'background: #3498db;'
+            };
+            
+            toast.style.cssText += styles[type] || styles.info;
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
+        // Auto-refresh data every 5 minutes
+        setInterval(() => {
+            console.log('🔄 Auto-refreshing dashboard data...');
+            if (document.getElementById('dashboard-section').classList.contains('active')) {
+                loadDashboardStats();
+            }
+        }, 5 * 60 * 1000); // 5 minutes
 
         // Bind events
         function bindEvents() {
             // Search functionality
-            document.getElementById('searchInput').addEventListener('input', function(e) {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => handleSearch(e.target.value), 300);
-            });
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => handleSearch(e.target.value), 300);
+                });
+            }
 
             // Records per page
-            document.getElementById('recordsPerPage').addEventListener('change', function() {
-                renderTable();
-            });
+            const recordsPerPage = document.getElementById('recordsPerPage');
+            if (recordsPerPage) {
+                recordsPerPage.addEventListener('change', function() {
+                    renderTable();
+                });
+            }
 
             // Form submission
-            document.getElementById('accountForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleFormSubmit();
-            });
+            const accountForm = document.getElementById('accountForm');
+            if (accountForm) {
+                accountForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleFormSubmit();
+                });
+            }
 
             // File input for import
-            document.getElementById('importFile').addEventListener('change', handleFileSelect);
+            const importFile = document.getElementById('importFile');
+            if (importFile) {
+                importFile.addEventListener('change', handleFileSelect);
+            }
 
             // Close modal when clicking outside
             window.addEventListener('click', function(e) {
@@ -905,7 +1478,8 @@
                 }
                 if (e.ctrlKey && e.key === 'f') {
                     e.preventDefault();
-                    document.getElementById('searchInput').focus();
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) searchInput.focus();
                 }
                 if (e.ctrlKey && e.key === 'n') {
                     e.preventDefault();
@@ -917,6 +1491,7 @@
         // Setup drag and drop
         function setupDragDrop() {
             const uploadArea = document.querySelector('.file-upload-area');
+            if (!uploadArea) return;
             
             uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
@@ -972,25 +1547,6 @@
             }
         }
 
-        // Load dashboard statistics
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('totalAccounts').textContent = result.data.totalAccounts.toLocaleString();
-                    document.getElementById('completeAccounts').textContent = result.data.namedAccounts.toLocaleString();
-                    document.getElementById('recentUpdates').textContent = result.data.recentAccounts.toLocaleString();
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-                document.getElementById('totalAccounts').textContent = 'Error';
-                document.getElementById('completeAccounts').textContent = 'Error';
-                document.getElementById('recentUpdates').textContent = 'Error';
-            }
-        }
-
         // Load accounts data
         async function loadAccounts() {
             showLoading(true);
@@ -1019,7 +1575,7 @@
             
             if (!searchTerm.trim()) {
                 filteredAccounts = [...allAccounts];
-                clearBtn.style.display = 'none';
+                if (clearBtn) clearBtn.style.display = 'none';
                 hideFilterInfo();
             } else {
                 const term = searchTerm.toLowerCase();
@@ -1030,7 +1586,7 @@
                     (account.acc_type_code_debit && account.acc_type_code_debit.toLowerCase().includes(term)) ||
                     (account.acc_type_code_credit && account.acc_type_code_credit.toLowerCase().includes(term))
                 );
-                clearBtn.style.display = 'inline-block';
+                if (clearBtn) clearBtn.style.display = 'inline-block';
                 showFilterInfo(searchTerm);
             }
             
@@ -1039,8 +1595,11 @@
 
         // Clear search
         function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            handleSearch('');
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                handleSearch('');
+            }
         }
 
         // Sort table
@@ -1059,7 +1618,9 @@
 
             // Add sort class to current column
             const currentTh = document.querySelector(`th[onclick*="${column}"]`);
-            currentTh.classList.add(`sort-${currentSort.direction}`);
+            if (currentTh) {
+                currentTh.classList.add(`sort-${currentSort.direction}`);
+            }
 
             filteredAccounts.sort((a, b) => {
                 let aVal = a[column] || '';
@@ -1089,11 +1650,13 @@
         // Render table
         function renderTable() {
             const tbody = document.getElementById('accountsTableBody');
-            const recordsPerPage = document.getElementById('recordsPerPage').value;
+            const recordsPerPage = document.getElementById('recordsPerPage');
+            
+            if (!tbody) return;
             
             let displayAccounts = filteredAccounts;
-            if (recordsPerPage !== 'all') {
-                displayAccounts = filteredAccounts.slice(0, parseInt(recordsPerPage));
+            if (recordsPerPage && recordsPerPage.value !== 'all') {
+                displayAccounts = filteredAccounts.slice(0, parseInt(recordsPerPage.value));
             }
 
             if (displayAccounts.length === 0) {
@@ -1135,63 +1698,90 @@
             const total = allAccounts.length;
             const filtered = filteredAccounts.length;
             
-            if (filtered === total) {
-                info.textContent = `Showing ${filtered.toLocaleString()} records`;
-            } else {
-                info.textContent = `Showing ${filtered.toLocaleString()} of ${total.toLocaleString()} records`;
+            if (info) {
+                if (filtered === total) {
+                    info.textContent = `Showing ${filtered.toLocaleString()} records`;
+                } else {
+                    info.textContent = `Showing ${filtered.toLocaleString()} of ${total.toLocaleString()} records`;
+                }
             }
         }
 
         // Show filter info
         function showFilterInfo(searchTerm) {
             const filterInfo = document.getElementById('filterInfo');
-            filterInfo.textContent = `Filtered: "${searchTerm}"`;
-            filterInfo.style.display = 'inline';
+            if (filterInfo) {
+                filterInfo.textContent = `Filtered: "${searchTerm}"`;
+                filterInfo.style.display = 'inline';
+            }
         }
 
         // Hide filter info
         function hideFilterInfo() {
-            document.getElementById('filterInfo').style.display = 'none';
+            const filterInfo = document.getElementById('filterInfo');
+            if (filterInfo) {
+                filterInfo.style.display = 'none';
+            }
         }
 
         // Show/hide loading
         function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
-            document.querySelector('.table-wrapper').style.display = show ? 'none' : 'block';
+            const loading = document.getElementById('loading');
+            const tableWrapper = document.querySelector('.table-wrapper');
+            
+            if (loading) loading.style.display = show ? 'flex' : 'none';
+            if (tableWrapper) tableWrapper.style.display = show ? 'none' : 'block';
         }
 
         // Show/hide error
         function showError(show) {
-            document.getElementById('error').style.display = show ? 'flex' : 'none';
-            document.querySelector('.table-wrapper').style.display = show ? 'none' : 'block';
+            const error = document.getElementById('error');
+            const tableWrapper = document.querySelector('.table-wrapper');
+            
+            if (error) error.style.display = show ? 'flex' : 'none';
+            if (tableWrapper) tableWrapper.style.display = show ? 'none' : 'block';
         }
 
         // Modal functions
         function addNewAccount() {
             showSection('accounts');
             setTimeout(() => {
-                document.getElementById('modalTitle').textContent = 'Add New Account';
-                document.getElementById('accountForm').reset();
-                document.getElementById('ptsAccountNo').readOnly = false;
-                document.getElementById('saveBtn').textContent = 'Save';
-                document.getElementById('accountModal').style.display = 'block';
-                document.getElementById('ptsAccountNo').focus();
+                const modal = document.getElementById('accountModal');
+                const title = document.getElementById('modalTitle');
+                const form = document.getElementById('accountForm');
+                const saveBtn = document.getElementById('saveBtn');
+                const accountNo = document.getElementById('ptsAccountNo');
+                
+                if (title) title.textContent = 'Add New Account';
+                if (form) form.reset();
+                if (accountNo) accountNo.readOnly = false;
+                if (saveBtn) saveBtn.textContent = 'Save';
+                if (modal) {
+                    modal.style.display = 'block';
+                    if (accountNo) accountNo.focus();
+                }
             }, 100);
         }
 
         function editAccount(ptsAccountNo) {
             const account = allAccounts.find(acc => acc.pts_account_no === ptsAccountNo);
             if (account) {
-                document.getElementById('modalTitle').textContent = 'Edit Account';
+                const modal = document.getElementById('accountModal');
+                const title = document.getElementById('modalTitle');
+                const saveBtn = document.getElementById('saveBtn');
+                
+                if (title) title.textContent = 'Edit Account';
                 document.getElementById('ptsAccountNo').value = account.pts_account_no;
                 document.getElementById('ptsAccountNo').readOnly = true;
                 document.getElementById('accountName').value = account.name || '';
                 document.getElementById('shortName').value = account.short_name || '';
                 document.getElementById('debitCode').value = account.acc_type_code_debit || '';
                 document.getElementById('creditCode').value = account.acc_type_code_credit || '';
-                document.getElementById('saveBtn').textContent = 'Update';
-                document.getElementById('accountModal').style.display = 'block';
-                document.getElementById('accountName').focus();
+                if (saveBtn) saveBtn.textContent = 'Update';
+                if (modal) {
+                    modal.style.display = 'block';
+                    document.getElementById('accountName').focus();
+                }
             }
         }
 
@@ -1210,7 +1800,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('Account deleted successfully!');
+                    showToast('Account deleted successfully!', 'success');
                     loadAccounts();
                     loadDashboardStats();
                 } else {
@@ -1218,13 +1808,16 @@
                 }
             } catch (error) {
                 console.error('Error deleting account:', error);
-                alert('Error deleting account. Please try again.');
+                showToast('Error deleting account. Please try again.', 'error');
             }
         }
 
         function closeModal() {
-            document.getElementById('accountModal').style.display = 'none';
-            document.getElementById('accountForm').reset();
+            const modal = document.getElementById('accountModal');
+            const form = document.getElementById('accountForm');
+            
+            if (modal) modal.style.display = 'none';
+            if (form) form.reset();
         }
 
         // Form submission
@@ -1238,7 +1831,7 @@
             };
 
             if (!formData.pts_account_no || !formData.name) {
-                alert('Account No and Name are required');
+                showToast('Account No and Name are required', 'error');
                 return;
             }
 
@@ -1263,7 +1856,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(isEdit ? 'Account updated successfully!' : 'Account created successfully!');
+                    showToast(isEdit ? 'Account updated successfully!' : 'Account created successfully!', 'success');
                     closeModal();
                     loadAccounts();
                     loadDashboardStats();
@@ -1272,30 +1865,43 @@
                 }
             } catch (error) {
                 console.error('Error saving account:', error);
-                alert('Error saving account: ' + error.message);
+                showToast('Error saving account: ' + error.message, 'error');
             }
         }
 
         // Import functions
         function importData() {
-            document.getElementById('importModal').style.display = 'block';
+            const importModal = document.getElementById('importModal');
+            if (importModal) {
+                importModal.style.display = 'block';
+            }
         }
-        
 
         function closeImportModal() {
-            document.getElementById('importModal').style.display = 'none';
-            document.getElementById('importFile').value = '';
-            document.getElementById('filePreview').style.display = 'none';
-            document.getElementById('fileInfo').style.display = 'none';
-            document.getElementById('importBtn').disabled = true;
+            const importModal = document.getElementById('importModal');
+            const importFile = document.getElementById('importFile');
+            const filePreview = document.getElementById('filePreview');
+            const fileInfo = document.getElementById('fileInfo');
+            const importBtn = document.getElementById('importBtn');
+            
+            if (importModal) importModal.style.display = 'none';
+            if (importFile) importFile.value = '';
+            if (filePreview) filePreview.style.display = 'none';
+            if (fileInfo) fileInfo.style.display = 'none';
+            if (importBtn) importBtn.disabled = true;
             importedData = null;
         }
 
         function clearFileSelection() {
-            document.getElementById('importFile').value = '';
-            document.getElementById('fileInfo').style.display = 'none';
-            document.getElementById('filePreview').style.display = 'none';
-            document.getElementById('importBtn').disabled = true;
+            const importFile = document.getElementById('importFile');
+            const fileInfo = document.getElementById('fileInfo');
+            const filePreview = document.getElementById('filePreview');
+            const importBtn = document.getElementById('importBtn');
+            
+            if (importFile) importFile.value = '';
+            if (fileInfo) fileInfo.style.display = 'none';
+            if (filePreview) filePreview.style.display = 'none';
+            if (importBtn) importBtn.disabled = true;
             importedData = null;
         }
 
@@ -1310,7 +1916,7 @@
 
             // Check file size (10MB limit)
             if (file.size > 10 * 1024 * 1024) {
-                alert('File size must be less than 10MB');
+                showToast('File size must be less than 10MB', 'error');
                 clearFileSelection();
                 return;
             }
@@ -1320,18 +1926,24 @@
             const isCSV = fileName.endsWith('.csv');
 
             if (!isExcel && !isCSV) {
-                alert('Please select an Excel (.xlsx, .xls) or CSV (.csv) file');
+                showToast('Please select an Excel (.xlsx, .xls) or CSV (.csv) file', 'error');
                 clearFileSelection();
                 return;
             }
 
             // Show file info
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileInfo').style.display = 'flex';
+            const fileNameSpan = document.getElementById('fileName');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            if (fileNameSpan) fileNameSpan.textContent = file.name;
+            if (fileInfo) fileInfo.style.display = 'flex';
 
             // Show loading in preview
-            document.getElementById('filePreview').style.display = 'block';
-            document.getElementById('previewContent').innerHTML = 'Loading file preview...';
+            const filePreview = document.getElementById('filePreview');
+            const previewContent = document.getElementById('previewContent');
+            
+            if (filePreview) filePreview.style.display = 'block';
+            if (previewContent) previewContent.innerHTML = 'Loading file preview...';
             
             // Process file based on type
             if (isExcel) {
@@ -1373,17 +1985,18 @@
                     importedData = parseImportData(headers, rows);
                     showFilePreview(headers, rows.slice(0, 5), importedData.length);
                     
-                    document.getElementById('importBtn').disabled = false;
+                    const importBtn = document.getElementById('importBtn');
+                    if (importBtn) importBtn.disabled = false;
                     
                 } catch (error) {
                     console.error('Excel processing error:', error);
-                    alert('Error reading Excel file: ' + error.message);
+                    showToast('Error reading Excel file: ' + error.message, 'error');
                     clearFileSelection();
                 }
             };
             
             reader.onerror = function() {
-                alert('Error reading file');
+                showToast('Error reading file', 'error');
                 clearFileSelection();
             };
             
@@ -1408,17 +2021,18 @@
                     importedData = parseImportData(headers, rows);
                     showFilePreview(headers, rows.slice(0, 5), importedData.length);
                     
-                    document.getElementById('importBtn').disabled = false;
+                    const importBtn = document.getElementById('importBtn');
+                    if (importBtn) importBtn.disabled = false;
                     
                 } catch (error) {
                     console.error('CSV processing error:', error);
-                    alert('Error reading CSV file: ' + error.message);
+                    showToast('Error reading CSV file: ' + error.message, 'error');
                     clearFileSelection();
                 }
             };
             
             reader.onerror = function() {
-                alert('Error reading file');
+                showToast('Error reading file', 'error');
                 clearFileSelection();
             };
             
@@ -1489,23 +2103,25 @@
         function showFilePreview(headers, rows, validCount) {
             const previewContent = document.getElementById('previewContent');
             
-            let preview = `<strong>Headers:</strong> ${headers.join(', ')}<br><br>`;
-            preview += `<strong>Sample data:</strong><br>`;
-            
-            rows.forEach((row, index) => {
-                if (row.some(cell => cell)) { // Only show rows with data
-                    preview += `Row ${index + 1}: ${row.join(' | ')}<br>`;
-                }
-            });
-            
-            preview += `<br><strong>Valid records found: ${validCount}</strong>`;
-            
-            previewContent.innerHTML = preview;
+            if (previewContent) {
+                let preview = `<strong>Headers:</strong> ${headers.join(', ')}<br><br>`;
+                preview += `<strong>Sample data:</strong><br>`;
+                
+                rows.forEach((row, index) => {
+                    if (row.some(cell => cell)) { // Only show rows with data
+                        preview += `Row ${index + 1}: ${row.join(' | ')}<br>`;
+                    }
+                });
+                
+                preview += `<br><strong>Valid records found: ${validCount}</strong>`;
+                
+                previewContent.innerHTML = preview;
+            }
         }
 
         async function processImport() {
             if (!importedData || importedData.length === 0) {
-                alert('No valid data to import');
+                showToast('No valid data to import', 'error');
                 return;
             }
 
@@ -1518,8 +2134,10 @@
             try {
                 // Show loading
                 const importBtn = document.getElementById('importBtn');
-                importBtn.textContent = 'Importing...';
-                importBtn.disabled = true;
+                if (importBtn) {
+                    importBtn.textContent = 'Importing...';
+                    importBtn.disabled = true;
+                }
                 
                 const response = await fetch('/api/accounts/bulk-import', {
                     method: 'POST',
@@ -1547,7 +2165,7 @@
                         }
                     }
                     
-                    alert(message);
+                    showToast(message, 'success');
                     closeImportModal();
                     loadAccounts();
                     loadDashboardStats();
@@ -1556,11 +2174,13 @@
                 }
             } catch (error) {
                 console.error('Import error:', error);
-                alert('Import failed: ' + error.message);
+                showToast('Import failed: ' + error.message, 'error');
             } finally {
                 const importBtn = document.getElementById('importBtn');
-                importBtn.textContent = 'Import Data';
-                importBtn.disabled = false;
+                if (importBtn) {
+                    importBtn.textContent = 'Import Data';
+                    importBtn.disabled = false;
+                }
             }
         }
 
@@ -1587,7 +2207,7 @@
         // Export function
         function exportData() {
             if (filteredAccounts.length === 0) {
-                alert('No data to export');
+                showToast('No data to export', 'warning');
                 return;
             }
 
@@ -1601,7 +2221,6 @@
                 ...filteredAccounts.map(account => [
                     account.pts_account_no,
                     `"${(account.name || '').replace(/"/g, '""')}"`,
-                    `"${(account.acc_type_code_debit || '').replace(/"/g, '""')}"`,
                     `"${(account.acc_type_code_credit || '').replace(/"/g, '""')}"`,
                     `"${(account.short_name || '').replace(/"/g, '""')}"`,
                     account.created_by || '',
@@ -1612,7 +2231,7 @@
             ].join('\n');
 
             downloadFile(csvContent, `chart_of_accounts_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-            alert(`Exported ${filteredAccounts.length} accounts successfully!`);
+            showToast(`Exported ${filteredAccounts.length} accounts successfully!`, 'success');
         }
 
         function downloadFile(content, filename, mimeType) {
@@ -1628,11 +2247,6 @@
         }
 
         // Utility functions
-        function refreshData() {
-            loadAccounts();
-            loadDashboardStats();
-        }
-
         function formatDate(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
@@ -1676,6 +2290,8 @@
         window.clearSearch = clearSearch;
         window.sortTable = sortTable;
         window.loadAccounts = loadAccounts;
+
     </script>
+    <script src="js/main.js"></script>
 </body>
 </html>
