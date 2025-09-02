@@ -266,7 +266,7 @@
         }
 
         .pl-table td {
-            padding: 8px 10px;
+            padding: 6px 10px;
             border: 1px solid #ecf0f1;
             vertical-align: middle;
             background: white;
@@ -703,7 +703,7 @@
             
             <!-- Header Section -->
             <div class="pl-header">
-                <div class="pl-title">PROFIT & LOSS STATEMENT</div>
+                <div class="pl-title">P&L</div>
                 <div class="pl-subtitle" id="plReportPeriod">For the Month Ended June 2025</div>
                 
                 <!-- Controls -->
@@ -765,7 +765,7 @@
             <div class="pl-loading" id="plLoading">
                 <div class="pl-loading-spinner"></div>
                 <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Generating P&L Report with Variance Analysis...</div>
-                <div style="font-size: 14px; color: #95a5a6;">Revenue: (Actual-Budget)/Budget×100 | Costs: (Budget-Actual)/Budget×100</div>
+                <div style="font-size: 14px; color: #95a5a6;"></div>
             </div>
 
             <!-- Error State -->
@@ -795,6 +795,9 @@
 </thead>
                         <tbody id="plTableBody">
                             <!-- Data will be loaded here by JavaScript with clean variance styling -->
+                            <tr class="pl-category-header">
+                                <td colspan="7">General & Administrative Expenses</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -812,7 +815,7 @@
                 </span>
                 <span>
                     <i class="fas fa-calculator"></i>
-                    Revenue: (A-B)/B×100 | Costs: (B-A)/B×100
+                    
                 </span>
             </div>
 
