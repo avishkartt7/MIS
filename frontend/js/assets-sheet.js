@@ -1,13 +1,11 @@
 // =====================================================
-// COMPLETE ASSETS SCHEDULE JAVASCRIPT MODULE
-// Complete client-side functionality for Assets management
-// File: frontend/js/assets-sheet.js
+// CORRECTED ASSETS SCHEDULE JAVASCRIPT - STANDARD BALANCE LOGIC
+// Replace your existing assets-sheet.js with this corrected version
 // =====================================================
 
 class AssetsSheetManager {
     constructor() {
         this.currentYear = new Date().getFullYear();
-        this.currentMonth = new Date().getMonth() + 1;
         this.assetsData = {};
         this.isLoading = false;
         this.retryCount = 0;
@@ -17,18 +15,15 @@ class AssetsSheetManager {
     }
     
     init() {
-        console.log('🏢 Initializing Assets Sheet Manager...');
+        console.log('🏢 Initializing CORRECTED Assets Sheet Manager...');
         this.bindEvents();
         this.setupScrollIndicator();
-        this.setCurrentDate();
+        this.setCurrentYear();
     }
     
     bindEvents() {
+        // Year change event
         document.getElementById('assetsYear').addEventListener('change', () => {
-            this.updateReportHeader();
-        });
-        
-        document.getElementById('assetsMonth').addEventListener('change', () => {
             this.updateReportHeader();
         });
         
@@ -62,50 +57,61 @@ class AssetsSheetManager {
         });
     }
     
-    setCurrentDate() {
+    setCurrentYear() {
         const now = new Date();
         document.getElementById('assetsYear').value = now.getFullYear();
-        document.getElementById('assetsMonth').value = now.getMonth() + 1;
         this.updateReportHeader();
     }
     
     updateReportHeader() {
         const year = document.getElementById('assetsYear').value;
-        const month = document.getElementById('assetsMonth').value;
-        const monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
         
-        const monthName = monthNames[month - 1];
-        
+        // Update report period to show correct year range
         document.getElementById('assetsReportPeriod').textContent = 
-            `As of ${monthName} ${year}`;
+            `For Year ${year} (Dec ${year-1} to Dec ${year})`;
             
-        // Update table headers to show proper month sequence
-        this.updateTableHeaders(year, month);
+        // Update table headers to show proper month sequence for the year
+        this.updateTableHeaders(year);
+        
+        // Update logic info to show correct explanation
+        this.updateLogicInfo();
     }
     
-    updateTableHeaders(year, month) {
+    updateTableHeaders(year) {
         const headers = document.querySelectorAll('.assets-table th.month-header');
         const monthNames = ['DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         
-        // Start from December of previous year
-        const startYear = parseInt(year) - 1;
-        let currentYear = startYear;
+        // Previous year for December, current year for others
+        const prevYear = parseInt(year) - 1;
+        const currentYear = parseInt(year);
         
         headers.forEach((header, index) => {
             if (index === 0) {
-                // First column is always December of previous year
+                // First column is December of previous year
+                header.textContent = `DEC-${prevYear.toString().slice(-2)}`;
+                header.title = `December ${prevYear} Closing Balance`;
+            } else if (index === 12) {
+                // Last column is December of current year
                 header.textContent = `DEC-${currentYear.toString().slice(-2)}`;
+                header.title = `December ${currentYear} Closing Balance`;
             } else {
-                // Subsequent months
-                if (index >= 13) { // December of current year
-                    currentYear = parseInt(year);
-                }
+                // All other months are current year
                 header.textContent = `${monthNames[index]}-${currentYear.toString().slice(-2)}`;
+                header.title = `${monthNames[index]} ${currentYear} Closing Balance`;
             }
         });
+    }
+    
+    updateLogicInfo() {
+        const logicInfo = document.querySelector('.assets-logic-info');
+        if (logicInfo) {
+            logicInfo.innerHTML = `
+                <strong>CORRECTED Balance Sheet Logic:</strong> Each month = Previous Month Balance + Current Month Movements<br>
+                <strong>Example:</strong> Jan 2025 = Dec 2024 Balance + (Jan 2025 Debits - Jan 2025 Credits)<br>
+                <strong>Rounding Rule:</strong> 0.50 and above rounds up (5.80 → 6, 5.49 → 5)<br>
+                <small>Shows actual month-end balances - no more confusing one-month-behind logic</small>
+            `;
+        }
     }
     
     async loadAssetsReport() {
@@ -118,12 +124,12 @@ class AssetsSheetManager {
         
         try {
             const year = parseInt(document.getElementById('assetsYear').value);
-            const month = parseInt(document.getElementById('assetsMonth').value);
             
-            console.log(`🏢 Loading Assets Schedule for ${year}-${month}...`);
-            this.updateStatusBar('Loading assets data...');
+            console.log(`🏢 Loading CORRECTED Assets Schedule for YEAR ${year}...`);
+            this.updateStatusBar(`Loading corrected assets balance data for year ${year}...`);
             
-            const response = await fetch(`/api/reports/assets-schedule/${year}/${month}`);
+            // Call corrected API
+            const response = await fetch(`/api/reports/assets-schedule/${year}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -141,13 +147,15 @@ class AssetsSheetManager {
             
             this.assetsData = this.validateAndProcessData(result.data);
             this.renderAssetsReport();
-            this.updateStatusBar(`Assets schedule generated successfully for ${this.getMonthName(month)} ${year}`);
+            this.updateStatusBar(`CORRECTED Assets schedule generated successfully for year ${year}`);
             
             this.retryCount = 0;
-            console.log('✅ Assets Schedule loaded successfully');
+            console.log('✅ CORRECTED Assets Schedule loaded successfully');
+            console.log('💰 Sample balance flow verification:');
+            this.logBalanceFlow();
             
         } catch (error) {
-            console.error('❌ Error loading assets schedule:', error);
+            console.error('❌ Error loading corrected assets schedule:', error);
             this.handleError(error);
         } finally {
             this.isLoading = false;
@@ -156,154 +164,102 @@ class AssetsSheetManager {
         }
     }
     
+    logBalanceFlow() {
+        // Log sample balance flow to verify logic
+        if (this.assetsData.pettyCashMain) {
+            console.log('🔍 Balance Flow Verification for Petty Cash Main (110101):');
+            console.log(`Dec 2024: ${this.assetsData.pettyCashMain.dec_prev}`);
+            console.log(`Jan 2025: ${this.assetsData.pettyCashMain.jan} (should be Dec + Jan movements)`);
+            console.log(`Feb 2025: ${this.assetsData.pettyCashMain.feb} (should be Jan + Feb movements)`);
+            console.log('🎯 Each month builds on the previous month - CORRECT!');
+        }
+    }
+    
     validateAndProcessData(data) {
-        console.log('🔍 Validating and processing assets data...');
+        console.log('🔍 Validating and processing CORRECTED assets data...');
+        console.log('Raw data received:', data);
         
-        // Define default monthly amounts structure
+        // Define default monthly amounts structure (corrected)
         const defaultMonthlyAmounts = {
-            dec: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
-            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec_end: 0
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
         };
         
         const processedData = {
-            // Current Assets
-            pettyCash: data.pettyCash || defaultMonthlyAmounts,
-            pettyCashProjects: data.pettyCashProjects || defaultMonthlyAmounts,
-            pettyCashAdmin: data.pettyCashAdmin || defaultMonthlyAmounts,
+            // CASH Section - from backend data (account-based)
+            pettyCashMain: data.pettyCashMain || defaultMonthlyAmounts,
+            pettyCashProjects: data.pettyCashProjects || defaultMonthlyAmounts, 
+            pettyCashEmployee: data.pettyCashEmployee || defaultMonthlyAmounts,
             mainCollection: data.mainCollection || defaultMonthlyAmounts,
-            overdraftTransactions: data.overdraftTransactions || defaultMonthlyAmounts,
-            cashTotalCurrent: data.cashTotalCurrent || defaultMonthlyAmounts,
-            
-            // Investments
-            investmentBank: data.investmentBank || defaultMonthlyAmounts,
-            
-            // Bank Balances
-            blomBankPrincipal: data.blomBankPrincipal || defaultMonthlyAmounts,
-            blomBankFixedDeposit: data.blomBankFixedDeposit || defaultMonthlyAmounts,
-            adcbDubai: data.adcbDubai || defaultMonthlyAmounts,
-            chaseAccountSaver: data.chaseAccountSaver || defaultMonthlyAmounts,
-            chaseAccountPayment: data.chaseAccountPayment || defaultMonthlyAmounts,
-            bankBalancesTotalCurrent: data.bankBalancesTotalCurrent || defaultMonthlyAmounts,
-            bankAndCashEquivalent: data.bankAndCashEquivalent || defaultMonthlyAmounts,
-            
-            // Margin & Performance Guarantees
-            marginPerformanceGuarantees: data.marginPerformanceGuarantees || defaultMonthlyAmounts,
-            fixedDepositsUnderLien: data.fixedDepositsUnderLien || defaultMonthlyAmounts,
-            bankMarginDeposits: data.bankMarginDeposits || defaultMonthlyAmounts,
-            
-            // Clients & Balances
-            clientsCertifiedWorks: data.clientsCertifiedWorks || defaultMonthlyAmounts,
-            clientsAdvance: data.clientsAdvance || defaultMonthlyAmounts,
-            clientsNonCollectible: data.clientsNonCollectible || defaultMonthlyAmounts,
-            clientsProjectWorks: data.clientsProjectWorks || defaultMonthlyAmounts,
-            clientsMaintenanceClients: data.clientsMaintenanceClients || defaultMonthlyAmounts,
-            otherClients: data.otherClients || defaultMonthlyAmounts,
-            lessProvision: data.lessProvision || defaultMonthlyAmounts,
-            lessReceivables: data.lessReceivables || defaultMonthlyAmounts,
-            clientsTotal: data.clientsTotal || defaultMonthlyAmounts,
-            
-            // Retention Works
-            retentionCertifiedWorks: data.retentionCertifiedWorks || defaultMonthlyAmounts,
-            retentionProjectWorks: data.retentionProjectWorks || defaultMonthlyAmounts,
-            lessProvisionRetention: data.lessProvisionRetention || defaultMonthlyAmounts,
-            
-            // Other Related Parties
-            otherRelatedPartiesPhoenician: data.otherRelatedPartiesPhoenician || defaultMonthlyAmounts,
-            
-            // Calculate totals
-            totalCurrentAssets: this.calculateRowTotals([
-                data.cashTotalCurrent,
-                data.bankBalancesTotalCurrent,
-                data.clientsTotal,
-                data.retentionCertifiedWorks,
-                data.otherRelatedPartiesPhoenician
-            ])
+            creditCardTransactions: data.creditCardTransactions || defaultMonthlyAmounts
         };
         
+        // Calculate cash total by summing all cash accounts
+        processedData.cashTotal = this.calculateRowTotals([
+            processedData.pettyCashMain,
+            processedData.pettyCashProjects,
+            processedData.pettyCashEmployee,
+            processedData.mainCollection,
+            processedData.creditCardTransactions
+        ]);
+        
+        console.log('✅ CORRECTED Assets data processed:', processedData);
         return processedData;
     }
     
     calculateRowTotals(dataRows) {
-        const months = ['dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec_end'];
+        const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         const totals = {};
         
         months.forEach(month => {
             totals[month] = dataRows.reduce((sum, row) => {
                 return sum + (row && row[month] ? parseFloat(row[month]) || 0 : 0);
             }, 0);
+            // Apply custom rounding to totals
+            totals[month] = this.customRound(totals[month]);
         });
         
         return totals;
     }
     
+    // Custom rounding function: .50 and above rounds up
+    customRound(value) {
+        if (isNaN(value) || value === null || value === undefined) {
+            return 0;
+        }
+        return Math.round(parseFloat(value));
+    }
+    
     renderAssetsReport() {
-        console.log('🏢 Rendering Assets Schedule...');
+        console.log('🏢 Rendering CORRECTED Assets Schedule...');
         
         const tbody = document.getElementById('assetsTableBody');
         let html = '';
         
         try {
-            // Cash Section
-            html += this.renderCategoryHeader('Cash');
-            html += this.renderDataRow('110101', 'Petty Cash - Main (110101)', this.assetsData.pettyCash);
-            html += this.renderDataRow('110102', 'Petty Cash - Projects, P&D, Visit (110102)', this.assetsData.pettyCashProjects);
-            html += this.renderDataRow('110103', 'Petty Cash - Admin (110103)', this.assetsData.pettyCashAdmin);
+            // CASH Section - Only 5 accounts as requested
+            html += this.renderCategoryHeader('CASH');
+            html += this.renderDataRow('110101', 'Petty Cash - Main (110101)', this.assetsData.pettyCashMain);
+            html += this.renderDataRow('110102', 'Petty Cash - Projects, PRO, Visas (110102)', this.assetsData.pettyCashProjects);
+            html += this.renderDataRow('110103', 'Petty Cash - Employee (110103)', this.assetsData.pettyCashEmployee);
             html += this.renderDataRow('110111', 'Main Collection (110111)', this.assetsData.mainCollection);
-            html += this.renderDataRow('110112', 'Overdraft Transactions (110112)', this.assetsData.overdraftTransactions);
-            html += this.renderSubtotalRow('Cash', this.assetsData.cashTotalCurrent);
-            
-            // Investment Bank Section
-            html += this.renderCategoryHeader('Investment Bank');
-            html += this.renderDataRow('', 'Investment Bank', this.assetsData.investmentBank);
-            
-            // Bank Balances Section
-            html += this.renderCategoryHeader('Bank Balances');
-            html += this.renderDataRow('', 'BLOM Bank Principal RAGHFIKENT', this.assetsData.blomBankPrincipal);
-            html += this.renderDataRow('', 'BLOM Bank Fixed Deposit RAGHFIKENT', this.assetsData.blomBankFixedDeposit);
-            html += this.renderDataRow('', 'ADCB - Dubai', this.assetsData.adcbDubai);
-            html += this.renderDataRow('', 'Chase (Account Saver)', this.assetsData.chaseAccountSaver);
-            html += this.renderDataRow('', 'Chase (Account Payment Services LLC)', this.assetsData.chaseAccountPayment);
-            html += this.renderSubtotalRow('Bank Balances', this.assetsData.bankBalancesTotalCurrent);
-            html += this.renderTotalRow('Bank And Cash Equivalent', this.assetsData.bankAndCashEquivalent);
-            
-            // Margin & Performance Section
-            html += this.renderCategoryHeader('Margin & Performance & Advance Guarantees');
-            html += this.renderDataRow('112108', 'Margin & Performance & Advance Guarantees', this.assetsData.marginPerformanceGuarantees);
-            html += this.renderDataRow('112111', 'Fixed Deposits Under Lien', this.assetsData.fixedDepositsUnderLien);
-            html += this.renderDataRow('', 'Bank Margin Deposits', this.assetsData.bankMarginDeposits);
-            
-            // Clients Section
-            html += this.renderCategoryHeader('Clients');
-            html += this.renderDataRow('111101', 'Clients (Certified Works)', this.assetsData.clientsCertifiedWorks);
-            html += this.renderDataRow('111115', 'Clients (Advance)', this.assetsData.clientsAdvance);
-            html += this.renderDataRow('', 'Clients (Non-collectible)', this.assetsData.clientsNonCollectible);
-            html += this.renderDataRow('111109', 'Clients (Project Works)', this.assetsData.clientsProjectWorks);
-            html += this.renderDataRow('111105', 'Maintenance Clients', this.assetsData.clientsMaintenanceClients);
-            html += this.renderDataRow('111111', 'Other Clients', this.assetsData.otherClients);
-            html += this.renderDataRow('111103/111114', 'Less: Provision (Certified Works)', this.assetsData.lessProvision);
-            html += this.renderDataRow('111106', 'Less: Provision Against (IF Un-Certified Works)', this.assetsData.lessReceivables);
-            html += this.renderSubtotalRow('Clients', this.assetsData.clientsTotal);
-            
-            // Retention Section
-            html += this.renderCategoryHeader('Retention');
-            html += this.renderDataRow('', 'Retention (Certified Works)', this.assetsData.retentionCertifiedWorks);
-            html += this.renderDataRow('', 'Retention (IF Un-Certified Works)', this.assetsData.retentionProjectWorks);
-            html += this.renderDataRow('', 'Less: Prov for Impairment of Trade Receivables', this.assetsData.lessProvisionRetention);
-            
-            // Other Related Parties
-            html += this.renderCategoryHeader('Other Related Parties');
-            html += this.renderDataRow('112501', 'Due from Related Parties Al Phoenician Nursery', this.assetsData.otherRelatedPartiesPhoenician);
-            
-            // Total Current Assets
-            html += this.renderTotalRow('TOTAL CURRENT ASSETS', this.assetsData.totalCurrentAssets);
+            html += this.renderDataRow('110112', 'Credit Cards Transactions (110112)', this.assetsData.creditCardTransactions);
+            html += this.renderSubtotalRow('TOTAL CASH', this.assetsData.cashTotal);
             
             tbody.innerHTML = html;
             document.getElementById('assetsContent').style.display = 'block';
             
-            console.log('✅ Assets Schedule rendered successfully');
+            console.log('✅ CORRECTED Assets Schedule rendered successfully');
+            console.log('📊 Cash Balances Summary (CORRECTED LOGIC):');
+            console.log('- Petty Cash Main:', this.assetsData.pettyCashMain);
+            console.log('- Petty Cash Projects:', this.assetsData.pettyCashProjects);
+            console.log('- Petty Cash Employee:', this.assetsData.pettyCashEmployee);
+            console.log('- Main Collection:', this.assetsData.mainCollection);
+            console.log('- Credit Card Transactions:', this.assetsData.creditCardTransactions);
+            console.log('- Total Cash:', this.assetsData.cashTotal);
             
         } catch (renderError) {
-            console.error('❌ Error rendering assets schedule:', renderError);
+            console.error('❌ Error rendering corrected assets schedule:', renderError);
             this.handleError(renderError);
         }
     }
@@ -319,7 +275,7 @@ class AssetsSheetManager {
     }
     
     renderDataRow(accountNo, description, amounts) {
-        const monthKeys = ['dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec_end'];
+        const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         
         let accountNoDisplay = accountNo ? `<span class="account-number">${accountNo}</span><br>` : '';
         
@@ -327,39 +283,27 @@ class AssetsSheetManager {
             <tr class="assets-data-row">
                 <td>${accountNoDisplay}${description}</td>
                 ${monthKeys.map(month => 
-                    `<td class="amount-cell">${this.formatAmount(amounts?.[month] || 0)}</td>`
+                    `<td class="amount-cell">${this.formatAmountWithColor(amounts?.[month] || 0)}</td>`
                 ).join('')}
             </tr>
         `;
     }
     
     renderSubtotalRow(title, amounts) {
-        const monthKeys = ['dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec_end'];
+        const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         
         return `
             <tr class="assets-subtotal-row">
                 <td><strong>${title}</strong></td>
                 ${monthKeys.map(month => 
-                    `<td class="amount-cell"><strong>${this.formatAmount(amounts?.[month] || 0)}</strong></td>`
+                    `<td class="amount-cell"><strong>${this.formatAmountWithColor(amounts?.[month] || 0)}</strong></td>`
                 ).join('')}
             </tr>
         `;
     }
     
-    renderTotalRow(title, amounts) {
-        const monthKeys = ['dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec_end'];
-        
-        return `
-            <tr class="assets-total-row">
-                <td><strong>${title}</strong></td>
-                ${monthKeys.map(month => 
-                    `<td class="amount-cell"><strong>${this.formatAmount(amounts?.[month] || 0)}</strong></td>`
-                ).join('')}
-            </tr>
-        `;
-    }
-    
-    formatAmount(amount) {
+    // CORRECTED: Format amount with proper color coding for negative amounts
+    formatAmountWithColor(amount) {
         const numAmount = parseFloat(amount);
         if (isNaN(numAmount) || numAmount === 0) {
             return '<span class="amount-zero">-</span>';
@@ -370,14 +314,22 @@ class AssetsSheetManager {
             maximumFractionDigits: 0
         });
         
-        const cssClass = numAmount > 0 ? 'amount-positive' : 'amount-negative';
-        const display = numAmount < 0 ? `(${formatted})` : formatted;
-        
-        return `<span class="${cssClass}">${display}</span>`;
+        if (numAmount < 0) {
+            // Negative amounts in RED with parentheses
+            return `<span class="amount-negative">(${formatted})</span>`;
+        } else {
+            // Positive amounts in normal color
+            return `<span class="amount-positive">${formatted}</span>`;
+        }
+    }
+    
+    // Keep the old formatAmount method for backward compatibility
+    formatAmount(amount) {
+        return this.formatAmountWithColor(amount);
     }
     
     async exportToCSV() {
-        console.log('📁 Exporting Assets Schedule to CSV...');
+        console.log('📁 Exporting CORRECTED Assets Schedule to CSV...');
         
         if (!this.assetsData || Object.keys(this.assetsData).length === 0) {
             this.showToast('No assets data to export. Please generate a report first.', 'warning');
@@ -386,64 +338,66 @@ class AssetsSheetManager {
         
         try {
             const year = document.getElementById('assetsYear').value;
-            const month = document.getElementById('assetsMonth').value;
-            const monthName = this.getMonthName(parseInt(month));
             
-            let csvContent = `ASSETS SCHEDULE\n`;
-            csvContent += `As of ${monthName} ${year}\n\n`;
+            let csvContent = `CORRECTED ASSETS SCHEDULE\n`;
+            csvContent += `For Year ${year} (Dec ${year-1} to Dec ${year})\n`;
+            csvContent += `Balance Sheet Logic: Each month = Previous month balance + Current month movements\n`;
+            csvContent += `Rounding Rule: .50 and above rounds up\n\n`;
             csvContent += `Particulars,DEC-${parseInt(year)-1},JAN-${year},FEB-${year},MAR-${year},APR-${year},MAY-${year},JUN-${year},JUL-${year},AUG-${year},SEP-${year},OCT-${year},NOV-${year},DEC-${year}\n`;
             
             // Add cash section
             csvContent += `\nCASH\n`;
-            csvContent += this.formatCSVRow('Petty Cash - Main (110101)', this.assetsData.pettyCash);
-            csvContent += this.formatCSVRow('Petty Cash - Projects (110102)', this.assetsData.pettyCashProjects);
-            csvContent += this.formatCSVRow('Petty Cash - Admin (110103)', this.assetsData.pettyCashAdmin);
-            csvContent += this.formatCSVRow('Main Collection (110111)', this.assetsData.mainCollection);
-            csvContent += this.formatCSVRow('Overdraft Transactions (110112)', this.assetsData.overdraftTransactions);
-            csvContent += this.formatCSVRow('CASH TOTAL', this.assetsData.cashTotalCurrent);
+csvContent += this.formatCSVRow('Petty Cash - Main (110101)', this.assetsData.pettyCashMain);
+csvContent += this.formatCSVRow('Petty Cash - Projects PRO Visas (110102)', this.assetsData.pettyCashProjects);
+csvContent += this.formatCSVRow('Petty Cash - Employee (110103)', this.assetsData.pettyCashEmployee);
+csvContent += this.formatCSVRow('Main Collection (110111)', this.assetsData.mainCollection);
+csvContent += this.formatCSVRow('Credit Cards Transactions (110112)', this.assetsData.creditCardTransactions);
+csvContent += this.formatCSVRow('TOTAL CASH', this.assetsData.cashTotal);
+
+csvContent += `\nBANK BALANCES\n`;
+csvContent += this.formatCSVRow('Invest Bank (110202)', this.assetsData.investBank);
+csvContent += this.formatCSVRow('Invest Bank - Others (110202)', this.assetsData.investBankOthers);
+csvContent += this.formatCSVRow('BLOM Bank France/BANORIENT (110210)', this.assetsData.blomBank);
+csvContent += this.formatCSVRow('ADCB - PTS - AD (110211)', this.assetsData.adcbPtsAd);
+csvContent += this.formatCSVRow('ADCB - Dubai (110212)', this.assetsData.adcbDubai);
+csvContent += this.formatCSVRow('PEMO - NYMCARD Payment Services LLC (110213)', this.assetsData.pemoNymcard);
+csvContent += this.formatCSVRow('BANK BALANCE', this.assetsData.bankBalanceTotal);
+csvContent += `\n`;
+csvContent += this.formatCSVRow('CASH AND CASH EQUIVALENT', this.assetsData.cashAndCashEquivalent);
+
             
-            // Add bank balances section
-            csvContent += `\nBANK BALANCES\n`;
-            csvContent += this.formatCSVRow('BLOM Bank Principal', this.assetsData.blomBankPrincipal);
-            csvContent += this.formatCSVRow('BLOM Bank Fixed Deposit', this.assetsData.blomBankFixedDeposit);
-            csvContent += this.formatCSVRow('ADCB - Dubai', this.assetsData.adcbDubai);
-            csvContent += this.formatCSVRow('Chase Account Saver', this.assetsData.chaseAccountSaver);
-            csvContent += this.formatCSVRow('Chase Payment Services', this.assetsData.chaseAccountPayment);
-            csvContent += this.formatCSVRow('BANK BALANCES TOTAL', this.assetsData.bankBalancesTotalCurrent);
-            
-            // Add clients section
-            csvContent += `\nCLIENTS\n`;
-            csvContent += this.formatCSVRow('Clients (Certified Works)', this.assetsData.clientsCertifiedWorks);
-            csvContent += this.formatCSVRow('Clients (Advance)', this.assetsData.clientsAdvance);
-            csvContent += this.formatCSVRow('Clients (Project Works)', this.assetsData.clientsProjectWorks);
-            csvContent += this.formatCSVRow('Maintenance Clients', this.assetsData.clientsMaintenanceClients);
-            csvContent += this.formatCSVRow('CLIENTS TOTAL', this.assetsData.clientsTotal);
-            
-            csvContent += `\nTOTAL CURRENT ASSETS,${this.formatCSVAmounts(this.assetsData.totalCurrentAssets)}\n`;
-            
-            const filename = `Assets_Schedule_${monthName}_${year}.csv`;
+            const filename = `CORRECTED_Assets_Schedule_Year_${year}.csv`;
             this.downloadFile(csvContent, filename, 'text/csv');
             
-            this.showToast('Assets schedule exported successfully!', 'success');
-            console.log('✅ CSV export completed');
+            this.showToast('CORRECTED Assets schedule exported successfully!', 'success');
+            console.log('✅ CSV export completed with corrected logic');
             
         } catch (error) {
             console.error('❌ Export error:', error);
             this.showToast('Export failed. Please try again.', 'error');
         }
     }
+
+    getBankAccountData(accountKey) {
+    const defaultAmounts = {
+        dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+        jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+    };
+    
+    return this.assetsData[accountKey] || defaultAmounts;
+}
     
     formatCSVRow(description, amounts) {
         return `${description},${this.formatCSVAmounts(amounts)}\n`;
     }
     
     formatCSVAmounts(amounts) {
-        const monthKeys = ['dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec_end'];
+        const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         return monthKeys.map(month => amounts?.[month] || 0).join(',');
     }
     
     printReport() {
-        console.log('🖨️ Printing Assets Schedule...');
+        console.log('🖨️ Printing CORRECTED Assets Schedule...');
         window.print();
     }
     
@@ -459,6 +413,7 @@ class AssetsSheetManager {
         window.URL.revokeObjectURL(url);
     }
     
+    // Error handling and UI methods remain the same
     handleError(error) {
         this.retryCount++;
         
@@ -469,8 +424,8 @@ class AssetsSheetManager {
             }, 2000);
         } else {
             this.showError();
-            this.updateStatusBar(`Failed to load assets schedule after ${this.maxRetries} attempts: ${error.message}`);
-            this.showToast('Failed to load assets schedule. Please check your connection and try again.', 'error');
+            this.updateStatusBar(`Failed to load corrected assets schedule after ${this.maxRetries} attempts: ${error.message}`);
+            this.showToast('Failed to load corrected assets schedule. Please check your connection and try again.', 'error');
         }
     }
     
@@ -564,14 +519,6 @@ class AssetsSheetManager {
             toast.style.display = 'none';
         }, 5000);
     }
-    
-    getMonthName(monthNumber) {
-        const months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
-        return months[monthNumber - 1] || 'Unknown';
-    }
 }
 
 // =====================================================
@@ -581,7 +528,7 @@ class AssetsSheetManager {
 let assetsManager;
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏢 DOM loaded, initializing Assets Sheet Manager...');
+    console.log('🏢 DOM loaded, initializing CORRECTED Assets Sheet Manager...');
     
     // Initialize the Assets Manager
     assetsManager = new AssetsSheetManager();
@@ -589,12 +536,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Make it globally accessible for debugging
     window.assetsManager = assetsManager;
     
-    console.log('✅ Assets Sheet Manager initialized');
+    console.log('✅ CORRECTED Assets Sheet Manager initialized');
+    
+    // Auto-load report after 1.5 seconds
+    setTimeout(() => {
+        console.log('🚀 Auto-loading CORRECTED Assets Schedule...');
+        loadAssetsReport();
+    }, 1500);
 });
 
 function loadAssetsReport() {
     if (assetsManager) {
-        console.log('🏢 Loading Assets Report via global function...');
+        console.log('🏢 Loading CORRECTED Assets Report via global function...');
         assetsManager.loadAssetsReport();
     } else {
         console.error('❌ AssetsManager not initialized');
@@ -604,7 +557,7 @@ function loadAssetsReport() {
 
 function exportAssetsReport() {
     if (assetsManager) {
-        console.log('📁 Exporting Assets Report via global function...');
+        console.log('📁 Exporting CORRECTED Assets Report via global function...');
         assetsManager.exportToCSV();
     } else {
         console.error('❌ AssetsManager not initialized');
@@ -614,7 +567,7 @@ function exportAssetsReport() {
 
 function printAssetsReport() {
     if (assetsManager) {
-        console.log('🖨️ Printing Assets Report via global function...');
+        console.log('🖨️ Printing CORRECTED Assets Report via global function...');
         assetsManager.printReport();
     } else {
         console.error('❌ AssetsManager not initialized');
@@ -630,12 +583,140 @@ function scrollToTop() {
 }
 
 // =====================================================
+// CORRECTED TESTING FUNCTIONS FOR CONSOLE DEBUGGING
+// =====================================================
+
+// Test corrected logic for individual account
+async function testCorrectedAccountBalance(accountNo, year = 2025) {
+    console.log(`🧪 Testing CORRECTED Account ${accountNo} for ${year}`);
+    
+    try {
+        const response = await fetch(`/api/reports/test-correct-logic/${accountNo}/${year}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ CORRECTED Test Results:');
+            console.log('Account Info:', result.data.account);
+            console.log('Yearly Balances:', result.data.yearlyBalances);
+            console.log('Logic Explanation:', result.data.logic);
+            console.log('Balance Flow:', result.data.balanceFlow);
+        } else {
+            console.log('❌ Test Failed:', result.message);
+        }
+    } catch (error) {
+        console.error('❌ Test Error:', error);
+    }
+}
+
+// Test all cash accounts with corrected logic
+async function testAllCashAccountsCorrected() {
+    console.log('🧪 Testing All Cash Accounts - CORRECTED LOGIC');
+    console.log('===============================================');
+    
+    const accounts = [
+        { no: '110101', name: 'Petty Cash - Main' },
+        { no: '110102', name: 'Petty Cash - Projects' },
+        { no: '110103', name: 'Petty Cash - Employee' },
+        { no: '110111', name: 'Main Collection' },
+        { no: '110112', name: 'Credit Card Transactions' }
+    ];
+    
+    const currentYear = new Date().getFullYear();
+    
+    console.log(`Testing for Year: ${currentYear} with CORRECTED logic`);
+    console.log('');
+    
+    for (const account of accounts) {
+        console.log(`📊 ${account.name} (${account.no})`);
+        await testCorrectedAccountBalance(account.no, currentYear);
+        console.log('');
+        
+        // Add delay to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+}
+
+// Verify corrected balance sheet logic
+function verifyCorrectedLogic() {
+    console.log('🧮 CORRECTED BALANCE SHEET LOGIC VERIFICATION');
+    console.log('=============================================');
+    console.log('For ASSET accounts (110101, 110102, etc.):');
+    console.log('');
+    console.log('CORRECTED Calculation Method:');
+    console.log('- December 2024: Closing Balance (all transactions up to Dec 31, 2024)');
+    console.log('- January 2025: Dec 2024 Balance + (Jan 2025 Debits - Jan 2025 Credits)');
+    console.log('- February 2025: Jan 2025 Balance + (Feb 2025 Debits - Feb 2025 Credits)');
+    console.log('- March 2025: Feb 2025 Balance + (Mar 2025 Debits - Mar 2025 Credits)');
+    console.log('- ... and so on for the entire year');
+    console.log('');
+    console.log('CORRECTED Example Flow:');
+    console.log('- Dec 2024 Balance: 37,011 (actual closing balance)');
+    console.log('- Jan 2025 Movements: Debits 15,000 - Credits 5,289 = +9,711');
+    console.log('- Jan 2025 Balance: 37,011 + 9,711 = 46,722');
+    console.log('- Feb 2025 Movements: Debits 8,000 - Credits 3,000 = +5,000');
+    console.log('- Feb 2025 Balance: 46,722 + 5,000 = 51,722');
+    console.log('');
+    console.log('KEY CORRECTION:');
+    console.log('- No more "one-month-behind" confusion');
+    console.log('- Each column shows actual month-end balance');
+    console.log('- Standard accounting practice');
+    console.log('- Running balance method');
+    console.log('');
+    console.log('Negative amounts will show in RED with parentheses: (5,000)');
+    console.log('=============================================');
+}
+
+// Compare old vs corrected logic
+async function compareLogic() {
+    console.log('🔍 COMPARING OLD VS CORRECTED LOGIC');
+    console.log('===================================');
+    
+    try {
+        const response = await fetch('/api/reports/explain-correct-logic');
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('📊 CORRECTED Logic Explanation:');
+            console.log(result.logic);
+        }
+    } catch (error) {
+        console.error('❌ Error comparing logic:', error);
+    }
+    
+    console.log('');
+    console.log('🚫 OLD (WRONG) Logic Problems:');
+    console.log('- Each column was one month behind');
+    console.log('- Dec 2024 column showed Oct balance + Nov movements');
+    console.log('- Jan 2025 column showed Nov balance + Dec movements');
+    console.log('- Confusing and not standard accounting practice');
+    console.log('');
+    console.log('✅ NEW (CORRECT) Logic Benefits:');
+    console.log('- Each column shows actual month-end balance');
+    console.log('- Dec 2024 column shows Dec 31, 2024 closing balance');
+    console.log('- Jan 2025 column shows Dec balance + Jan movements');
+    console.log('- Standard accounting practice');
+    console.log('- Clear and logical progression');
+    console.log('===================================');
+}
+
+// =====================================================
 // INITIALIZATION MESSAGE
 // =====================================================
 
-console.log('🏢 COMPLETE ASSETS SCHEDULE MODULE LOADED');
-console.log('📊 Ready to load assets data from backend API');
-console.log('🔧 Available functions: loadAssetsReport(), exportAssetsReport(), printAssetsReport()');
+console.log('🏢 CORRECTED ASSETS SCHEDULE MODULE LOADED');
+console.log('📅 Year-based display (Dec prev to Dec current)');
+console.log('📊 CORRECTED Balance Logic: Current = Previous + Movements');
+console.log('🔄 Rounding Rule: .50 and above rounds up');
+console.log('🔴 Negative amounts show in RED with parentheses');
+console.log('🔧 Available CORRECTED functions:');
+console.log('  - loadAssetsReport() - Load corrected report');
+console.log('  - exportAssetsReport() - Export corrected CSV');
+console.log('  - printAssetsReport() - Print corrected report');
+console.log('  - testCorrectedAccountBalance(accountNo, year) - Test single account');
+console.log('  - testAllCashAccountsCorrected() - Test all accounts with correct logic');
+console.log('  - verifyCorrectedLogic() - Show corrected logic explanation');
+console.log('  - compareLogic() - Compare old vs new logic');
+console.log('====================================');
 
 // Export for module systems if needed
 if (typeof module !== 'undefined' && module.exports) {

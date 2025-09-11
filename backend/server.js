@@ -1380,36 +1380,52 @@ app.get('/api/reports/pl-complete/:year/:month', async (req, res) => {
 
         // Helper function to get category totals for specific accounts
         async function getCategoryTotals(yearParam, monthCondition, accounts) {
-            if (!accounts || accounts.length === 0) {
-                return { total_credits: 0, total_debits: 0, transaction_count: 0 };
-            }
-            
-            const whereClause = `
-                WHERE gl.account_number = ANY($2)
-                AND EXTRACT(YEAR FROM gl.transaction_date) = $1 
-                ${monthCondition} 
-                AND gl.is_locked = false
-            `;
-            
-            const query = `
-                SELECT 
-                    SUM(CASE WHEN gl.debit_credit = 'C' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_credits,
-                    SUM(CASE WHEN gl.debit_credit = 'D' THEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) ELSE 0 END) as total_debits,
-                    COUNT(*) as transaction_count
-                FROM general_ledger gl
-                JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
-                ${whereClause}
-            `;
-            
-            console.log(`🔍 Query for ${JSON.stringify(accounts.slice(0, 5))}... (${accounts.length} accounts)`);
-            
-            const result = await queryDB(query, [yearParam, accounts]);
-            const row = result.rows[0] || { total_credits: 0, total_debits: 0, transaction_count: 0 };
-            
-            console.log(`📊 Results: Credits=${row.total_credits}, Debits=${row.total_debits}, Count=${row.transaction_count}`);
-            
-            return row;
-        }
+    if (!accounts || accounts.length === 0) {
+        return { total_credits: 0, total_debits: 0, transaction_count: 0 };
+    }
+    
+    const whereClause = `
+        WHERE gl.account_number = ANY($2)
+        AND EXTRACT(YEAR FROM gl.transaction_date) = $1 
+        ${monthCondition} 
+        AND gl.is_locked = false
+    `;
+    
+    const query = `
+        SELECT 
+            SUM(CASE 
+                WHEN gl.debit_credit = 'C' THEN 
+                    CASE 
+                        WHEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) < 0 
+                        THEN ABS(COALESCE(gl.aed_amount, gl.foreign_amount, 0))
+                        ELSE COALESCE(gl.aed_amount, gl.foreign_amount, 0)
+                    END 
+                ELSE 0 
+            END) as total_credits,
+            SUM(CASE 
+                WHEN gl.debit_credit = 'D' THEN 
+                    CASE 
+                        WHEN COALESCE(gl.aed_amount, gl.foreign_amount, 0) < 0 
+                        THEN ABS(COALESCE(gl.aed_amount, gl.foreign_amount, 0))
+                        ELSE COALESCE(gl.aed_amount, gl.foreign_amount, 0)
+                    END 
+                ELSE 0 
+            END) as total_debits,
+            COUNT(*) as transaction_count
+        FROM general_ledger gl
+        JOIN chart_of_accounts coa ON gl.account_number = coa.pts_account_no
+        ${whereClause}
+    `;
+    
+    console.log(`🔍 Query for ${JSON.stringify(accounts.slice(0, 5))}... (${accounts.length} accounts)`);
+    
+    const result = await queryDB(query, [yearParam, accounts]);
+    const row = result.rows[0] || { total_credits: 0, total_debits: 0, transaction_count: 0 };
+    
+    console.log(`📊 Results: Credits=${row.total_credits}, Debits=${row.total_debits}, Count=${row.transaction_count}`);
+    
+    return row;
+}
 
         // Get all data in parallel
         console.log('🔄 Fetching data for ALL categories...');
@@ -1998,6 +2014,1452 @@ function getBudgetKey(plKey) {
         });
     }
 });
+
+
+
+//////////////////////// ASSET MANAGEMENT REPORTS ////////////////////////
+
+// =====================================================
+// COMPLETE ASSETS BACKEND - FIXED RUNNING BALANCE LOGIC
+// Replace the entire assets section in your server.js with this
+// =====================================================
+
+// Assets Schedule API Route - FIXED with proper year-to-year calculation
+app.get('/api/reports/assets-schedule/:year', async (req, res) => {
+    try {
+        const { year } = req.params;
+        const targetYear = parseInt(year);
+        console.log(`🏢 Generating Extended Assets Schedule for YEAR ${targetYear}...`);
+        
+        // COMPLETE ACCOUNT MAPPINGS
+        const cashAccounts = {
+            pettyCashMain: '110101',
+            pettyCashProjects: '110102', 
+            pettyCashEmployee: '110103',
+            mainCollection: '110111',
+            creditCardTransactions: '110112'
+        };
+        
+        const bankAccounts = {
+    investBank: { account: '110202', auxiliary: '001' },
+    investBankOthers: { account: '110202', auxiliary: 'NOT_001' },
+    blomBank: { account: '110210', auxiliary: null },
+    adcbPtsAd: { account: '110211', auxiliary: null },
+    adcbDubai: { account: '110212', auxiliary: null },
+    adcbAccountSaver: { account: '110214', auxiliary: null }, // NEW - ADDED MISSING ACCOUNT
+    pemoNymcard: { account: '110213', auxiliary: null }
+};
+
+        const marginDepositAccounts = {
+            marginPerformanceAdvance: '112108',
+            fixedDepositsUnderLien: '112111'
+        };
+
+        const tradeReceivablesAccounts = {
+    clientsCertifiedWorkks: '111101',        // FIXED - Clients (Certified Works) - 21,920,568
+    clientsAdvance: '111115',               // Clients (Advance) - 409,500
+    contractWorkInProgress: '111102',       // Contract Work in Progress (WIP) - 0
+    clientsNonCollectible: '111113',        // Clients (Non-collectible) - 9,324,149
+    clientsIpaUncertified: '111109',        // Clients - IPA (Un-Certified Works) - 27,239,054
+    maintenanceClients: '111105',           // Maintenance Clients - 62,146
+    loamsClients1: '111111',                // LOAMS-Clients 1 - 3,140,807
+    loamsClients2: '111112',                // LOAMS-Clients 2 - 3,140,807
+    provImpairmentTrade1: '211850',         // Prov for Impairment 1 - (-4,991,976)
+    provImpairmentTrade2: '211851',         // Prov for Impairment 2 - (-4,991,976)
+    provImpairmentTrade3: '211853',         // Prov for Impairment 3 - (-4,991,977)
+    provImpairmentRetention: '211852'       // Prov for Impairment Retention - (-822,300)
+};
+
+        const retentionReceivablesAccounts = {
+            retentionCertified1: '111103',
+            retentionCertified2: '111114',
+            retentionAgainstPB: '111106',
+            retentionIpaUncertified: '111110'
+        };
+
+        const relatedPartiesAccounts = {
+            dueFromAlPhoenician: '112501'
+        };
+
+        const inventoryAccounts = {
+            inventoryCivilMechanicalTiles: '111104'
+        };
+
+        const equipmentAccounts = {
+            productionEquipmentCost: '120101',
+            productionEquipmentDepn: '120201',
+            officeEquipmentCost: '120102',
+            officeEquipmentDepn: '120202',
+            furnitureFixturesCost: '120103',
+            furnitureFixturesDepn: '120203',
+            computerSoftwareCost: '120104',
+            computerSoftwareDepn: '120204',
+            toolsCost: '120105',
+            toolsDepn: '120205',
+            carsVehiclesCost: '120107',
+            carsVehiclesDepn: '120207',
+            officeImprovementCost: '120110',
+            officeImprovementDepn: '120209', // CORRECTED
+            siteAssetsToolsCost1: '120111',
+            siteAssetsToolsCost2: '120112',
+            siteAssetsToolsCost3: '120113',
+            siteAssetsToolsDepn1: '120211',
+            siteAssetsToolsDepn2: '120212'
+
+        };
+
+        const rightOfUseAccounts = {
+            assetsOffice: '120108',
+            officeSpaceDepn: '120208'
+        };
+
+        const loansAdvancesAccounts = {
+            loansAdvancesSuppliers: '112403',
+            othersOverPaidSuppliers: '112404'
+        };
+
+        const prepaymentsBreakdownAccounts = {
+    rentPrepaidThirdParty: '112341',         // 566,406
+    rentPrepaidExpenses: '112351',           // 68,192
+    prepaidVisaExpense: '112352',            // 274,750
+    otherPrepaidExpenses: '112359'           // 0
+};
+
+        const refundableDepositsBreakdownAccounts = {
+            staffBankGuarantee: '1122',
+            refundableDepositsAccom: '112101',
+            dewaFewaEmicoolDeposits: '112103',
+            duDeposit: '112107',
+            refundableDepositsThirdParty: '112110',
+            otherDeposits: '112199'
+        };
+
+        const otherReceivablesAccounts = {
+    staffLoansAdvancesPaid: '111503',        // Staff Loans and Advances Paid
+    otherReceivables: '111503'               // Other Receivables
+};
+
+        // Initialize assets data
+        const assetsData = {};
+        
+        // Process cash accounts
+        for (const [key, accountNo] of Object.entries(cashAccounts)) {
+            console.log(`📊 Processing cash account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+        
+        // Process bank accounts
+        for (const [key, config] of Object.entries(bankAccounts)) {
+    console.log(`🏦 Processing bank account ${config.account} (${key}) for year ${targetYear}...`);
+    assetsData[key] = await getBankYearlyRunningBalances(config.account, config.auxiliary, targetYear);
+}
+
+        // Process margin & deposits accounts
+        for (const [key, accountNo] of Object.entries(marginDepositAccounts)) {
+            console.log(`📊 Processing margin/deposit account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process trade receivables accounts
+        for (const [key, accountNo] of Object.entries(tradeReceivablesAccounts)) {
+    console.log(`📊 Processing trade receivables account ${accountNo} (${key}) for year ${targetYear}...`);
+    assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+    
+    // SPECIAL LOG for account 111101
+    if (accountNo === '111101') {
+        console.log(`🔍 SPECIAL CHECK - Account 111101 (Clients Certified Works):`);
+        console.log(`Opening Balance: ${assetsData[key].dec_prev}`);
+        console.log(`Expected: 21920568`);
+        console.log(`Match: ${assetsData[key].dec_prev === 21920568 ? 'YES' : 'NO'}`);
+    }
+}
+
+
+        // Process retention receivables accounts
+        for (const [key, accountNo] of Object.entries(retentionReceivablesAccounts)) {
+            console.log(`📊 Processing retention account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+ 
+
+        
+
+
+
+// Process main prepayments account (the total)
+for (const [key, accountNo] of Object.entries(prepaymentsBreakdownAccounts)) {
+    console.log(`📄 Processing prepayments account ${accountNo} (${key}) for year ${targetYear}...`);
+    assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+}
+
+        // Process related parties accounts
+        for (const [key, accountNo] of Object.entries(relatedPartiesAccounts)) {
+            console.log(`📊 Processing related parties account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process inventory accounts
+        for (const [key, accountNo] of Object.entries(inventoryAccounts)) {
+            console.log(`📦 Processing inventory account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process equipment accounts  
+        for (const [key, accountNo] of Object.entries(equipmentAccounts)) {
+            console.log(`🏭 Processing equipment account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process right of use accounts
+        for (const [key, accountNo] of Object.entries(rightOfUseAccounts)) {
+            console.log(`🏢 Processing right of use account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process loans and advances breakdown
+        for (const [key, accountNo] of Object.entries(loansAdvancesAccounts)) {
+            console.log(`💰 Processing loans/advances account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process prepayments breakdown
+        for (const [key, accountNo] of Object.entries(prepaymentsBreakdownAccounts)) {
+            console.log(`📄 Processing prepayments account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process refundable deposits breakdown
+        for (const [key, accountNo] of Object.entries(refundableDepositsBreakdownAccounts)) {
+            console.log(`🏦 Processing deposits account ${accountNo} (${key}) for year ${targetYear}...`);
+            assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+        }
+
+        // Process other receivables
+        for (const [key, accountNo] of Object.entries(otherReceivablesAccounts)) {
+    console.log(`📋 Processing other receivables account ${accountNo} (${key}) for year ${targetYear}...`);
+    assetsData[key] = await getYearlyRunningBalances(accountNo, targetYear);
+}
+
+        // CALCULATE ALL TOTALS
+        
+        // Cash totals
+        assetsData.cashTotal = calculateCombinedTotals([
+            assetsData.pettyCashMain,
+            assetsData.pettyCashProjects,
+            assetsData.pettyCashEmployee,
+            assetsData.mainCollection,
+            assetsData.creditCardTransactions
+        ]);
+        
+        // Bank totals
+        assetsData.bankBalanceTotal = calculateCombinedTotals([
+    assetsData.investBank,
+    assetsData.investBankOthers,
+    assetsData.blomBank,
+    assetsData.adcbPtsAd,
+    assetsData.adcbDubai,
+    assetsData.adcbAccountSaver,  // NEW - ADDED TO CALCULATION
+    assetsData.pemoNymcard
+]);
+
+        // Cash and cash equivalent
+        assetsData.cashAndCashEquivalent = calculateCombinedTotals([
+            assetsData.cashTotal,
+            assetsData.bankBalanceTotal
+        ]);
+
+        // Bank margin deposits
+        assetsData.bankMarginDeposits = calculateCombinedTotals([
+            assetsData.marginPerformanceAdvance,
+            assetsData.fixedDepositsUnderLien
+        ]);
+
+        // Trade receivables totals
+        assetsData.loamsClientsTotal = calculateCombinedTotals([
+            assetsData.loamsClients1,
+            assetsData.loamsClients2
+        ]);
+
+        assetsData.provImpairmentTradeTotal = calculateCombinedTotals([
+            assetsData.provImpairmentTrade1,
+            assetsData.provImpairmentTrade2,
+            assetsData.provImpairmentTrade3
+        ]);
+
+        // Net Trade Receivables (WIP is separate)
+        assetsData.netTradeReceivables = calculateCombinedTotalsWithNegatives([
+    assetsData.clientsCertifiedWorkks,      // 111101 - Should show 21,920,568
+    assetsData.clientsAdvance,             // 111115 - 409,500
+    assetsData.clientsNonCollectible,      // 111113 - 9,324,149
+    assetsData.clientsIpaUncertified,      // 111109 - 27,239,054
+    assetsData.maintenanceClients,         // 111105 - 62,146
+    assetsData.loamsClientsTotal,          // 111111 + 111112 - 6,281,614
+    assetsData.provImpairmentTradeTotal,   // 211850 + 211851 + 211853 - (-14,975,929)
+    assetsData.provImpairmentRetention     // 211852 - (-822,300)
+]);
+
+        // Retention totals
+        assetsData.retentionCertifiedTotal = calculateCombinedTotals([
+            assetsData.retentionCertified1,
+            assetsData.retentionCertified2
+        ]);
+
+        assetsData.provImpairmentShiftedToAR = {
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+
+        assetsData.netRetentionReceivables = calculateCombinedTotals([
+            assetsData.retentionCertifiedTotal,
+            assetsData.retentionAgainstPB,
+            assetsData.retentionIpaUncertified,
+            assetsData.provImpairmentShiftedToAR
+        ]);
+
+        // Inventory total
+        assetsData.totalInventory = calculateCombinedTotals([
+            assetsData.inventoryCivilMechanicalTiles
+        ]);
+
+        // Site Assets totals
+        assetsData.siteAssetsToolsCostTotal = calculateCombinedTotals([
+            assetsData.siteAssetsToolsCost1,
+            assetsData.siteAssetsToolsCost2,
+            assetsData.siteAssetsToolsCost3
+        ]);
+
+        assetsData.siteAssetsToolsDepnTotal = calculateCombinedTotals([
+            assetsData.siteAssetsToolsDepn1,
+            assetsData.siteAssetsToolsDepn2
+        ]);
+
+        // Net Property Plant & Equipment
+        assetsData.netPropertyPlantEquipment = calculateCombinedTotals([
+            assetsData.productionEquipmentCost,
+            assetsData.productionEquipmentDepn,
+            assetsData.officeEquipmentCost,
+            assetsData.officeEquipmentDepn,
+            assetsData.furnitureFixturesCost,
+            assetsData.furnitureFixturesDepn,
+            assetsData.computerSoftwareCost,
+            assetsData.computerSoftwareDepn,
+            assetsData.toolsCost,
+            assetsData.toolsDepn,
+            assetsData.carsVehiclesCost,
+            assetsData.carsVehiclesDepn,
+            assetsData.officeImprovementCost,
+            assetsData.officeImprovementDepn,
+            assetsData.siteAssetsToolsCostTotal,
+            assetsData.siteAssetsToolsDepnTotal
+        ]);
+
+        // Right of Use Assets total
+        assetsData.rightOfUseAssetsTotal = calculateCombinedTotals([
+            assetsData.assetsOffice,
+            assetsData.officeSpaceDepn
+        ]);
+
+        // Other Assets breakdown totals
+        assetsData.loansAdvancesSuppliersTotal = calculateCombinedTotals([
+    assetsData.loansAdvancesSuppliers,      // 112403
+    assetsData.othersOverPaidSuppliers      // 112404
+]);
+
+        assetsData.prepaymentsTotal = calculateCombinedTotals([
+    assetsData.rentPrepaidThirdParty,       // 566,406
+    assetsData.rentPrepaidExpenses,         // 68,192
+    assetsData.prepaidVisaExpense,          // 274,750
+    assetsData.otherPrepaidExpenses         // 0
+]);
+
+        assetsData.refundableDepositsTotal = calculateCombinedTotals([
+            assetsData.staffBankGuarantee,
+            assetsData.refundableDepositsAccom,
+            assetsData.dewaFewaEmicoolDeposits,
+            assetsData.duDeposit,
+            assetsData.refundableDepositsThirdParty,
+            assetsData.otherDeposits
+        ]);
+
+        assetsData.otherAssetsTotal = calculateCombinedTotals([
+    assetsData.loansAdvancesSuppliersTotal, // 2,529,151
+    assetsData.prepaymentsTotal,            // 909,348
+    assetsData.refundableDepositsTotal,     // 335,005
+    
+    assetsData.otherReceivables             // 605,892 (existing)
+]);
+
+        // TOTAL BALANCE SHEET ASSETS
+        assetsData.totalBalanceSheetAssets = calculateCombinedTotals([
+    assetsData.cashAndCashEquivalent,        // 1. Cash and Cash Equivalent
+    assetsData.bankMarginDeposits,           // 2. Bank Margin Deposits  
+    assetsData.netTradeReceivables,          // 3. Net Trade Receivables
+    assetsData.netRetentionReceivables,      // 4. Net: Retention Receivables
+    assetsData.dueFromAlPhoenician,          // 5. Due From Related Parties
+    assetsData.contractWorkInProgress,       // 6. Contract Work in Progress (WIP)
+    assetsData.totalInventory,               // 7. Inventory
+    assetsData.netPropertyPlantEquipment,    // 8. Net Property And Equipment
+    assetsData.rightOfUseAssetsTotal,        // 9. Right of Use Assets
+    assetsData.otherAssetsTotal              // 10. OTHER ASSETS (ADVS+PREPAID+DEPOSIT)
+]);
+        
+        console.log('✅ Complete Assets Schedule generated successfully');
+        
+        res.json({
+            success: true,
+            data: assetsData,
+            period: `Year ${targetYear}`,
+            logic: 'Complete Assets Schedule with Detailed Breakdowns',
+            generatedAt: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating extended assets schedule:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating extended assets schedule',
+            error: error.message
+        });
+    }
+});
+
+// Helper function for combined totals with negatives
+function calculateCombinedTotalsWithNegatives(dataArray) {
+    const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const combinedTotals = {};
+    
+    months.forEach(month => {
+        combinedTotals[month] = dataArray.reduce((sum, dataObj) => {
+            return sum + (dataObj && dataObj[month] ? parseFloat(dataObj[month]) || 0 : 0);
+        }, 0);
+        combinedTotals[month] = customRound(combinedTotals[month]);
+    });
+    
+    return combinedTotals;
+}
+
+
+async function getBankYearlyRunningBalances(accountNo, auxiliary, targetYear) {
+    try {
+        console.log(`🔍 Calculating bank balances for ${accountNo} (aux: ${auxiliary}) - Year ${targetYear}`);
+        
+        // Step 1: Get the opening balance for the target year
+        const openingBalance = await getBankYearOpeningBalance(accountNo, auxiliary, targetYear);
+        console.log(`📊 ${accountNo} (aux: ${auxiliary}) opening balance for ${targetYear}: ${openingBalance}`);
+        
+        // Step 2: Calculate monthly running balances for the target year
+        const monthlyBalances = {
+            dec_prev: openingBalance, // Opening balance (Dec of previous year)
+            jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
+            jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+        
+        // Step 3: Calculate running balance for each month
+        let runningBalance = openingBalance;
+        
+        const months = [
+            { key: 'jan', num: 1 }, { key: 'feb', num: 2 }, { key: 'mar', num: 3 },
+            { key: 'apr', num: 4 }, { key: 'may', num: 5 }, { key: 'jun', num: 6 },
+            { key: 'jul', num: 7 }, { key: 'aug', num: 8 }, { key: 'sep', num: 9 },
+            { key: 'oct', num: 10 }, { key: 'nov', num: 11 }, { key: 'dec', num: 12 }
+        ];
+        
+        for (const month of months) {
+            // Get net movement for this month with auxiliary filtering
+            const netMovement = await getBankAccountMonthMovement(accountNo, auxiliary, targetYear, month.num);
+            
+            // Calculate running balance
+            runningBalance = runningBalance + netMovement;
+            monthlyBalances[month.key] = customRound(runningBalance);
+            
+            console.log(`📅 ${accountNo} (aux: ${auxiliary}) ${targetYear}-${month.num}: Previous=${customRound(runningBalance - netMovement)}, Movement=${netMovement}, Closing=${monthlyBalances[month.key]}`);
+        }
+        
+        return monthlyBalances;
+        
+    } catch (error) {
+        console.error(`❌ Error calculating bank balances for ${accountNo} (aux: ${auxiliary}):`, error);
+        return {
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+    }
+}
+
+async function getBankYearOpeningBalance(accountNo, auxiliary, targetYear) {
+    try {
+        console.log(`🔍 Getting bank opening balance for ${accountNo} (aux: ${auxiliary}) - Year ${targetYear}`);
+        
+        // Hardcoded bank opening balances for 2025 (Dec 2024 closing figures)
+        const dec2024BankClosingBalances = {
+            '110202_001': 1402,        // Invest Bank (aux 001)
+            '110202_NOT_001': 5002485, // Invest Bank Others (aux NOT 001)
+            '110210': 107548,          // BLOM Bank France/BANORIENT
+            '110211': 23400,           // ADCB - PTS - AD
+            '110212': 11260002,        // ADCB - Dubai
+            '110214': 0,               // ADCB-(Account Saver) - NEW, NO OPENING BALANCE
+            '110213': 322449           // PEMO - NYMCARD Payment Services LLC
+        };
+        
+        // For 2025, use the hardcoded Dec 2024 balances
+        if (targetYear === 2025) {
+            let balanceKey;
+            if (auxiliary === '001') {
+                balanceKey = `${accountNo}_001`;
+            } else if (auxiliary === 'NOT_001') {
+                balanceKey = `${accountNo}_NOT_001`;
+            } else {
+                balanceKey = accountNo;
+            }
+            
+            return dec2024BankClosingBalances[balanceKey] || 0;
+        }
+        
+        // For other years, calculate the Dec closing of the previous year
+        const previousYear = targetYear - 1;
+        const prevYearClosing = await getBankDecemberClosingBalance(accountNo, auxiliary, previousYear);
+        
+        console.log(`📊 ${accountNo} (aux: ${auxiliary}) opening for ${targetYear} = Dec ${previousYear} closing: ${prevYearClosing}`);
+        return prevYearClosing;
+        
+    } catch (error) {
+        console.error(`❌ Error getting bank opening balance for ${accountNo} (aux: ${auxiliary}):`, error);
+        return 0;
+    }
+}
+
+
+
+
+
+// Add to your getYearOpeningBalance function
+async function getYearOpeningBalance(accountNo, targetYear) {
+    try {
+        console.log(`🔍 Getting opening balance for ${accountNo} - Year ${targetYear}`);
+        
+        // Hardcoded opening balances for 2025 (your Dec 2024 closing figures)
+        const dec2024ClosingBalances = {
+    '110101': 37011,     // Petty Cash - Main
+    '110102': 216506,    // Petty Cash - Projects
+    '110103': 25997,     // Petty Cash - Employee  
+    '110111': 12363,     // Main Collection
+    '110112': 0,         // Credit Cards
+    '112108': 7999827,   // Margin @ Performance & Advance Guarantee
+    '112111': 0,         // Fixed Deposits Under Lien
+    '111101': 21920568,  // Clients (Certified Works)
+    '111115': 409500,    // Clients (Advance)
+    '111113': 9324149,   // Clients (Non-collectible) - CORRECT ACCOUNT & AMOUNT
+    '111109': 27239054,  // Clients - IPA (Un-Certified Works)
+    '111105': 62146,     // Maintenance Clients
+    '111111': 3140807,   // LOAMS-Clients 1 (half of 6,281,614)
+    '111112': 3140807,   // LOAMS-Clients 2 (half of 6,281,614)
+    '211850': -4991976,  // 1/3 of total (adjust with actual amounts)
+    '211851': -4991976,  // 1/3 of total (adjust with actual amounts)
+    '211853': -4991977,  // 1/3 of total (adjust with actual amounts)
+    '211852': -822300,    // Less: Prov for Impairment of Retention (NEGATIVE)
+    '111103': 6976548,    // Half of 13,953,096 (or provide actual split)
+    '111114': 6976548,    // Half of 13,953,096 (or provide actual split)
+    '111106': 1002603.34, // Retention Against P.B (Certified Works)
+    '111110': 3462121.69, // Retention-IPA (Un-Certified Works)
+
+    '110214': 0, 
+    
+    // Related Parties
+    '112501': 176860.37,  // Due From Related Parties - Al Phoenician Nursery
+
+    '111102': 0,         // NEW - Contract Work in Progress (WIP) - BLANK as requested
+    '111104': 2543865,   // NEW - Inventory (Civil+Mechanical, Tiles) - Dec 2024: 2,543,865
+    // CORRECTED EQUIPMENT ACCOUNTS
+    // EQUIPMENT (unchanged)
+    '120101': 1074029,   // B.A Production Equipments (Cost)
+    '120201': -279590,   // B.A Production Equipment (Accd. Depn)
+    '120102': 416300,    // B.B Office Equipment (Cost)
+    '120202': -154271,   // B.B Office Equipment (Accd. Depn)
+    '120103': 637785,    // B.C Furniture & Fixtures (Cost)
+    '120203': -420126,   // B.C Furniture & Fixtures (Accd. Depn)
+    '120104': 962066,    // B.D Computer Software & Accessories (Cost)
+    '120204': -440454,   // B.D Computer Software & Accessories (Accd. Depn)
+    '120105': 692324,    // B.E Tools (Cost)
+    '120205': -304388,   // B.E Tools (Accumulated Depreciation)
+    '120107': 1961418,   // B.F Cars & Vehicles (Cost)
+    '120207': -312265,   // B.F Cars & Vehicles (Accd. Depn)
+    '120110': 396290,    // B.G Office 399 Improvement (Cost)
+    '120209': -275123,   // B.G Office 399 Improvement (Accd. Depn)
+    '120111': 750459.5,  // B.H Site Assets Tools & Equips (Cost) - Part 1
+    '120112': 750459.5,  // B.H Site Assets Tools & Equips (Cost) - Part 2
+    '120211': -139161.5, // B.H Site Assets Tools & Equips (Accd. Depn) - Part 1
+    '120212': -139161.5, // B.H Site Assets Tools & Equips (Accd. Depn) - Part 2
+    
+    // RIGHT OF USE ASSETS
+    '120108': 0,         // Assets Office (3-99) - BLANK
+    '120208': 0,         // Office Space (Accumulated Depn) - BLANK
+    
+    // LOANS AND ADVANCES (from image)
+    '112403': 2495252,   // Loans and advances-Suppliers
+    '112404': 33899,     // Others/Over Paid to Suppliers
+    
+    // PREPAYMENTS - CORRECTED VALUES
+    '112341': 566406,    // Rent Prepaid - Third Party: 566,406
+    '112351': 68192,     // Rent Prepaid Expenses: 68,192
+    '112352': 274750,    // Prepaid Visa Expense: 274,750
+    '112359': 0,         
+         // Other Prepaid Expenses - CORRECTED: This gets the 274750 amount
+
+    
+    
+    // REFUNDABLE DEPOSITS (from image)
+    '1122': 96589,       // Staff Bank Guarantee
+    '112101': 76700,     // Refundable Deposits @ Accommodation
+    '112103': 30800,     // DEWA /FEWA & Emicool Deposits
+    '112107': 2000,      // Du Deposit
+    '112110': 125466,    // Refundable Deposits @ Third Party
+    '112199': 3650,      // Other Deposits
+    
+    // OTHER RECEIVABLES
+    '111503': 605892,    // Staff Loans and Advances Paid: 605,892
+    '111503': 605892,     // Other Receivables
+};
+
+
+        // For 2025, use the hardcoded Dec 2024 balances
+        if (targetYear === 2025) {
+            return dec2024ClosingBalances[accountNo] || 0;
+        }
+        
+        // For other years, calculate the Dec closing of the previous year
+        const previousYear = targetYear - 1;
+        const prevYearClosing = await getDecemberClosingBalance(accountNo, previousYear);
+        
+        console.log(`📊 ${accountNo} opening for ${targetYear} = Dec ${previousYear} closing: ${prevYearClosing}`);
+        return prevYearClosing;
+        
+    } catch (error) {
+        console.error(`❌ Error getting opening balance for ${accountNo}:`, error);
+        return 0;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Add this endpoint to your server.js to debug account 111101 specifically for June 2025
+
+
+function calculateCombinedTotalsWithNegatives(dataArray) {
+    const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const combinedTotals = {};
+    
+    months.forEach(month => {
+        combinedTotals[month] = dataArray.reduce((sum, dataObj) => {
+            return sum + (dataObj && dataObj[month] ? parseFloat(dataObj[month]) || 0 : 0);
+        }, 0);
+        combinedTotals[month] = customRound(combinedTotals[month]);
+    });
+    
+    return combinedTotals;
+}
+
+
+async function getBankDecemberClosingBalance(accountNo, auxiliary, year) {
+    try {
+        console.log(`🔍 Calculating Dec ${year} closing balance for ${accountNo} (aux: ${auxiliary})`);
+        
+        // Get opening balance for that year
+        const yearOpening = await getBankYearOpeningBalance(accountNo, auxiliary, year);
+        
+        // Get total net movements for Jan through Dec of that year
+        let totalMovements = 0;
+        for (let month = 1; month <= 12; month++) {
+            const monthMovement = await getBankAccountMonthMovement(accountNo, auxiliary, year, month);
+            totalMovements += monthMovement;
+        }
+        
+        const decClosing = yearOpening + totalMovements;
+        console.log(`📊 ${accountNo} (aux: ${auxiliary}) Dec ${year} closing: Opening(${yearOpening}) + Movements(${totalMovements}) = ${decClosing}`);
+        
+        return customRound(decClosing);
+        
+    } catch (error) {
+        console.error(`❌ Error calculating bank Dec closing for ${accountNo} (aux: ${auxiliary}):`, error);
+        return 0;
+    }
+}
+
+
+// COMPLETE FIX: Replace BOTH movement functions in your server.js
+
+// 1. FIXED: Regular account movement calculation
+async function getAccountMonthMovement(accountNo, year, month) {
+    try {
+        // List of accounts confirmed to have negative storage issues
+        const accountsWithNegativeStorageIssues = [
+            '111103', '111114', // Retention accounts with confirmed data corruption
+            '111106',
+            '110101' // ADDED: Retention Against P.B also has data issues
+            // Add other problematic accounts here ONLY after confirming they have issues
+        ];
+        
+        const needsAbsFix = accountsWithNegativeStorageIssues.includes(accountNo);
+        
+        let query;
+        if (needsAbsFix) {
+            // Use ABS() ONLY for confirmed problematic accounts
+            query = `
+                SELECT 
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_debits,
+                    SUM(CASE 
+                        WHEN debit_credit = 'C' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_credits,
+                    COUNT(*) as transaction_count
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+            console.log(`[ABS-FIX] ${accountNo} ${year}-${month} - Using ABS() for confirmed problematic account`);
+        } else {
+            // Use ORIGINAL calculation for all other accounts
+            query = `
+                SELECT 
+                    SUM(CASE WHEN debit_credit = 'D' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_debits,
+                    SUM(CASE WHEN debit_credit = 'C' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_credits,
+                    COUNT(*) as transaction_count
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+        }
+        
+        const result = await queryDB(query, [accountNo, year, month]);
+        
+        const totalDebits = parseFloat(result.rows[0]?.total_debits) || 0;
+        const totalCredits = parseFloat(result.rows[0]?.total_credits) || 0;
+        const transactionCount = parseInt(result.rows[0]?.transaction_count) || 0;
+        
+        const netMovement = totalDebits - totalCredits;
+        
+        if (transactionCount > 0) {
+            const label = needsAbsFix ? '[FIXED]' : '[NORMAL]';
+            console.log(`${accountNo} ${year}-${month} ${label}: D=${totalDebits}, C=${totalCredits}, Net=${netMovement}, Txns=${transactionCount}`);
+        }
+        
+        return netMovement;
+        
+    } catch (error) {
+        console.error(`Error calculating movement for ${accountNo}:`, error);
+        return 0;
+    }
+}
+
+
+async function debugAccountData(accountNo, year, month) {
+    try {
+        const query = `
+            SELECT 
+                debit_credit,
+                COUNT(*) as total_count,
+                COUNT(CASE WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 THEN 1 END) as negative_count,
+                MIN(COALESCE(aed_amount, foreign_amount, 0)) as min_amount,
+                MAX(COALESCE(aed_amount, foreign_amount, 0)) as max_amount,
+                SUM(COALESCE(aed_amount, foreign_amount, 0)) as sum_raw,
+                SUM(ABS(COALESCE(aed_amount, foreign_amount, 0))) as sum_abs
+            FROM general_ledger 
+            WHERE account_number = $1 
+              AND EXTRACT(YEAR FROM transaction_date) = $2
+              AND EXTRACT(MONTH FROM transaction_date) = $3
+              AND is_locked = false
+            GROUP BY debit_credit
+            ORDER BY debit_credit
+        `;
+        
+        const result = await queryDB(query, [accountNo, year, month]);
+        
+        console.log(`\n=== DEBUG DATA for ${accountNo} ${year}-${month} ===`);
+        result.rows.forEach(row => {
+            console.log(`${row.debit_credit}: ${row.total_count} txns, ${row.negative_count} negative, Range: ${row.min_amount} to ${row.max_amount}`);
+            console.log(`  Raw Sum: ${row.sum_raw}, ABS Sum: ${row.sum_abs}`);
+        });
+        console.log(`=== END DEBUG ===\n`);
+        
+        return result.rows;
+        
+    } catch (error) {
+        console.error(`Debug error for ${accountNo}:`, error);
+        return [];
+    }
+}
+
+
+async function getAccountMonthMovementV2(accountNo, year, month) {
+    try {
+        // List of accounts that specifically need ABS() fix
+        const accountsNeedingAbsFix = [
+            // Add account numbers here that specifically have the negative D&C issue
+            // Example: '123456', '789012'
+        ];
+        
+        const needsAbsFix = accountsNeedingAbsFix.includes(accountNo);
+        
+        let query;
+        if (needsAbsFix) {
+            // Apply ABS() only for specific problematic accounts
+            query = `
+                SELECT 
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN 
+                            CASE 
+                                WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                                THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                                ELSE COALESCE(aed_amount, foreign_amount, 0)
+                            END
+                        ELSE 0 
+                    END) as total_debits,
+                    SUM(CASE 
+                        WHEN debit_credit = 'C' THEN 
+                            CASE 
+                                WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                                THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                                ELSE COALESCE(aed_amount, foreign_amount, 0)
+                            END
+                        ELSE 0 
+                    END) as total_credits
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+        } else {
+            // Use original calculation for all other accounts
+            query = `
+                SELECT 
+                    SUM(CASE WHEN debit_credit = 'D' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_debits,
+                    SUM(CASE WHEN debit_credit = 'C' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_credits
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+        }
+        
+        const result = await queryDB(query, [accountNo, year, month]);
+        
+        const totalDebits = parseFloat(result.rows[0]?.total_debits) || 0;
+        const totalCredits = parseFloat(result.rows[0]?.total_credits) || 0;
+        
+        return totalDebits - totalCredits;
+        
+    } catch (error) {
+        console.error(`❌ Error getting month movement for ${accountNo}:`, error);
+        return 0;
+    }
+}
+
+// RECOMMENDED SOLUTION: Revert to original for now, identify specific problem accounts later
+async function getAccountMonthMovementSafe(accountNo, year, month) {
+    try {
+        // Use the original working logic for all accounts
+        const query = `
+            SELECT 
+                SUM(CASE WHEN debit_credit = 'D' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_debits,
+                SUM(CASE WHEN debit_credit = 'C' THEN COALESCE(aed_amount, foreign_amount, 0) ELSE 0 END) as total_credits,
+                COUNT(*) as transaction_count
+            FROM general_ledger 
+            WHERE account_number = $1 
+              AND EXTRACT(YEAR FROM transaction_date) = $2
+              AND EXTRACT(MONTH FROM transaction_date) = $3
+              AND is_locked = false
+        `;
+        
+        const result = await queryDB(query, [accountNo, year, month]);
+        
+        const totalDebits = parseFloat(result.rows[0]?.total_debits) || 0;
+        const totalCredits = parseFloat(result.rows[0]?.total_credits) || 0;
+        const transactionCount = parseInt(result.rows[0]?.transaction_count) || 0;
+        
+        const netMovement = totalDebits - totalCredits;
+        
+        if (transactionCount > 0) {
+            console.log(`💰 ${accountNo} ${year}-${month}: Debits=${totalDebits}, Credits=${totalCredits}, Net=${netMovement}, Txns=${transactionCount}`);
+        }
+        
+        return netMovement;
+        
+    } catch (error) {
+        console.error(`❌ Error getting month movement for ${accountNo}:`, error);
+        return 0;
+    }
+}
+
+// 2. FIXED: Bank account movement calculation with auxiliary filtering
+async function getBankAccountMonthMovement(accountNo, auxiliary, year, month) {
+    try {
+        let query;
+        let params;
+        
+        if (auxiliary === null) {
+            query = `
+                SELECT 
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_debits,
+                    SUM(CASE 
+                        WHEN debit_credit = 'C' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_credits,
+                    COUNT(*) as transaction_count
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+            params = [accountNo, year, month];
+            
+        } else if (auxiliary === '001') {
+            query = `
+                SELECT 
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_debits,
+                    SUM(CASE 
+                        WHEN debit_credit = 'C' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_credits,
+                    COUNT(*) as transaction_count
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND auxiliary_account = '001'
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+            params = [accountNo, year, month];
+            
+        } else if (auxiliary === 'NOT_001') {
+            query = `
+                SELECT 
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_debits,
+                    SUM(CASE 
+                        WHEN debit_credit = 'C' THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                        ELSE 0 
+                    END) as total_credits,
+                    COUNT(*) as transaction_count
+                FROM general_ledger 
+                WHERE account_number = $1 
+                  AND (auxiliary_account IS NULL OR auxiliary_account != '001')
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND EXTRACT(MONTH FROM transaction_date) = $3
+                  AND is_locked = false
+            `;
+            params = [accountNo, year, month];
+        }
+        
+        const result = await queryDB(query, params);
+        
+        const totalDebits = parseFloat(result.rows[0]?.total_debits) || 0;
+        const totalCredits = parseFloat(result.rows[0]?.total_credits) || 0;
+        const transactionCount = parseInt(result.rows[0]?.transaction_count) || 0;
+        
+        const netMovement = totalDebits - totalCredits;
+        
+        if (transactionCount > 0) {
+            console.log(`🏦 ${accountNo} (aux: ${auxiliary}) ${year}-${month}: Debits=${totalDebits}, Credits=${totalCredits}, Net=${netMovement}, Txns=${transactionCount}`);
+        }
+        
+        return netMovement;
+        
+    } catch (error) {
+        console.error(`❌ Error getting bank month movement for ${accountNo} (aux: ${auxiliary}):`, error);
+        return 0;
+    }
+}
+
+// FIXED: Get yearly running balances with proper year-over-year calculation
+async function getYearlyRunningBalances(accountNo, targetYear) {
+    try {
+        console.log(`🔍 Calculating yearly running balances for ${accountNo} - Year ${targetYear}`);
+        
+        const openingBalance = await getYearOpeningBalance(accountNo, targetYear);
+        console.log(`📊 ${accountNo} opening balance for ${targetYear}: ${openingBalance}`);
+        
+        const monthlyBalances = {
+            dec_prev: openingBalance,
+            jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
+            jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+        
+        let runningBalance = parseFloat(openingBalance);
+        
+        const months = [
+            { key: 'jan', num: 1 }, { key: 'feb', num: 2 }, { key: 'mar', num: 3 },
+            { key: 'apr', num: 4 }, { key: 'may', num: 5 }, { key: 'jun', num: 6 },
+            { key: 'jul', num: 7 }, { key: 'aug', num: 8 }, { key: 'sep', num: 9 },
+            { key: 'oct', num: 10 }, { key: 'nov', num: 11 }, { key: 'dec', num: 12 }
+        ];
+        
+        for (const month of months) {
+            const netMovement = await getAccountMonthMovement(accountNo, targetYear, month.num);
+            
+            runningBalance = runningBalance + parseFloat(netMovement);
+            monthlyBalances[month.key] = Math.round(runningBalance);
+            
+            console.log(`📅 ${accountNo} ${targetYear}-${month.num}: Previous=${Math.round(runningBalance - netMovement)}, Movement=${netMovement}, Closing=${monthlyBalances[month.key]}`);
+        }
+        
+        return monthlyBalances;
+        
+    } catch (error) {
+        console.error(`❌ Error calculating yearly balances for ${accountNo}:`, error);
+        return {
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+    }
+}
+
+async function getAccountYearlyBalances(accountNo, targetYear) {
+    try {
+        const openingBalance = await getYearOpeningBalance(accountNo, targetYear);
+        
+        const query = `
+            WITH monthly_movements AS (
+                SELECT 
+                    EXTRACT(MONTH FROM transaction_date) as month,
+                    SUM(CASE 
+                        WHEN debit_credit = 'D' THEN 
+                            CASE 
+                                WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                                THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                                ELSE COALESCE(aed_amount, foreign_amount, 0)
+                            END
+                        WHEN debit_credit = 'C' THEN 
+                            -CASE 
+                                WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                                THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                                ELSE COALESCE(aed_amount, foreign_amount, 0)
+                            END
+                        ELSE 0 
+                    END) as net_movement
+                FROM general_ledger 
+                WHERE account_number = $1
+                  AND EXTRACT(YEAR FROM transaction_date) = $2
+                  AND is_locked = false
+                GROUP BY EXTRACT(MONTH FROM transaction_date)
+            ),
+            running_balances AS (
+                SELECT 
+                    month,
+                    net_movement,
+                    $3 + SUM(net_movement) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING) as running_balance
+                FROM monthly_movements
+            )
+            SELECT month, ROUND(running_balance) as balance
+            FROM running_balances
+            ORDER BY month;
+        `;
+        
+        const result = await queryDB(query, [accountNo, targetYear, openingBalance]);
+        
+        const monthlyBalances = {
+            dec_prev: openingBalance,
+            jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
+            jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+        
+        const monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        
+        result.rows.forEach(row => {
+            const monthIndex = row.month - 1;
+            if (monthIndex >= 0 && monthIndex < 12) {
+                monthlyBalances[monthKeys[monthIndex]] = parseInt(row.balance);
+            }
+        });
+        
+        return monthlyBalances;
+        
+    } catch (error) {
+        console.error(`❌ Error calculating account balances:`, error);
+        return {
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+    }
+}
+
+// FIXED: Get proper opening balance for any year
+
+
+// NEW: Get December closing balance for any year
+async function getDecemberClosingBalance(accountNo, year) {
+    try {
+        console.log(`🔍 Calculating Dec ${year} closing balance for ${accountNo}`);
+        
+        // Get opening balance for that year
+        const yearOpening = await getYearOpeningBalance(accountNo, year);
+        
+        // Get total net movements for Jan through Dec of that year
+        let totalMovements = 0;
+        for (let month = 1; month <= 12; month++) {
+            const monthMovement = await getAccountMonthMovement(accountNo, year, month);
+            totalMovements += monthMovement;
+        }
+        
+        const decClosing = yearOpening + totalMovements;
+        console.log(`📊 ${accountNo} Dec ${year} closing: Opening(${yearOpening}) + Movements(${totalMovements}) = ${decClosing}`);
+        
+        return customRound(decClosing);
+        
+    } catch (error) {
+        console.error(`❌ Error calculating Dec closing for ${accountNo}:`, error);
+        return 0;
+    }
+}
+
+// FIXED: Get actual month movement from general ledger
+// FIXED: Account movement calculation with conditional ABS() logic
+
+function calculateCombinedTotals(dataArray) {
+    const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const combinedTotals = {};
+    
+    months.forEach(month => {
+        combinedTotals[month] = dataArray.reduce((sum, dataObj) => {
+            return sum + (dataObj && dataObj[month] ? parseFloat(dataObj[month]) || 0 : 0);
+        }, 0);
+        combinedTotals[month] = customRound(combinedTotals[month]);
+    });
+    
+    return combinedTotals;
+}
+
+// Keep your existing customRound function
+function customRound(value) {
+    if (isNaN(value) || value === null || value === undefined) {
+        return 0;
+    }
+    
+    // Keep decimals during calculation, only round for display
+    return Math.round(parseFloat(value));
+}
+
+
+
+// Debugging endpoint - check what data exists for specific periods
+app.get('/api/reports/debug-assets/:accountNo/:year/:month', async (req, res) => {
+    try {
+        const { accountNo, year, month } = req.params;
+        
+        console.log(`🐛 Debug: Checking ${accountNo} for ${year}-${month}`);
+        
+        // Get all transactions for this account/period
+        const transactionsQuery = `
+            SELECT 
+                transaction_date,
+                jv_number,
+                description,
+                debit_credit,
+                COALESCE(aed_amount, foreign_amount, 0) as amount,
+                currency_code
+            FROM general_ledger 
+            WHERE account_number = $1 
+              AND EXTRACT(YEAR FROM transaction_date) = $2
+              AND EXTRACT(MONTH FROM transaction_date) = $3
+              AND is_locked = false
+            ORDER BY transaction_date, jv_number
+        `;
+        
+        const transactions = await queryDB(transactionsQuery, [accountNo, year, month]);
+        const movement = await getAccountMonthMovement(accountNo, year, month);
+        
+        res.json({
+            success: true,
+            debug: {
+                account: accountNo,
+                period: `${year}-${month}`,
+                transactionCount: transactions.rows.length,
+                netMovement: movement,
+                transactions: transactions.rows.slice(0, 10) // First 10 transactions
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Debug error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+console.log('✅ EXTENDED Assets Backend Logic Loaded');
+console.log('🏦 Added Bank Balances Section with Auxiliary Filtering');
+console.log('💰 Invest Bank: Account 110202, Aux 001');
+console.log('🏛️ Invest Bank Others: Account 110202, Aux NOT 001');
+console.log('🌍 Other Banks: Individual accounts without auxiliary');
+console.log('📊 Dec 2024 hardcoded opening balances included');
+console.log('====================================');
+
+
+
+
+// DETAILED TRACE - Add this to debug the exact calculation issue
+
+// 1. ENHANCED getAccountMonthMovement with detailed logging
+async function getAccountMonthMovementDetailed(accountNo, year, month) {
+    try {
+        console.log(`=== DETAILED TRACE for ${accountNo} ${year}-${month} ===`);
+        
+        const query = `
+            SELECT 
+                transaction_date,
+                jv_number,
+                debit_credit,
+                COALESCE(aed_amount, foreign_amount, 0) as original_amount,
+                CASE 
+                    WHEN debit_credit = 'D' THEN 
+                        CASE 
+                            WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                            THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                            ELSE COALESCE(aed_amount, foreign_amount, 0)
+                        END
+                    ELSE 0 
+                END as processed_debit,
+                CASE 
+                    WHEN debit_credit = 'C' THEN 
+                        CASE 
+                            WHEN COALESCE(aed_amount, foreign_amount, 0) < 0 
+                            THEN ABS(COALESCE(aed_amount, foreign_amount, 0))
+                            ELSE COALESCE(aed_amount, foreign_amount, 0)
+                        END
+                    ELSE 0 
+                END as processed_credit,
+                description
+            FROM general_ledger 
+            WHERE account_number = $1 
+              AND EXTRACT(YEAR FROM transaction_date) = $2
+              AND EXTRACT(MONTH FROM transaction_date) = $3
+              AND is_locked = false
+            ORDER BY transaction_date, jv_number
+        `;
+        
+        const result = await queryDB(query, [accountNo, year, month]);
+        
+        let totalDebits = 0;
+        let totalCredits = 0;
+        let negativeAmountCount = 0;
+        
+        console.log(`Found ${result.rows.length} transactions`);
+        
+        // Process each transaction and log details
+        result.rows.forEach((row, index) => {
+            const processedDebit = parseFloat(row.processed_debit || 0);
+            const processedCredit = parseFloat(row.processed_credit || 0);
+            
+            totalDebits += processedDebit;
+            totalCredits += processedCredit;
+            
+            if (parseFloat(row.original_amount) < 0) {
+                negativeAmountCount++;
+                if (index < 5) { // Log first 5 negative amounts
+                    console.log(`Negative amount found: JV=${row.jv_number}, DC=${row.debit_credit}, Original=${row.original_amount}, Processed D=${processedDebit}, C=${processedCredit}`);
+                }
+            }
+        });
+        
+        const netMovement = totalDebits - totalCredits;
+        
+        console.log(`Total Debits: ${totalDebits}`);
+        console.log(`Total Credits: ${totalCredits}`);
+        console.log(`Net Movement: ${netMovement}`);
+        console.log(`Negative amounts found: ${negativeAmountCount}`);
+        console.log(`=== END DETAILED TRACE ===`);
+        
+        return netMovement;
+        
+    } catch (error) {
+        console.error(`Error in detailed movement calculation:`, error);
+        return 0;
+    }
+}
+
+// 2. ENHANCED getYearlyRunningBalances with step-by-step logging
+async function getYearlyRunningBalancesDetailed(accountNo, targetYear) {
+    try {
+        console.log(`\n🔍 DETAILED CALCULATION for ${accountNo} - Year ${targetYear}`);
+        
+        // Step 1: Get opening balance
+        const openingBalance = await getYearOpeningBalance(accountNo, targetYear);
+        console.log(`📊 Opening Balance (Dec ${targetYear-1}): ${openingBalance}`);
+        
+        // Step 2: Initialize monthly balances
+        const monthlyBalances = {
+            dec_prev: openingBalance,
+            jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
+            jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+        
+        // Step 3: Calculate running balance for each month with detailed logging
+        let runningBalance = parseFloat(openingBalance);
+        console.log(`Starting Running Balance: ${runningBalance}`);
+        
+        const months = [
+            { key: 'jan', num: 1 }, { key: 'feb', num: 2 }, { key: 'mar', num: 3 },
+            { key: 'apr', num: 4 }, { key: 'may', num: 5 }, { key: 'jun', num: 6 },
+            { key: 'jul', num: 7 }, { key: 'aug', num: 8 }, { key: 'sep', num: 9 },
+            { key: 'oct', num: 10 }, { key: 'nov', num: 11 }, { key: 'dec', num: 12 }
+        ];
+        
+        for (const month of months) {
+            console.log(`\n--- Processing ${month.key.toUpperCase()} (Month ${month.num}) ---`);
+            console.log(`Previous Balance: ${runningBalance}`);
+            
+            // Get movement using detailed function for January, regular for others
+            let netMovement;
+            if (month.key === 'jan') {
+                netMovement = await getAccountMonthMovementDetailed(accountNo, targetYear, month.num);
+            } else {
+                netMovement = await getAccountMonthMovement(accountNo, targetYear, month.num);
+            }
+            
+            console.log(`Net Movement: ${netMovement}`);
+            
+            // Calculate new running balance
+            const newRunningBalance = runningBalance + parseFloat(netMovement);
+            runningBalance = newRunningBalance;
+            monthlyBalances[month.key] = Math.round(runningBalance);
+            
+            console.log(`New Running Balance: ${newRunningBalance}`);
+            console.log(`Rounded Balance: ${monthlyBalances[month.key]}`);
+            
+            // Special check for January
+            if (month.key === 'jan') {
+                const expectedJanBalance = openingBalance + 3844382.41;
+                console.log(`\n🔍 JANUARY ANALYSIS:`);
+                console.log(`Expected Jan Balance: ${openingBalance} + 3844382.41 = ${expectedJanBalance}`);
+                console.log(`Actual Calculated: ${newRunningBalance}`);
+                console.log(`Difference: ${newRunningBalance - expectedJanBalance}`);
+                
+                if (Math.abs(newRunningBalance - expectedJanBalance) > 1) {
+                    console.log(`❌ MISMATCH DETECTED!`);
+                    console.log(`Expected Movement: 3844382.41`);
+                    console.log(`Actual Movement: ${netMovement}`);
+                    console.log(`Movement Difference: ${netMovement - 3844382.41}`);
+                }
+            }
+        }
+        
+        console.log(`\n✅ Final Monthly Balances for ${accountNo}:`);
+        Object.entries(monthlyBalances).forEach(([month, balance]) => {
+            console.log(`${month}: ${balance}`);
+        });
+        
+        return monthlyBalances;
+        
+    } catch (error) {
+        console.error(`Error in detailed yearly balances:`, error);
+        return {
+            dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+            jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+        };
+    }
+}
+
+// 3. Test endpoint to trace the exact issue
+app.get('/api/trace/account/:accountNo/:year', async (req, res) => {
+    try {
+        const { accountNo, year } = req.params;
+        
+        console.log(`\n${'='.repeat(80)}`);
+        console.log(`TRACING CALCULATION ISSUE FOR ACCOUNT ${accountNo} YEAR ${year}`);
+        console.log(`${'='.repeat(80)}`);
+        
+        // Get detailed calculation
+        const detailedResult = await getYearlyRunningBalancesDetailed(accountNo, parseInt(year));
+        
+        // Also get the database query result for comparison
+        const dbQuery = `
+            SELECT
+                EXTRACT(MONTH FROM transaction_date) as month,
+                COUNT(*) as count,
+                SUM(CASE WHEN debit_credit = 'D' THEN COALESCE(aed_amount, foreign_amount, 0)
+                         WHEN debit_credit = 'C' THEN -COALESCE(aed_amount, foreign_amount, 0)
+                         ELSE 0 END) as net_movement_db
+            FROM general_ledger
+            WHERE account_number = $1
+              AND EXTRACT(YEAR FROM transaction_date) = $2
+              AND is_locked = false
+            GROUP BY EXTRACT(MONTH FROM transaction_date)
+            ORDER BY EXTRACT(MONTH FROM transaction_date)
+        `;
+        
+        const dbResult = await queryDB(dbQuery, [accountNo, year]);
+        
+        console.log(`\n📊 DATABASE QUERY RESULTS:`);
+        dbResult.rows.forEach(row => {
+            console.log(`Month ${row.month}: Net Movement = ${row.net_movement_db}, Transactions = ${row.count}`);
+        });
+        
+        res.json({
+            success: true,
+            trace: {
+                account: accountNo,
+                year: year,
+                detailedBalances: detailedResult,
+                databaseMovements: dbResult.rows,
+                analysis: {
+                    openingBalance: 21920568,
+                    expectedJanMovement: 3844382.41,
+                    expectedJanBalance: 21920568 + 3844382.41,
+                    actualJanBalance: detailedResult.jan,
+                    difference: detailedResult.jan - (21920568 + 3844382.41)
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Trace error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 

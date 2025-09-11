@@ -6,7 +6,6 @@
     <title>MIS System - Assets Schedule</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Base styles */
         * {
             margin: 0;
             padding: 0;
@@ -121,16 +120,9 @@
             font-size: 32px;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 2px;
-        }
-
-        .assets-subtitle {
-            font-size: 18px;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-            font-weight: 500;
         }
 
         .assets-controls {
@@ -138,7 +130,6 @@
             justify-content: center;
             gap: 20px;
             align-items: center;
-            margin-top: 20px;
             background: white;
             padding: 20px;
             border-radius: 12px;
@@ -229,29 +220,32 @@
             background: white;
         }
 
+        /* FIXED TABLE STYLES - Removed all spacing issues */
         .assets-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
             font-size: 11px;
             min-width: 1600px;
+            border-spacing: 0;
         }
 
         .assets-table th {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            padding: 15px 8px;
+            background: #E9F5DB;
+            color: #2c3e50;
+            padding: 12px 8px;
             text-align: center;
             font-weight: 700;
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border: 1px solid #34495e;
+            border: 1px solid #c5d9b7;
             white-space: nowrap;
             line-height: 1.2;
             position: sticky;
             top: 0;
             z-index: 10;
+            margin: 0;
         }
 
         .assets-table th.particulars-header {
@@ -266,12 +260,21 @@
             font-size: 9px;
         }
 
+        /* FIXED: Removed all double spacing and blank rows */
         .assets-table td {
             padding: 6px 8px;
             border: 1px solid #ecf0f1;
             vertical-align: middle;
             background: white;
-            line-height: 1.3;
+            line-height: 1.2;
+            margin: 0;
+            height: auto;
+        }
+
+        .assets-table tbody tr {
+            margin: 0;
+            padding: 0;
+            height: auto;
         }
 
         .assets-table tbody tr:hover {
@@ -279,6 +282,7 @@
             transition: all 0.2s ease;
         }
 
+        /* Category header styling */
         .assets-category-header {
             background: linear-gradient(135deg, #3498db, #2980b9) !important;
             color: white !important;
@@ -288,23 +292,29 @@
         }
 
         .assets-category-header td {
-            padding: 12px 10px !important;
+            padding: 10px !important;
             border: 1px solid #2980b9 !important;
             font-weight: 700 !important;
+            margin: 0 !important;
         }
 
         .assets-category-header:hover {
             background: linear-gradient(135deg, #3498db, #2980b9) !important;
         }
 
+        /* Data row styling - FIXED spacing */
         .assets-data-row {
             background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         .assets-data-row td {
-            padding: 5px 8px !important;
+            padding: 6px 8px !important;
             border: 1px solid #ecf0f1 !important;
             font-size: 11px !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
         }
 
         .assets-data-row td:first-child {
@@ -314,6 +324,30 @@
             padding-left: 20px !important;
         }
 
+        /* FIXED: Total row with custom colors */
+        .assets-total-row {
+            background: #FFFDD0 !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .assets-total-row td {
+            padding: 8px !important;
+            border: 1px solid #ddd !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #367588 !important;
+            margin: 0 !important;
+        }
+
+        .assets-total-row td:first-child {
+            color: #367588 !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+        }
+
+        /* Amount cell styling */
         .amount-cell {
             text-align: right !important;
             font-family: 'Consolas', 'Courier New', monospace !important;
@@ -323,12 +357,14 @@
             padding-right: 10px !important;
         }
 
+        /* FIXED: Only negative amounts in red */
         .amount-positive {
-            color: #27ae60 !important;
+            color: #2c3e50 !important;
         }
 
         .amount-negative {
             color: #e74c3c !important;
+            font-weight: 700 !important;
         }
 
         .amount-zero {
@@ -336,29 +372,49 @@
             font-style: italic !important;
         }
 
-        .assets-total-row {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7) !important;
+        /* Total row amount styling */
+        .assets-total-row .amount-cell {
+            color: #367588 !important;
             font-weight: 700 !important;
-            color: #856404 !important;
         }
 
-        .assets-total-row td {
-            padding: 8px !important;
-            border: 2px solid #f39c12 !important;
+        .assets-total-row .amount-negative {
+            color: #e74c3c !important;
+            font-weight: 700 !important;
+        }
+
+        /* Grand total row styling - BLACK */
+        .assets-grand-total-row {
+            background: #2c3e50 !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .assets-grand-total-row td {
+            padding: 10px 8px !important;
+            border: 1px solid #2c3e50 !important;
             font-size: 12px !important;
             font-weight: 700 !important;
+            color: white !important;
+            margin: 0 !important;
         }
 
-        .assets-subtotal-row {
-            background: linear-gradient(135deg, #e8f5e8, #d4edda) !important;
-            font-weight: 600 !important;
-            color: #155724 !important;
+        .assets-grand-total-row td:first-child {
+            color: white !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            padding-left: 20px !important;
         }
 
-        .assets-subtotal-row td {
-            padding: 7px 8px !important;
-            border: 1px solid #28a745 !important;
-            font-weight: 600 !important;
+        .assets-grand-total-row .amount-cell {
+            color: white !important;
+            font-weight: 700 !important;
+        }
+
+        .assets-grand-total-row .amount-negative {
+            color: #ff6b6b !important;
+            font-weight: 700 !important;
         }
 
         .assets-loading, .assets-error {
@@ -430,7 +486,6 @@
             transform: scale(1.1);
         }
 
-        /* Account number styling */
         .account-number {
             font-family: 'Courier New', monospace !important;
             font-weight: 700 !important;
@@ -438,7 +493,6 @@
             font-size: 11px !important;
         }
 
-        /* Mobile responsiveness */
         @media (max-width: 768px) {
             .container {
                 padding: 0 15px;
@@ -464,28 +518,9 @@
             }
         }
 
-        /* Print styles */
-        @media print {
-            .header, .assets-controls, .assets-status-bar, .scroll-indicator {
-                display: none;
-            }
-            
-            .assets-table {
-                font-size: 8px;
-            }
-            
-            .assets-table th, .assets-table td {
-                padding: 2px 4px;
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .assets-table tbody tr {
-            animation: fadeIn 0.3s ease-in-out;
+        /* Remove any default margins that might cause spacing */
+        .assets-table * {
+            margin: 0;
         }
     </style>
 </head>
@@ -523,7 +558,6 @@
             <!-- Header Section -->
             <div class="assets-header">
                 <div class="assets-title">Assets (Schedule)</div>
-                <div class="assets-subtitle" id="assetsReportPeriod">As of June 2025</div>
                 
                 <!-- Controls -->
                 <div class="assets-controls">
@@ -532,31 +566,9 @@
                             <i class="fas fa-calendar-alt"></i> Year:
                         </label>
                         <select id="assetsYear" class="assets-select">
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
                             <option value="2025" selected>2025</option>
                             <option value="2026">2026</option>
-                        </select>
-                    </div>
-                    
-                    <div class="assets-control-group">
-                        <label for="assetsMonth">
-                            <i class="fas fa-calendar"></i> Month:
-                        </label>
-                        <select id="assetsMonth" class="assets-select">
-                            <option value="1">January</option>
-                            <option value="2">February</option>
-                            <option value="3">March</option>
-                            <option value="4">April</option>
-                            <option value="5">May</option>
-                            <option value="6" selected>June</option>
-                            <option value="7">July</option>
-                            <option value="8">August</option>
-                            <option value="9">September</option>
-                            <option value="10">October</option>
-                            <option value="11">November</option>
-                            <option value="12">December</option>
+                            <option value="2027">2027</option>
                         </select>
                     </div>
                     
@@ -584,7 +596,7 @@
             <div class="assets-loading" id="assetsLoading">
                 <div class="assets-loading-spinner"></div>
                 <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Generating Assets Schedule...</div>
-                <div style="font-size: 14px; color: #95a5a6;">Loading financial data...</div>
+                <div style="font-size: 14px; color: #95a5a6;">Loading assets data...</div>
             </div>
 
             <!-- Error State -->
@@ -620,9 +632,8 @@
                             </tr>
                         </thead>
                         <tbody id="assetsTableBody">
-                            <!-- Data will be loaded here by JavaScript -->
                             <tr class="assets-category-header">
-                                <td colspan="14">Ready to load assets data...</td>
+                                <td colspan="14">Ready to load Cash accounts...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -641,7 +652,7 @@
                 </span>
                 <span>
                     <i class="fas fa-calculator"></i>
-                    Assets Management System
+                    <span id="yearDisplay">For Year 2025 (Dec 2024 to Dec 2025)</span>
                 </span>
             </div>
 
@@ -653,25 +664,983 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <!-- Include the JavaScript -->
-    <script src="js/assets-sheet.js"></script>
-    
+    <!-- JavaScript -->
     <script>
-        // Additional inline JavaScript for Assets Sheet
-        console.log('🏢 Assets Schedule Interface Loaded');
-        console.log('📊 Ready to load assets data from backend API');
-        
-        // Auto-load report on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏗️ Auto-loading Assets Schedule...');
-            setTimeout(() => {
-                if (typeof loadAssetsReport === 'function') {
-                    loadAssetsReport();
+        // Assets Sheet Manager 
+        class AssetsSheetManager {
+            constructor() {
+                this.currentYear = new Date().getFullYear();
+                this.assetsData = {};
+                this.isLoading = false;
+                this.retryCount = 0;
+                this.maxRetries = 3;
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('Assets Sheet Manager initializing...');
+                this.bindEvents();
+                this.setupScrollIndicator();
+                this.setCurrentYear();
+            }
+            
+            bindEvents() {
+                document.getElementById('assetsYear').addEventListener('change', () => {
+                    this.updateYearDisplay();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'r') {
+                        e.preventDefault();
+                        this.loadAssetsReport();
+                    }
+                    if (e.ctrlKey && e.key === 'e') {
+                        e.preventDefault();
+                        this.exportToCSV();
+                    }
+                    if (e.ctrlKey && e.key === 'p') {
+                        e.preventDefault();
+                        this.printReport();
+                    }
+                });
+                
+                console.log('Events bound successfully');
+            }
+            
+            setupScrollIndicator() {
+                window.addEventListener('scroll', () => {
+                    const scrollIndicator = document.getElementById('scrollToTop');
+                    if (scrollIndicator && window.scrollY > 300) {
+                        scrollIndicator.classList.add('show');
+                    } else if (scrollIndicator) {
+                        scrollIndicator.classList.remove('show');
+                    }
+                });
+            }
+            
+            setCurrentYear() {
+                const now = new Date();
+                document.getElementById('assetsYear').value = now.getFullYear();
+                this.updateYearDisplay();
+            }
+            
+            updateYearDisplay() {
+                const year = document.getElementById('assetsYear').value;
+                const prevYear = parseInt(year) - 1;
+                
+                document.getElementById('yearDisplay').textContent = `For Year ${year} (Dec ${prevYear} to Dec ${year})`;
+                this.updateTableHeaders(year);
+            }
+            
+            updateTableHeaders(year) {
+                const headers = document.querySelectorAll('.assets-table th.month-header');
+                const monthNames = ['DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+                
+                const prevYear = parseInt(year) - 1;
+                const currentYear = parseInt(year);
+                
+                headers.forEach((header, index) => {
+                    if (index === 0) {
+                        header.textContent = `DEC-${prevYear.toString().slice(-2)}`;
+                    } else if (index === 12) {
+                        header.textContent = `DEC-${currentYear.toString().slice(-2)}`;
+                    } else {
+                        header.textContent = `${monthNames[index]}-${currentYear.toString().slice(-2)}`;
+                    }
+                });
+            }
+            
+            async loadAssetsReport() {
+                if (this.isLoading) return;
+                
+                this.isLoading = true;
+                this.showLoading(true);
+                this.hideError();
+                this.disableButtons(true);
+                
+                try {
+                    const year = parseInt(document.getElementById('assetsYear').value);
+                    
+                    console.log(`Loading Assets Schedule for YEAR ${year}...`);
+                    this.updateStatusBar(`Loading assets data for year ${year}...`);
+                    
+                    const response = await fetch(`/api/reports/assets-schedule/${year}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.message || 'Failed to fetch assets data');
+                    }
+                    
+                    if (!result.data) {
+                        throw new Error('No data returned from server');
+                    }
+                    
+                    this.assetsData = this.validateAndProcessData(result.data);
+                    this.renderAssetsReport();
+                    this.updateStatusBar(`Assets schedule generated successfully for year ${year}`);
+                    
+                    this.retryCount = 0;
+                    console.log('Assets Schedule loaded successfully');
+                    
+                } catch (error) {
+                    console.error('Error loading assets schedule:', error);
+                    this.handleError(error);
+                } finally {
+                    this.isLoading = false;
+                    this.showLoading(false);
+                    this.disableButtons(false);
                 }
+            }
+            
+           validateAndProcessData(data) {
+    console.log('Validating and processing corrected assets data with proper breakdowns...');
+    
+    const defaultMonthlyAmounts = {
+        dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+        jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+    };
+    
+    const processedData = {
+        // EXISTING ACCOUNTS (keep all current mappings - cash, bank, trade receivables, etc.)
+        pettyCashMain: data.pettyCashMain || defaultMonthlyAmounts,
+        pettyCashProjects: data.pettyCashProjects || defaultMonthlyAmounts,
+        pettyCashEmployee: data.pettyCashEmployee || defaultMonthlyAmounts,
+        mainCollection: data.mainCollection || defaultMonthlyAmounts,
+        creditCardTransactions: data.creditCardTransactions || defaultMonthlyAmounts,
+        
+        investBank: data.investBank || defaultMonthlyAmounts,
+        investBankOthers: data.investBankOthers || defaultMonthlyAmounts,
+        blomBank: data.blomBank || defaultMonthlyAmounts,
+        adcbPtsAd: data.adcbPtsAd || defaultMonthlyAmounts,
+        adcbAccountSaver: data.adcbAccountSaver || defaultMonthlyAmounts,  // NEW - ADDED
+        adcbDubai: data.adcbDubai || defaultMonthlyAmounts,
+        pemoNymcard: data.pemoNymcard || defaultMonthlyAmounts,
+        
+        marginPerformanceAdvance: data.marginPerformanceAdvance || defaultMonthlyAmounts,
+        fixedDepositsUnderLien: data.fixedDepositsUnderLien || defaultMonthlyAmounts,
+        
+        clientsCertifiedWorkks: data.clientsCertifiedWorkks || defaultMonthlyAmounts,
+        clientsAdvance: data.clientsAdvance || defaultMonthlyAmounts,
+        contractWorkInProgress: data.contractWorkInProgress || defaultMonthlyAmounts,
+        clientsNonCollectible: data.clientsNonCollectible || defaultMonthlyAmounts,  // 111113 - CORRECT ACCOUNT
+        clientsIpaUncertified: data.clientsIpaUncertified || defaultMonthlyAmounts,
+        maintenanceClients: data.maintenanceClients || defaultMonthlyAmounts,
+        loamsClients1: data.loamsClients1 || defaultMonthlyAmounts,
+        loamsClients2: data.loamsClients2 || defaultMonthlyAmounts,
+        
+        provImpairmentTrade1: data.provImpairmentTrade1 || defaultMonthlyAmounts,
+        provImpairmentTrade2: data.provImpairmentTrade2 || defaultMonthlyAmounts,
+        provImpairmentTrade3: data.provImpairmentTrade3 || defaultMonthlyAmounts,
+        provImpairmentRetention: data.provImpairmentRetention || defaultMonthlyAmounts,
+        
+        retentionCertified1: data.retentionCertified1 || defaultMonthlyAmounts,
+        retentionCertified2: data.retentionCertified2 || defaultMonthlyAmounts,
+        retentionAgainstPB: data.retentionAgainstPB || defaultMonthlyAmounts,
+        retentionIpaUncertified: data.retentionIpaUncertified || defaultMonthlyAmounts,
+        provImpairmentShiftedToAR: data.provImpairmentShiftedToAR || defaultMonthlyAmounts,
+        
+        dueFromAlPhoenician: data.dueFromAlPhoenician || defaultMonthlyAmounts,
+        
+        // INVENTORY
+        inventoryCivilMechanicalTiles: data.inventoryCivilMechanicalTiles || defaultMonthlyAmounts,
+        
+        // PROPERTY, PLANT & EQUIPMENT - CORRECTED ACCOUNTS
+        productionEquipmentCost: data.productionEquipmentCost || defaultMonthlyAmounts,
+        productionEquipmentDepn: data.productionEquipmentDepn || defaultMonthlyAmounts,
+        officeEquipmentCost: data.officeEquipmentCost || defaultMonthlyAmounts,
+        officeEquipmentDepn: data.officeEquipmentDepn || defaultMonthlyAmounts,
+        furnitureFixturesCost: data.furnitureFixturesCost || defaultMonthlyAmounts,
+        furnitureFixturesDepn: data.furnitureFixturesDepn || defaultMonthlyAmounts,
+        computerSoftwareCost: data.computerSoftwareCost || defaultMonthlyAmounts,
+        computerSoftwareDepn: data.computerSoftwareDepn || defaultMonthlyAmounts,
+        toolsCost: data.toolsCost || defaultMonthlyAmounts,
+        toolsDepn: data.toolsDepn || defaultMonthlyAmounts,
+        carsVehiclesCost: data.carsVehiclesCost || defaultMonthlyAmounts,
+        carsVehiclesDepn: data.carsVehiclesDepn || defaultMonthlyAmounts,
+        officeImprovementCost: data.officeImprovementCost || defaultMonthlyAmounts,
+        officeImprovementDepn: data.officeImprovementDepn || defaultMonthlyAmounts, // Now 120209
+        
+        // SITE ASSETS - BREAKDOWN ACCOUNTS
+        siteAssetsToolsCost1: data.siteAssetsToolsCost1 || defaultMonthlyAmounts, // 120111
+        siteAssetsToolsCost2: data.siteAssetsToolsCost2 || defaultMonthlyAmounts, // 120112
+        siteAssetsToolsDepn1: data.siteAssetsToolsDepn1 || defaultMonthlyAmounts, // 120211
+        siteAssetsToolsDepn2: data.siteAssetsToolsDepn2 || defaultMonthlyAmounts, // 120212
+        
+        // RIGHT OF USE ASSETS
+        assetsOffice: data.assetsOffice || defaultMonthlyAmounts,
+        officeSpaceDepn: data.officeSpaceDepn || defaultMonthlyAmounts,
+        
+        // LOANS AND ADVANCES - DETAILED BREAKDOWN
+        loansAdvancesSuppliers: data.loansAdvancesSuppliers || defaultMonthlyAmounts,     // 112403
+        othersOverPaidSuppliers: data.othersOverPaidSuppliers || defaultMonthlyAmounts,   // 112404
+        
+        // PREPAYMENTS - DETAILED BREAKDOWN
+        prepaymentsTotal: data.prepaymentsTotal || this.calculateRowTotals([
+        data.rentPrepaidThirdParty || defaultMonthlyAmounts,       // 566,406
+        data.rentPrepaidExpenses || defaultMonthlyAmounts,         // 68,192
+        data.prepaidVisaExpense || defaultMonthlyAmounts,          // 274,750
+        data.otherPrepaidExpenses || defaultMonthlyAmounts         // 0
+        // Total still = 909,348
+    ]),
+        
+        // REFUNDABLE DEPOSITS - DETAILED BREAKDOWN
+        staffBankGuarantee: data.staffBankGuarantee || defaultMonthlyAmounts,             // 1122
+        refundableDepositsAccom: data.refundableDepositsAccom || defaultMonthlyAmounts,   // 112101
+        dewaFewaEmicoolDeposits: data.dewaFewaEmicoolDeposits || defaultMonthlyAmounts,   // 112103
+        duDeposit: data.duDeposit || defaultMonthlyAmounts,                               // 112107
+        refundableDepositsThirdParty: data.refundableDepositsThirdParty || defaultMonthlyAmounts, // 112110
+        otherDeposits: data.otherDeposits || defaultMonthlyAmounts,                       // 112199
+        
+        // OTHER RECEIVABLES
+        otherReceivables: data.otherReceivables || defaultMonthlyAmounts,
+        
+        // CALCULATED TOTALS - Keep existing + Add new breakdown totals
+        
+        // Existing totals (keep all previous calculations)
+        cashTotal: data.cashTotal || this.calculateRowTotals([
+            data.pettyCashMain || defaultMonthlyAmounts,
+            data.pettyCashProjects || defaultMonthlyAmounts,
+            data.pettyCashEmployee || defaultMonthlyAmounts,
+            data.mainCollection || defaultMonthlyAmounts,
+            data.creditCardTransactions || defaultMonthlyAmounts
+        ]),
+        
+        bankBalanceTotal: data.bankBalanceTotal || this.calculateRowTotals([
+            data.investBank || defaultMonthlyAmounts,
+            data.investBankOthers || defaultMonthlyAmounts,
+            data.blomBank || defaultMonthlyAmounts,
+            data.adcbPtsAd || defaultMonthlyAmounts,
+            data.adcbAccountSaver || defaultMonthlyAmounts,
+            data.adcbDubai || defaultMonthlyAmounts,
+            data.pemoNymcard || defaultMonthlyAmounts
+        ]),
+        
+        cashAndCashEquivalent: data.cashAndCashEquivalent || this.calculateRowTotals([
+            data.cashTotal || defaultMonthlyAmounts,
+            data.bankBalanceTotal || defaultMonthlyAmounts
+        ]),
+        
+        bankMarginDeposits: data.bankMarginDeposits || this.calculateRowTotals([
+            data.marginPerformanceAdvance || defaultMonthlyAmounts,
+            data.fixedDepositsUnderLien || defaultMonthlyAmounts
+        ]),
+        
+        // Keep existing trade receivables and retention totals...
+        loamsClientsTotal: data.loamsClientsTotal || this.calculateRowTotals([
+            data.loamsClients1 || defaultMonthlyAmounts,
+            data.loamsClients2 || defaultMonthlyAmounts
+        ]),
+        
+        provImpairmentTradeTotal: data.provImpairmentTradeTotal || this.calculateRowTotals([
+            data.provImpairmentTrade1 || defaultMonthlyAmounts,
+            data.provImpairmentTrade2 || defaultMonthlyAmounts,
+            data.provImpairmentTrade3 || defaultMonthlyAmounts
+        ]),
+        
+        retentionCertifiedTotal: data.retentionCertifiedTotal || this.calculateRowTotals([
+            data.retentionCertified1 || defaultMonthlyAmounts,
+            data.retentionCertified2 || defaultMonthlyAmounts
+        ]),
+        
+        netTradeReceivables: data.netTradeReceivables || this.calculateRowTotals([
+            data.clientsCertifiedWorks || defaultMonthlyAmounts,
+            data.clientsAdvance || defaultMonthlyAmounts,
+            data.clientsNonCollectible || defaultMonthlyAmounts,
+            data.clientsIpaUncertified || defaultMonthlyAmounts,
+            data.maintenanceClients || defaultMonthlyAmounts,
+            data.loamsClientsTotal || defaultMonthlyAmounts,
+            data.provImpairmentTradeTotal || defaultMonthlyAmounts,
+            data.provImpairmentRetention || defaultMonthlyAmounts
+        ]),
+        
+        netRetentionReceivables: data.netRetentionReceivables || this.calculateRowTotals([
+            data.retentionCertifiedTotal || defaultMonthlyAmounts,
+            data.retentionAgainstPB || defaultMonthlyAmounts,
+            data.retentionIpaUncertified || defaultMonthlyAmounts,
+            data.provImpairmentShiftedToAR || defaultMonthlyAmounts
+        ]),
+        
+        // NEW BREAKDOWN TOTALS
+        
+        // Site Assets Totals
+        siteAssetsToolsCostTotal: data.siteAssetsToolsCostTotal || this.calculateRowTotals([
+            data.siteAssetsToolsCost1 || defaultMonthlyAmounts,    // 120111
+            data.siteAssetsToolsCost2 || defaultMonthlyAmounts     // 120112
+        ]),
+        
+        siteAssetsToolsDepnTotal: data.siteAssetsToolsDepnTotal || this.calculateRowTotals([
+            data.siteAssetsToolsDepn1 || defaultMonthlyAmounts,    // 120211
+            data.siteAssetsToolsDepn2 || defaultMonthlyAmounts     // 120212
+        ]),
+        
+        // Loans and Advances Total
+        loansAdvancesSuppliersTotal: data.loansAdvancesSuppliersTotal || this.calculateRowTotals([
+            data.loansAdvancesSuppliers || defaultMonthlyAmounts,      // 112403
+            data.othersOverPaidSuppliers || defaultMonthlyAmounts      // 112404
+        ]),
+        
+        // Prepayments Total (all 4 accounts)
+        prepaymentsTotal: data.prepaymentsTotal || this.calculateRowTotals([
+            data.rentPrepaidThirdParty || defaultMonthlyAmounts,       // 112341
+            data.rentPrepaidExpenses || defaultMonthlyAmounts,         // 112351
+            data.prepaidVisaExpense || defaultMonthlyAmounts,          // 112359
+            data.otherPrepaidExpenses || defaultMonthlyAmounts         // 11235
+        ]),
+        
+        // Refundable Deposits Total (all 6 accounts)
+        refundableDepositsTotal: data.refundableDepositsTotal || this.calculateRowTotals([
+            data.staffBankGuarantee || defaultMonthlyAmounts,          // 1122
+            data.refundableDepositsAccom || defaultMonthlyAmounts,     // 112101
+            data.dewaFewaEmicoolDeposits || defaultMonthlyAmounts,     // 112103
+            data.duDeposit || defaultMonthlyAmounts,                   // 112107
+            data.refundableDepositsThirdParty || defaultMonthlyAmounts, // 112110
+            data.otherDeposits || defaultMonthlyAmounts                // 112199
+        ]),
+        
+        // Inventory Total
+        totalInventory: data.totalInventory || this.calculateRowTotals([
+            data.inventoryCivilMechanicalTiles || defaultMonthlyAmounts
+        ]),
+        
+        // CORRECTED Net Property Plant & Equipment (with proper accounts)
+        netPropertyPlantEquipment: data.netPropertyPlantEquipment || this.calculateRowTotals([
+            data.productionEquipmentCost || defaultMonthlyAmounts,
+            data.productionEquipmentDepn || defaultMonthlyAmounts,
+            data.officeEquipmentCost || defaultMonthlyAmounts,
+            data.officeEquipmentDepn || defaultMonthlyAmounts,
+            data.furnitureFixturesCost || defaultMonthlyAmounts,
+            data.furnitureFixturesDepn || defaultMonthlyAmounts,
+            data.computerSoftwareCost || defaultMonthlyAmounts,
+            data.computerSoftwareDepn || defaultMonthlyAmounts,
+            data.toolsCost || defaultMonthlyAmounts,
+            data.toolsDepn || defaultMonthlyAmounts,
+            data.carsVehiclesCost || defaultMonthlyAmounts,
+            data.carsVehiclesDepn || defaultMonthlyAmounts,
+            data.officeImprovementCost || defaultMonthlyAmounts,
+            data.officeImprovementDepn || defaultMonthlyAmounts,        // Now 120209
+            data.siteAssetsToolsCostTotal || defaultMonthlyAmounts,     // 120111 + 120112
+            data.siteAssetsToolsDepnTotal || defaultMonthlyAmounts      // 120211 + 120212
+        ]),
+        
+        // Right of Use Assets Total
+        rightOfUseAssetsTotal: data.rightOfUseAssetsTotal || this.calculateRowTotals([
+            data.assetsOffice || defaultMonthlyAmounts,
+            data.officeSpaceDepn || defaultMonthlyAmounts
+        ]),
+
+
+        rentPrepaidThirdParty: data.rentPrepaidThirdParty || defaultMonthlyAmounts,       // 112341: 566,406
+    rentPrepaidExpenses: data.rentPrepaidExpenses || defaultMonthlyAmounts,           // 112351: 68,192
+    prepaidVisaExpense: data.prepaidVisaExpense || defaultMonthlyAmounts,             // 112352: 274,750
+    otherPrepaidExpenses: data.otherPrepaidExpenses || defaultMonthlyAmounts,         // 112359: 0
+
+
+    prepaymentsTotal: data.prepaymentsTotal || this.calculateRowTotals([
+        data.rentPrepaidThirdParty || defaultMonthlyAmounts,       // 566,406
+        data.rentPrepaidExpenses || defaultMonthlyAmounts,         // 68,192
+        data.prepaidVisaExpense || defaultMonthlyAmounts,          // 274,750
+        data.otherPrepaidExpenses || defaultMonthlyAmounts         // 0
+    ]),
+
+        staffLoansAdvancesPaid: data.staffLoansAdvancesPaid || defaultMonthlyAmounts,  // 111503
+    otherReceivables: data.otherReceivables || defaultMonthlyAmounts,
+        
+        // CORRECTED Other Assets Total (with breakdown totals)
+        otherAssetsTotal: data.otherAssetsTotal || this.calculateRowTotals([
+        data.loansAdvancesSuppliersTotal || defaultMonthlyAmounts,  // 2,529,151
+        data.prepaymentsTotal || defaultMonthlyAmounts,             // 909,348
+        data.refundableDepositsTotal || defaultMonthlyAmounts,      // 335,005
+        
+        data.otherReceivables || defaultMonthlyAmounts              // 605,892 (existing)
+    ]),
+        
+        // TOTAL BALANCE SHEET ASSETS (unchanged formula)
+        totalBalanceSheetAssets: data.totalBalanceSheetAssets || this.calculateRowTotals([
+    data.cashAndCashEquivalent || this.calculateRowTotals([
+        data.cashTotal || defaultMonthlyAmounts,
+        data.cashAndCashEquivalent || defaultMonthlyAmounts
+    ]),
+    data.bankMarginDeposits || this.calculateRowTotals([
+        data.marginPerformanceAdvance || defaultMonthlyAmounts,
+        data.fixedDepositsUnderLien || defaultMonthlyAmounts
+    ]),
+    data.netTradeReceivables || defaultMonthlyAmounts,
+    data.netRetentionReceivables || defaultMonthlyAmounts,
+    data.dueFromAlPhoenician || defaultMonthlyAmounts,
+    data.contractWorkInProgress || defaultMonthlyAmounts,
+    data.totalInventory || this.calculateRowTotals([
+        data.inventoryCivilMechanicalTiles || defaultMonthlyAmounts
+    ]),
+    data.netPropertyPlantEquipment || defaultMonthlyAmounts,
+    data.rightOfUseAssetsTotal || defaultMonthlyAmounts,
+    data.otherAssetsTotal || this.calculateRowTotals([
+        data.loansAdvancesSuppliersTotal || defaultMonthlyAmounts,
+        data.prepaymentsTotal || defaultMonthlyAmounts,
+        data.refundableDepositsTotal || defaultMonthlyAmounts,
+        data.staffLoansAdvancesPaid || defaultMonthlyAmounts,
+        data.otherReceivables || defaultMonthlyAmounts
+    ])
+])
+    };
+    
+    console.log('Corrected assets data processed with proper breakdowns:', processedData);
+    return processedData;
+}
+            
+            calculateRowTotals(dataRows) {
+                const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+                const totals = {};
+                
+                months.forEach(month => {
+                    totals[month] = dataRows.reduce((sum, row) => {
+                        return sum + (row && row[month] ? parseFloat(row[month]) || 0 : 0);
+                    }, 0);
+                    totals[month] = this.customRound(totals[month]);
+                });
+                
+                return totals;
+            }
+            
+            customRound(value) {
+                if (isNaN(value) || value === null || value === undefined) {
+                    return 0;
+                }
+                return Math.round(parseFloat(value));
+            }
+
+            // Add these TWO functions inside your AssetsSheetManager class
+
+renderGrandTotalRow(title, amounts) {
+    const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    
+    return `
+        <tr class="assets-grand-total-row">
+            <td><strong>${title}</strong></td>
+            ${monthKeys.map(month => 
+                `<td class="amount-cell">${this.formatGrandTotalAmount(amounts?.[month] || 0)}</td>`
+            ).join('')}
+        </tr>
+    `;
+}
+
+formatGrandTotalAmount(amount) {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount === 0) {
+        return '<span class="amount-zero">-</span>';
+    }
+    
+    // Proper rounding while preserving sign
+    const roundedAmount = Math.round(numAmount);
+    const absFormatted = Math.abs(roundedAmount).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+    
+    // FIXED: Proper negative handling for grand totals
+    if (roundedAmount < 0) {
+        return `<span class="amount-negative">-${absFormatted}</span>`;
+    } else {
+        return `${absFormatted}`;
+    }
+}
+            
+            renderAssetsReport() {
+    console.log('Rendering CORRECTED Assets Schedule with proper breakdowns...');
+    
+    const tbody = document.getElementById('assetsTableBody');
+    let html = '';
+    
+    try {
+        // 1. CASH SECTION (unchanged)
+        html += this.renderCategoryHeader('CASH');
+        html += this.renderDataRow('110101', 'Petty Cash - Main (110101)', this.assetsData.pettyCashMain);
+        html += this.renderDataRow('110102', 'Petty Cash - Projects, PRO, Visas (110102)', this.assetsData.pettyCashProjects);
+        html += this.renderDataRow('110103', 'Petty Cash - Employee (110103)', this.assetsData.pettyCashEmployee);
+        html += this.renderDataRow('110111', 'Main Collection (110111)', this.assetsData.mainCollection);
+        html += this.renderDataRow('110112', 'Credit Cards Transactions (110112)', this.assetsData.creditCardTransactions);
+        html += this.renderTotalRow('TOTAL CASH', this.assetsData.cashTotal);
+        
+        // 2. BANK BALANCES SECTION (unchanged)
+        html += this.renderCategoryHeader('BANK BALANCES');
+        html += this.renderDataRow('110202', 'Invest Bank', this.assetsData.investBank);
+        html += this.renderDataRow('110202', 'Invest Bank - Others', this.assetsData.investBankOthers);
+        html += this.renderDataRow('110210', 'BLOM Bank France/BANORIENT', this.assetsData.blomBank);
+        html += this.renderDataRow('110211', 'ADCB - PTS - AD', this.assetsData.adcbPtsAd);
+        html += this.renderDataRow('110214', 'ADCB-(Account Saver)', this.assetsData.adcbAccountSaver);
+        html += this.renderDataRow('110212', 'ADCB - Dubai', this.assetsData.adcbDubai);
+        html += this.renderDataRow('110213', 'PEMO - NYMCARD Payment Services LLC', this.assetsData.pemoNymcard);
+        html += this.renderTotalRow('BANK BALANCE', this.assetsData.bankBalanceTotal);
+        
+        // 3. CASH AND CASH EQUIVALENT TOTAL
+        html += this.renderTotalRow('CASH AND CASH EQUIVALENT', this.assetsData.cashAndCashEquivalent);
+        
+        // 4. MARGIN & DEPOSITS SECTION (unchanged)
+        html += this.renderCategoryHeader('MARGIN & DEPOSITS');
+        html += this.renderDataRow('112108', 'Margin @ Performance & Advance Guarantee', this.assetsData.marginPerformanceAdvance);
+        html += this.renderDataRow('112111', 'Guarantee Fixed Deposits Under Lien', this.assetsData.fixedDepositsUnderLien);
+        html += this.renderTotalRow('BANK MARGIN DEPOSITS', this.assetsData.bankMarginDeposits);
+        
+        // 5. TRADE RECEIVABLES SECTION (unchanged)
+        html += this.renderCategoryHeader('TRADE RECEIVABLES');
+        html += this.renderDataRow('111101', 'Clients (Certified Works)', this.assetsData.clientsCertifiedWorkks);
+        html += this.renderDataRow('111115', 'Clients (Advance)', this.assetsData.clientsAdvance);
+        html += this.renderDataRow('111113', 'Clients (Non-collectible)', this.assetsData.clientsNonCollectible);  // CORRECT ACCOUNT
+        html += this.renderDataRow('111109', 'Clients - IPA (Un-Certified Works)', this.assetsData.clientsIpaUncertified);
+        html += this.renderDataRow('111105', 'Maintenance Clients', this.assetsData.maintenanceClients);
+        html += this.renderDataRow('111111/111112', 'LOAMS - Clients', this.assetsData.loamsClientsTotal);
+        html += this.renderDataRow('211850/211851/211853', 'Less: Prov for Impairment of Trade Receivables', this.assetsData.provImpairmentTradeTotal);
+        html += this.renderDataRow('211852', 'Less: Prov for Impairment of Retention', this.assetsData.provImpairmentRetention);
+        html += this.renderTotalRow('NET TRADE RECEIVABLES', this.assetsData.netTradeReceivables);
+
+        // 6. CONTRACT WORK IN PROGRESS (unchanged)
+        
+
+        // 7. RETENTION RECEIVABLES SECTION (unchanged)
+        html += this.renderCategoryHeader('RETENTION RECEIVABLES');
+        html += this.renderDataRow('111103/111114', 'Retention (Certified Works)', this.assetsData.retentionCertifiedTotal);
+        html += this.renderDataRow('111106', 'Retention Against P.B (Certified Works)', this.assetsData.retentionAgainstPB);
+        html += this.renderDataRow('111110', 'Retention-IPA (Un-Certified Works)', this.assetsData.retentionIpaUncertified);
+        html += this.renderDataRow('', 'Less: Prov for Impairment (Shifted to AR)', this.assetsData.provImpairmentShiftedToAR);
+        html += this.renderTotalRow('Net: Retention Receivables', this.assetsData.netRetentionReceivables);
+
+        // 8. DUE FROM RELATED PARTIES SECTION (unchanged)
+        html += this.renderCategoryHeader('DUE FROM RELATED PARTIES');
+        html += this.renderDataRow('112501', 'Due From Related Parties - Al Phoenician Nursery', this.assetsData.dueFromAlPhoenician);
+
+        html += this.renderCategoryHeader('Contract Work in Progress (WIP)');
+        html += this.renderDataRow('111102', 'Contract Work in Progress (WIP)', this.assetsData.contractWorkInProgress);
+
+        // 9. INVENTORIES SECTION (unchanged)
+        html += this.renderCategoryHeader('INVENTORIES');
+        html += this.renderDataRow('111104', 'Inventory (Civil+Mechanical, Tiles)', this.assetsData.inventoryCivilMechanicalTiles);
+        html += this.renderTotalRow('Inventory', this.assetsData.totalInventory);
+        
+        // 10. PROPERTY, PLANT & EQUIPMENT SECTION - CORRECTED
+        html += this.renderCategoryHeader('PROPERTY, PLANT & EQUIPMENT');
+        html += this.renderDataRow('120101', 'B.A Production Equipments (Cost)', this.assetsData.productionEquipmentCost);
+        html += this.renderDataRow('120201', 'B.A Production Equipment (Accd. Depn)', this.assetsData.productionEquipmentDepn);
+        html += this.renderDataRow('120102', 'B.B Office Equipment (Cost)', this.assetsData.officeEquipmentCost);
+        html += this.renderDataRow('120202', 'B.B Office Equipment (Accd. Depn)', this.assetsData.officeEquipmentDepn);
+        html += this.renderDataRow('120103', 'B.C Furniture & Fixtures (Cost)', this.assetsData.furnitureFixturesCost);
+        html += this.renderDataRow('120203', 'B.C Furniture & Fixtures (Accd. Depn)', this.assetsData.furnitureFixturesDepn);
+        html += this.renderDataRow('120104', 'B.D Computer Software & Accessories (Cost)', this.assetsData.computerSoftwareCost);
+        html += this.renderDataRow('120204', 'B.D Computer Software & Accessories (Accd. Depn)', this.assetsData.computerSoftwareDepn);
+        html += this.renderDataRow('120105', 'B.E Tools (Cost)', this.assetsData.toolsCost);
+        html += this.renderDataRow('120205', 'B.E Tools (Accumulated Depreciation)', this.assetsData.toolsDepn);
+        html += this.renderDataRow('120107', 'B.F Cars & Vehicles (Cost)', this.assetsData.carsVehiclesCost);
+        html += this.renderDataRow('120207', 'B.F Cars & Vehicles (Accd. Depn)', this.assetsData.carsVehiclesDepn);
+        html += this.renderDataRow('120110', 'B.G Office 399 Improvement (Cost)', this.assetsData.officeImprovementCost);
+        html += this.renderDataRow('120209', 'B.G Office 399 Improvement (Accd. Depn)', this.assetsData.officeImprovementDepn); // CORRECTED to 120209
+        
+        // SITE ASSETS - SHOW BREAKDOWN AND TOTAL
+        html += this.renderDataRow('120111/120112/120113', 'B.H Site Assets Tools & Equips (Cost)', this.assetsData.siteAssetsToolsCostTotal);
+        html += this.renderDataRow('120211/120212', 'B.H Site Assets Tools & Equips (Accd. Depn)', this.assetsData.siteAssetsToolsDepnTotal);
+        
+        html += this.renderTotalRow('Net Property Plant & Equipment', this.assetsData.netPropertyPlantEquipment);
+        
+        // 11. RIGHT OF USE ASSETS SECTION (unchanged)
+        html += this.renderCategoryHeader('RIGHT OF USE ASSETS');
+        html += this.renderDataRow('120108', 'Assets Office (3-99)', this.assetsData.assetsOffice);
+        html += this.renderDataRow('120208', 'Office Space (Accumulated Depn)', this.assetsData.officeSpaceDepn);
+        html += this.renderTotalRow('Right of Use Assets', this.assetsData.rightOfUseAssetsTotal);
+        
+        // 12. OTHER ASSETS SECTION - WITH DETAILED BREAKDOWNS
+        html += this.renderCategoryHeader('OTHER ASSETS');
+        
+        // Loans and Advances - Show breakdown
+        html += this.renderDataRow('112403', 'Loans and advances-Suppliers', this.assetsData.loansAdvancesSuppliers);           // 2,495,252
+html += this.renderDataRow('112404', 'Others/Over Paid to Suppliers', this.assetsData.othersOverPaidSuppliers);         // 33,899
+html += this.renderTotalRow('Loans and advances-Suppliers', this.assetsData.loansAdvancesSuppliersTotal);
+        
+        // Prepayments - Show breakdown
+        html += this.renderDataRow('112341', 'Rent Prepaid - Third Party', this.assetsData.rentPrepaidThirdParty);              // 566,406
+html += this.renderDataRow('112351', 'Rent Prepaid Expenses', this.assetsData.rentPrepaidExpenses);                     // 68,192
+html += this.renderDataRow('112352', 'Prepaid Visa Expense', this.assetsData.prepaidVisaExpense);                       // 274,750
+html += this.renderDataRow('112359', 'Other Prepaid Expenses', this.assetsData.otherPrepaidExpenses);                   // 0
+
+// TOTAL ROW - Sum of the 4 accounts above
+html += this.renderTotalRow('Prepayments', this.assetsData.prepaymentsTotal);                                           // 909,348
+        
+        // Refundable Deposits - Show breakdown
+        html += this.renderDataRow('1122', 'Staff Bank Guarantee', this.assetsData.staffBankGuarantee);
+        html += this.renderDataRow('112101', 'Refundable Deposits @ Accommodation', this.assetsData.refundableDepositsAccom);
+        html += this.renderDataRow('112103', 'DEWA /FEWA & Emicool Deposits', this.assetsData.dewaFewaEmicoolDeposits);
+        html += this.renderDataRow('112107', 'Du Deposit', this.assetsData.duDeposit);
+        html += this.renderDataRow('112110', 'Refundable Deposits @ Third Party', this.assetsData.refundableDepositsThirdParty);
+        html += this.renderDataRow('112199', 'Other Deposits', this.assetsData.otherDeposits);
+        html += this.renderTotalRow('Refundable Deposits', this.assetsData.refundableDepositsTotal);
+        
+        // Other Receivables
+       
+        
+        html += this.renderDataRow('111503', 'Staff Loans and Advances Paid', this.assetsData.staffLoansAdvancesPaid);          // 605,892
+        html += this.renderDataRow('111505', 'Other Receivables', this.assetsData.otherReceivables);       
+        
+        // 13. TOTAL BALANCE SHEET ASSETS - GRAND TOTAL
+        html += this.renderTotalRow('OTHER ASSETS (ADVS+PREPAID+DEPOSIT)', this.assetsData.otherAssetsTotal);                  // ← THIS WAS MISSING
+
+// GRAND TOTAL - THIS WAS MISSING  
+        html += this.renderTotalRow('Total(BS)-Assets', this.assetsData.totalBalanceSheetAssets);  
+        
+        tbody.innerHTML = html;
+        document.getElementById('assetsContent').style.display = 'block';
+        
+        console.log('CORRECTED Assets Schedule rendered with proper breakdowns');
+        
+    } catch (renderError) {
+        console.error('Error rendering corrected assets schedule:', renderError);
+        this.handleError(renderError);
+    }
+}
+            
+            // Temporary function to generate dummy amounts (will be replaced with real data later)
+            getDummyAmounts() {
+                return {
+                    dec_prev: 0, jan: 0, feb: 0, mar: 0, apr: 0, may: 0,
+                    jun: 0, jul: 0, aug: 0, sep: 0, oct: 0, nov: 0, dec: 0
+                };
+            }
+            
+            renderCategoryHeader(title) {
+                return `
+                    <tr class="assets-category-header">
+                        <td><strong>${title}</strong></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                `;
+            }
+            
+            renderDataRow(accountNo, description, amounts) {
+                const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+                
+                let accountNoDisplay = accountNo ? `<span class="account-number">${accountNo}</span><br>` : '';
+                
+                return `
+                    <tr class="assets-data-row">
+                        <td>${accountNoDisplay}${description}</td>
+                        ${monthKeys.map(month => 
+                            `<td class="amount-cell">${this.formatAmountWithColor(amounts?.[month] || 0)}</td>`
+                        ).join('')}
+                    </tr>
+                `;
+            }
+            
+            // FIXED: Total row with custom colors
+            renderTotalRow(title, amounts) {
+                const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+                
+                return `
+                    <tr class="assets-total-row">
+                        <td><strong>${title}</strong></td>
+                        ${monthKeys.map(month => 
+                            `<td class="amount-cell">${this.formatTotalAmount(amounts?.[month] || 0)}</td>`
+                        ).join('')}
+                    </tr>
+                `;
+            }
+            
+            formatAmountWithColor(amount) {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount === 0) {
+        return '<span class="amount-zero">-</span>';
+    }
+    
+    // Proper rounding while preserving sign
+    const roundedAmount = Math.round(numAmount);
+    const absFormatted = Math.abs(roundedAmount).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+    
+    // FIXED: Proper negative handling
+    if (roundedAmount < 0) {
+        return `<span class="amount-negative">-${absFormatted}</span>`;
+    } else {
+        return `<span class="amount-positive">${absFormatted}</span>`;
+    }
+}
+            
+            // Special formatting for total row amounts
+            formatTotalAmount(amount) {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount === 0) {
+        return '<span class="amount-zero">-</span>';
+    }
+    
+    // Proper rounding while preserving sign
+    const roundedAmount = Math.round(numAmount);
+    const absFormatted = Math.abs(roundedAmount).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+    
+    // FIXED: Proper negative handling for totals
+    if (roundedAmount < 0) {
+        return `<span class="amount-negative">-${absFormatted}</span>`;
+    } else {
+        return `${absFormatted}`;
+    }
+}
+            
+            async exportToCSV() {
+                console.log('Exporting Assets Schedule to CSV...');
+                
+                if (!this.assetsData || Object.keys(this.assetsData).length === 0) {
+                    this.showToast('No assets data to export. Please generate a report first.', 'warning');
+                    return;
+                }
+                
+                try {
+                    const year = document.getElementById('assetsYear').value;
+                    
+                    let csvContent = `ASSETS SCHEDULE\n`;
+                    csvContent += `For Year ${year} (Dec ${parseInt(year)-1} to Dec ${year})\n\n`;
+                    csvContent += `Particulars,DEC-${parseInt(year)-1},JAN-${year},FEB-${year},MAR-${year},APR-${year},MAY-${year},JUN-${year},JUL-${year},AUG-${year},SEP-${year},OCT-${year},NOV-${year},DEC-${year}\n`;
+                    
+                    csvContent += `\nCASH\n`;
+                    csvContent += this.formatCSVRow('Petty Cash - Main (110101)', this.assetsData.pettyCashMain);
+                    csvContent += this.formatCSVRow('Petty Cash - Projects PRO Visas (110102)', this.assetsData.pettyCashProjects);
+                    csvContent += this.formatCSVRow('Petty Cash - Employee (110103)', this.assetsData.pettyCashEmployee);
+                    csvContent += this.formatCSVRow('Main Collection (110111)', this.assetsData.mainCollection);
+                    csvContent += this.formatCSVRow('Credit Cards Transactions (110112)', this.assetsData.creditCardTransactions);
+                    csvContent += this.formatCSVRow('TOTAL CASH', this.assetsData.cashTotal);
+
+
+                    // ADD MARGIN & DEPOSITS SECTION
+                    csvContent += `\nMARGIN & DEPOSITS\n`;
+                    csvContent += this.formatCSVRow('Margin @ Performance & Advance Guarantee (112108)', this.assetsData.marginPerformanceAdvance);
+                    csvContent += this.formatCSVRow('Guarantee Fixed Deposits Under Lien (112111)', this.assetsData.fixedDepositsUnderLien);
+                    csvContent += this.formatCSVRow('BANK MARGIN DEPOSITS', this.assetsData.bankMarginDeposits);
+
+                    csvContent += `\nTRADE RECEIVABLES\n`;
+                    csvContent += this.formatCSVRow('Clients (Certified Works) (111101)', this.assetsData.clientsCertifiedWorks);
+                    csvContent += this.formatCSVRow('Clients (Advance) (111115)', this.assetsData.clientsAdvance);
+                    csvContent += this.formatCSVRow('Clients (Non-collectible)', this.assetsData.clientsNonCollectible);
+                    csvContent += this.formatCSVRow('Clients - IPA (Un-Certified Works) (111109)', this.assetsData.clientsIpaUncertified);
+                    csvContent += this.formatCSVRow('Maintenance Clients (111105)', this.assetsData.maintenanceClients);
+                    csvContent += this.formatCSVRow('LOAMS - Clients (111111/111112)', this.assetsData.loamsClientsTotal);
+                    csvContent += this.formatCSVRow('Less: Prov for Impairment of Trade Receivables (21185)', this.assetsData.provImpairmentTrade);
+                    csvContent += this.formatCSVRow('Less: Prov for Impairment of Retention (999999)', this.assetsData.provImpairmentRetention);
+                    csvContent += this.formatCSVRow('NET TRADE RECEIVABLES', this.assetsData.netTradeReceivables);
+
+// ADD RETENTION RECEIVABLES SECTION
+                    csvContent += `\nRETENTION RECEIVABLES\n`;
+                    csvContent += this.formatCSVRow('Retention (Certified Works) (111103/111114)', this.assetsData.retentionCertifiedTotal);
+                    csvContent += this.formatCSVRow('Retention Against P.B (Certified Works) (111106)', this.assetsData.retentionAgainstPB);
+                    csvContent += this.formatCSVRow('Retention-IPA (Un-Certified Works) (111110)', this.assetsData.retentionIpaUncertified);
+                    csvContent += this.formatCSVRow('Less: Prov for Impairment (Shifted to AR)', this.assetsData.provImpairmentShiftedToAR);
+                    csvContent += this.formatCSVRow('Net: Retention Receivables', this.assetsData.netRetentionReceivables);
+
+// ADD RELATED PARTIES SECTION
+                    csvContent += `\nDUE FROM RELATED PARTIES\n`;
+                    csvContent += this.formatCSVRow('Due From Related Parties - Al Phoenician Nursery (112501)', this.assetsData.dueFromAlPhoenician);
+
+                    csvContent += this.formatCSVRow('Contract Work in Progress (WIP) (111102)', this.assetsData.contractWorkInProgress);
+                    
+                    const filename = `Assets_Schedule_Year_${year}.csv`;
+                    this.downloadFile(csvContent, filename, 'text/csv');
+                    
+                    this.showToast('Assets schedule exported successfully!', 'success');
+                    console.log('CSV export completed');
+                    
+                } catch (error) {
+                    console.error('Export error:', error);
+                    this.showToast('Export failed. Please try again.', 'error');
+                }
+            }
+
+
+            
+            
+            formatCSVRow(description, amounts) {
+                return `${description},${this.formatCSVAmounts(amounts)}\n`;
+            }
+            
+            formatCSVAmounts(amounts) {
+                const monthKeys = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+                return monthKeys.map(month => amounts?.[month] || 0).join(',');
+            }
+            
+            printReport() {
+                console.log('Printing Assets Schedule...');
+                window.print();
+            }
+            
+            downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+            
+            handleError(error) {
+                this.retryCount++;
+                
+                if (this.retryCount <= this.maxRetries) {
+                    this.updateStatusBar(`Error occurred. Retry ${this.retryCount}/${this.maxRetries}: ${error.message}`);
+                    setTimeout(() => {
+                        this.loadAssetsReport();
+                    }, 2000);
+                } else {
+                    this.showError();
+                    this.updateStatusBar(`Failed to load assets schedule after ${this.maxRetries} attempts: ${error.message}`);
+                    this.showToast('Failed to load assets schedule. Please check your connection and try again.', 'error');
+                }
+            }
+            
+            showLoading(show) {
+                const loadingElement = document.getElementById('assetsLoading');
+                const contentElement = document.getElementById('assetsContent');
+                
+                if (loadingElement) {
+                    loadingElement.style.display = show ? 'flex' : 'none';
+                }
+                if (contentElement) {
+                    contentElement.style.display = show ? 'none' : 'block';
+                }
+            }
+            
+            showError() {
+                const errorElement = document.getElementById('assetsError');
+                const contentElement = document.getElementById('assetsContent');
+                
+                if (errorElement) {
+                    errorElement.style.display = 'flex';
+                }
+                if (contentElement) {
+                    contentElement.style.display = 'none';
+                }
+            }
+            
+            hideError() {
+                const errorElement = document.getElementById('assetsError');
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            }
+            
+            disableButtons(disable) {
+                const buttons = ['generateBtn', 'exportBtn', 'exportBtn2', 'printBtn'];
+                buttons.forEach(id => {
+                    const btn = document.getElementById(id);
+                    if (btn) {
+                        btn.disabled = disable;
+                        btn.style.opacity = disable ? '0.6' : '1';
+                    }
+                });
+            }
+            
+            updateStatusBar(message) {
+                const statusInfo = document.getElementById('assetsStatusInfo');
+                const timestamp = document.getElementById('assetsTimestamp');
+                
+                if (statusInfo) {
+                    statusInfo.textContent = message;
+                }
+                if (timestamp) {
+                    timestamp.textContent = new Date().toLocaleString();
+                }
+            }
+            
+            showToast(message, type = 'info') {
+                let toast = document.getElementById('toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'toast';
+                    toast.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: 600;
+                        z-index: 10000;
+                        display: none;
+                        max-width: 400px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    `;
+                    document.body.appendChild(toast);
+                }
+                
+                const styles = {
+                    success: 'background: #27ae60;',
+                    error: 'background: #e74c3c;',
+                    warning: 'background: #f39c12;',
+                    info: 'background: #3498db;'
+                };
+                
+                toast.style.cssText += styles[type] || styles.info;
+                toast.textContent = message;
+                toast.style.display = 'block';
+                
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Global Variables and Functions
+        let assetsManager;
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing Assets Sheet Manager...');
+            
+            assetsManager = new AssetsSheetManager();
+            window.assetsManager = assetsManager;
+            
+            console.log('Assets Sheet Manager initialized');
+            
+            setTimeout(() => {
+                console.log('Auto-loading Assets Schedule...');
+                loadAssetsReport();
             }, 1500);
         });
 
-        // Global functions for HTML onclick events
+        // Global Functions for HTML onclick events
+        function loadAssetsReport() {
+            if (assetsManager) {
+                console.log('Loading Assets Report...');
+                assetsManager.loadAssetsReport();
+            } else {
+                console.error('AssetsManager not initialized');
+                alert('Assets Manager not initialized. Please refresh the page.');
+            }
+        }
+
+        function exportAssetsReport() {
+            if (assetsManager) {
+                console.log('Exporting Assets Report...');
+                assetsManager.exportToCSV();
+            } else {
+                console.error('AssetsManager not initialized');
+                alert('Assets Manager not initialized. Please refresh the page.');
+            }
+        }
+
+        function printAssetsReport() {
+            if (assetsManager) {
+                console.log('Printing Assets Report...');
+                assetsManager.printReport();
+            } else {
+                console.error('AssetsManager not initialized');
+                alert('Assets Manager not initialized. Please refresh the page.');
+            }
+        }
+
         function scrollToTop() {
             window.scrollTo({
                 top: 0,
@@ -679,46 +1648,12 @@
             });
         }
 
-        // Placeholder functions until JavaScript file is created
-        function loadAssetsReport() {
-            console.log('📊 Loading Assets Report - Function will be implemented in assets-sheet.js');
-            document.getElementById('assetsStatusInfo').textContent = 'Assets report function ready - JavaScript implementation pending';
-        }
-
-        function exportAssetsReport() {
-            console.log('📁 Exporting Assets Report - Function will be implemented in assets-sheet.js');
-        }
-
-        function printAssetsReport() {
-            console.log('🖨️ Printing Assets Report - Function will be implemented in assets-sheet.js');
-            window.print();
-        }
-        
-        // Update report period when date changes
-        document.getElementById('assetsYear').addEventListener('change', updateAssetsReportPeriod);
-        document.getElementById('assetsMonth').addEventListener('change', updateAssetsReportPeriod);
-        
-        function updateAssetsReportPeriod() {
-            const year = document.getElementById('assetsYear').value;
-            const month = document.getElementById('assetsMonth').value;
-            const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ];
-            
-            const monthName = monthNames[month - 1];
-            document.getElementById('assetsReportPeriod').textContent = `As of ${monthName} ${year}`;
-        }
-
-        // Setup scroll indicator
-        window.addEventListener('scroll', () => {
-            const scrollIndicator = document.getElementById('scrollToTop');
-            if (scrollIndicator && window.scrollY > 300) {
-                scrollIndicator.classList.add('show');
-            } else if (scrollIndicator) {
-                scrollIndicator.classList.remove('show');
-            }
-        });
+        console.log('ASSETS SCHEDULE MODULE LOADED');
+        console.log('Clean design with fixed spacing');
+        console.log('Header color: #E9F5DB');
+        console.log('Total row colors: Background #FFFDD0, Text #367588');
+        console.log('Only negative amounts show in red');
+        console.log('====================================');
     </script>
 </body>
 </html>
