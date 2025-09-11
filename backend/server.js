@@ -9,6 +9,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: '../config/.env' });
+const { initLiabilitiesRoutes } = require('./routes/liabilities');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '../frontend')));
+app.use('/api/reports', initLiabilitiesRoutes(queryDB));
 
 // Simple, robust database connection
 const dbConfig = {

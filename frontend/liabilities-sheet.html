@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS System - Liabilities Schedule</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: #e74c3c;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        .btn:hover {
+            background: #c0392b;
+        }
+        
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        th {
+            background: #ffebee;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: right;
+        }
+        
+        td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .category-header {
+            background: #e74c3c !important;
+            color: white !important;
+            font-weight: bold !important;
+            text-align: left !important;
+        }
+        
+        .total-row {
+            background: #fce4ec !important;
+            font-weight: bold !important;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            display: none;
+        }
+        
+        .year-select {
+            padding: 8px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Liabilities Schedule</h1>
+        <p>Balance Sheet Liabilities Analysis</p>
+    </div>
+
+    <div class="controls">
+        <label>Year:</label>
+        <select id="yearSelect" class="year-select">
+            <option value="2025" selected>2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+        </select>
+        
+        <button class="btn" onclick="loadLiabilities()">Generate Report</button>
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+        <button class="btn" onclick="printReport()">Print</button>
+        
+        <a href="index.html" class="btn" style="text-decoration: none; margin-left: 20px;">← Back to Dashboard</a>
+    </div>
+
+    <div class="loading" id="loading">
+        <p>Loading liabilities data...</p>
+    </div>
+
+    <div class="table-container" id="tableContainer" style="display: none;">
+        <table id="liabilitiesTable">
+            <thead>
+                <tr>
+                    <th style="width: 300px;">PARTICULARS</th>
+                    <th>DEC-24</th>
+                    <th>JAN-25</th>
+                    <th>FEB-25</th>
+                    <th>MAR-25</th>
+                    <th>APR-25</th>
+                    <th>MAY-25</th>
+                    <th>JUN-25</th>
+                    <th>JUL-25</th>
+                    <th>AUG-25</th>
+                    <th>SEP-25</th>
+                    <th>OCT-25</th>
+                    <th>NOV-25</th>
+                    <th>DEC-25</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="category-header">
+                    <td colspan="14">TRADE PAYABLES</td>
+                </tr>
+                <tr>
+                    <td>Suppliers Trade Payables (210201)</td>
+                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                    <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                </tr>
+                <!-- More rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let liabilitiesData = {};
+
+        async function loadLiabilities() {
+            const year = document.getElementById('yearSelect').value;
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('tableContainer');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                console.log(`Loading liabilities for year ${year}...`);
+                
+                const response = await fetch(`/api/reports/liabilities-schedule/${year}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    liabilitiesData = result.data;
+                    renderTable();
+                    container.style.display = 'block';
+                } else {
+                    alert('Error loading data: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error loading liabilities data');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderTable() {
+            // Table is already populated with static content
+            // This function can be used for future dynamic updates
+            console.log('Liabilities table rendered with static content');
+        }
+
+        function renderDataRow(description, data) {
+            const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            let html = `<tr><td>${description}</td>`;
+            
+            months.forEach(month => {
+                const amount = data?.[month] || 0;
+                html += `<td>${formatAmount(amount)}</td>`;
+            });
+            
+            html += '</tr>';
+            return html;
+        }
+
+        function renderTotalRow(title, data) {
+            const months = ['dec_prev', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            let html = `<tr class="total-row"><td><strong>${title}</strong></td>`;
+            
+            months.forEach(month => {
+                const amount = data?.[month] || 0;
+                html += `<td><strong>${formatAmount(amount)}</strong></td>`;
+            });
+            
+            html += '</tr>';
+            return html;
+        }
+
+        function formatAmount(amount) {
+            const num = parseFloat(amount);
+            if (isNaN(num) || num === 0) return '-';
+            
+            return Math.abs(num).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        function exportCSV() {
+            if (!liabilitiesData || Object.keys(liabilitiesData).length === 0) {
+                alert('No data to export. Please generate report first.');
+                return;
+            }
+            
+            console.log('Exporting CSV...');
+            alert('CSV export feature will be implemented');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // Auto-load on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                loadLiabilities();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
